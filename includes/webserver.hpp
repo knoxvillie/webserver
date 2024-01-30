@@ -1,23 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   webserver.cpp                                      :+:      :+:    :+:   */
+/*   webserver.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/15 09:36:33 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/01/25 15:12:20 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include"../includes/webserver.hpp"
+#ifndef WEBSERVER_HPP
+# define WEBSERVER_HPP
 
-int	main(int argc, char* argv[]) {
-	if (argc > 2) {
-		std::cout << "Webserver must have only 1 argument" << std::endl;
-		return (1);
-	}
-	const std::string config_file(argc == 1 ? "../conf/default.conf" : argv[1]);
+#pragma once
 
-	return (0);
-}
+#ifdef DEBUG
+# define MESSAGE(a,b) std::cout << "DEBUG" << std::endl;
+#else
+# define MESSAGE
+#endif
+
+//C++ Standard Libraries
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+
+#endif

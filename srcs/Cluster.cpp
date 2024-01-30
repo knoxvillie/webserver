@@ -1,20 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cluster.hpp                                        :+:      :+:    :+:   */
+/*   Cluster.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/15 15:05:21 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/15 15:05:21 by kfaustin         ###   ########.fr       */
+/*   Created: 2024/01/23 12:14:19 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/01/23 12:14:19 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CLUSTER_HPP
-# define CLUSTER_HPP
+#include "../includes/Cluster.hpp"
 
-#pragma once
+Cluster::Cluster(void) {}
 
-class Cluste
+Cluster::~Cluster(void) {}
 
-#endif

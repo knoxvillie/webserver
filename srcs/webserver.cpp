@@ -1,28 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Parser.cpp                                         :+:      :+:    :+:   */
+/*   webserver.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/15 10:00:15 by kfaustin         ###   ########.fr       */
+/*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/01/15 09:36:33 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/Parser.hpp"
+#include"../includes/webserver.hpp"
 
-Parser::Parser(const std::string &config_file) {
-	std::ifstream inputFile(config_file.c_str());
-
-	if (inputFile.is_open()) {
-		std::string line;
-		while (std::getline(inputFile, line)) {
-			if ()
-		}
-	} else {
-		std::cout << "Cannot open the config file" << std::endl;
+int	main(int argc, char* argv[]) {
+	if (argc > 2) {
+		std::cout << "Webserver must have only 1 argument" << std::endl;
 		return (1);
 	}
-
+	const std::string config_file(argc == 1 ? "../conf/default.conf" : argv[1]);
+	return (0);
 }
