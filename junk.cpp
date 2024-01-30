@@ -1,21 +1,29 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   junk.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/01/30 12:38:18 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/01/30 13:12:43 by kfaustin         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include <string>
 #include <iostream>
 #include <sstream>
-#include <string>
 
-int main() {
-    std::string input = "42 3.14 Hello";
+int	main(int argc, char** argv) {
+	std::string input;
+	std::string var;
 
-    std::stringstream ss(input);
+	std::cout << argc << std::endl;
 
-    int intValue;
-    double doubleValue;
-    std::string stringValue;
+	std::cout << "Input: ";
+	std::getline(std::cin, input);
+	std::stringstream ss(input);
 
-    ss >> intValue >> doubleValue >> stringValue;
-
-    std::cout << "Integer: " << intValue << "\n";
-    std::cout << "Double: " << doubleValue << "\n";
-    std::cout << "String: " << stringValue;
-
-    return 0;
+	while (ss >> var)
+		std::cout << "Your input>" << var << std::endl;
 }

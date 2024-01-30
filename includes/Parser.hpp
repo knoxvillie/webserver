@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/15 10:02:59 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/01/30 18:47:47 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,10 +54,11 @@
 
 class Parser {
 private:
-	const std::string
+
 public:
 	Parser(const std::string& config_file);
 	~Parser(void);
+	void parsingDirectives(const std::vector<std::string>& split);
 };
 
 #endif
