@@ -36,15 +36,18 @@ Parser::Parser(const std::string& config_file) {
 				if (!token.empty() && token[0] == '{') {
 					while (std::getline(inputFile, line)) {
 						ss << line; ss >> token;
+						if (token == "}") //Server block closing
+							break;
 						if (token.empty() || token[0] == '#')
 							continue;
-						if (!isTokenInDirectives(token))
+						if (!isTokenInDirectives(token)) // missing location block
 							throw std::runtime_error("Invalid server directive");
 						Parser::parsingDirectives(splitString(line));
 					}
 				} else
 					throw std::runtime_error("Server block must be opened with `{");
-			}
+			} else
+				throw std::runtime_error("Invalid block");
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
@@ -52,12 +55,16 @@ Parser::Parser(const std::string& config_file) {
 
 Parser::~Parser(void) {}
 
-void Parser::parsingDirectives(const std::vector<std::string>& split) {
+void
+Parser::parsingDirectives(const std::vector<std::string>& split) {
 	size_t size = split.size();
 
 	if (size == 1)
 		throw std::runtime_error(split[0] + " doesn't have values");
 	for (size_t i = 1; i < size; i++) {
-
+		// Missing the logic to append the directive's values to the Class
+		// location is a block, need to implement verify all the block
+		if (i == (size - 1))
+			(split[i].back() == ';') ? return : throw std::runtime_error("The directive's line must end in `;'")
 	}
 }
