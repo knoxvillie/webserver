@@ -1,29 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cluster.hpp                                        :+:      :+:    :+:   */
+/*   error.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/15 15:05:21 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/01 12:30:27 by diogmart         ###   ########.fr       */
+/*   Created: 2023/11/13 11:59:01 by diogmart          #+#    #+#             */
+/*   Updated: 2023/11/13 12:00:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CLUSTER_HPP
-# define CLUSTER_HPP
+#include "webserv.hpp"
 
-#pragma once
+void log(const std::string &message)
+{
+    std::cout << message << std::endl;
+}
 
-class Cluster {
-	protected:
-	
-	private:
-	
-	public:
-		Cluster(void);
-		~Cluster(void);
-		void initServers();
-};
-
-#endif
+void exitWithError(const std::string &errorMessage)
+{
+    log("ERROR: " + errorMessage);
+    exit(1);
+}
