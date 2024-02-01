@@ -16,7 +16,7 @@
 #pragma once
 
 #ifdef DEBUG
-# define MESSAGE(a,b) std::cout << "DEBUG" << std::endl;
+# define MESSAGE(msg, svar) {std::cout << "#DEBUG: " << msg << " -> '" << svar << "'" << std::endl;}
 #else
 # define MESSAGE
 #endif

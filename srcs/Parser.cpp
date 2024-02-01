@@ -13,7 +13,12 @@
 #include "../includes/Parser.hpp"
 #include "../includes/utils.hpp"
 
-Parser::Parser(const std::string& config_file) {
+Parser::Parser(void) {}
+
+Parser::~Parser(void) {}
+
+void
+Parser::parsingConfigFile(const std::string &config_file) {
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
@@ -52,8 +57,6 @@ Parser::Parser(const std::string& config_file) {
 	} else
 		throw std::runtime_error("Cannot open the config file");
 }
-
-Parser::~Parser(void) {}
 
 void
 Parser::parsingDirectives(const std::vector<std::string>& split) {

@@ -18,5 +18,6 @@ int	main(int argc, char* argv[]) {
 		return (1);
 	}
 	const std::string config_file(argc == 1 ? "../conf/default.conf" : argv[1]);
+	MESSAGE("Config file path", config_file);
 	return (0);
 }

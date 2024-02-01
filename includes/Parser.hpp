@@ -51,14 +51,13 @@
         autoindex: Controls directory listing.
 */
 
-
+//Static class
 class Parser {
 private:
-
+	Parser(void); //It can not be reached
 public:
-	Parser(const std::string& config_file);
-	~Parser(void);
-	void parsingDirectives(const std::vector<std::string>& split);
+	static void parsingConfigFile(const std::string& config_file);
+	static void parsingDirectives(const std::vector<std::string>& split);
 };
 
 #endif
