@@ -3,19 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/30 18:47:47 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/01 13:48:56 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PARSER_HPP
-# define PARSER_HPP
-
 #pragma once
 
-#include "webserver.hpp"
+#include "webserv.hpp"
+
 /*
     Block Structure:
      - The configuration is organized into blocks denoted by curly braces {}.
@@ -51,13 +49,16 @@
         autoindex: Controls directory listing.
 */
 
-//Static class
+
 class Parser {
-private:
-	Parser(void); //It can not be reached
-public:
-	static void parsingConfigFile(const std::string& config_file);
-	static void parsingDirectives(const std::vector<std::string>& split);
+
+    private:
+        Parser(void);
+    	~Parser(void);
+    
+    public:
+    	static void parsingConfigFile(const std::string& config_file);
+    	static void parsingDirectives(const std::vector<std::string>& split);
 };
 
 #endif
