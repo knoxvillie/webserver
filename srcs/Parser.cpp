@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/30 17:44:07 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/01 14:14:58 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 #include "../includes/utils.hpp"
 
 Parser::Parser(void) {}
-
-Parser::~Parser(void) {}
 
 void
 Parser::parsingConfigFile(const std::string &config_file) {
@@ -47,7 +45,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 							continue;
 						if (!isTokenInDirectives(token)) // missing location block
 							throw std::runtime_error("Invalid server directive");
-						Parser::parsingDirectives(splitString(line));
+						Parser::parsingDirectives(splitString(line, ' '));
 					}
 				} else
 					throw std::runtime_error("Server block must be opened with `{");
@@ -67,7 +65,9 @@ Parser::parsingDirectives(const std::vector<std::string>& split) {
 	for (size_t i = 1; i < size; i++) {
 		// Missing the logic to append the directive's values to the Class
 		// location is a block, need to implement verify all the block
-		if (i == (size - 1))
-			(split[i].back() == ';') ? return : throw std::runtime_error("The directive's line must end in `;'")
+		if (i == (size - 1)) {
+			std::cout << split[i] << std::endl;
+			//throw std::runtime_error("The directive's line must end in `;'");
+		}
 	}
 }

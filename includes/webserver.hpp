@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/30 17:52:08 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/01 14:06:14 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,8 @@
 #ifdef DEBUG
 # define MESSAGE(msg, svar) {std::cout << "#DEBUG: " << msg << " -> '" << svar << "'" << std::endl;}
 #else
-# define MESSAGE
+# define MESSAGE(msg, svar) do {} while (false)
 #endif
-
-# define SERVER_DIRECTIVES { \
-	"listen", "server_name", "root", "index", "charset", \
-	"access_log", "error_log", "error_page", "location"};
 
 //C++ Standard Libraries
 #include <iostream>
