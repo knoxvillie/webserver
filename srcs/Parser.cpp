@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/01 14:14:58 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:22:49 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,17 +28,16 @@ Parser::parsingConfigFile(const std::string &config_file) {
 			throw std::runtime_error("The config file hasn't content");
 		std::string line;
 		std::string token;
-		std::stringstream ss;
 
 		while (std::getline(inputFile, line)) {
-			ss << line; ss >> token;
+			std::stringstream ss(line); ss >> token;
 			if (token.empty() || token[0] == '#')
 				continue; // It means that line is empty
 			if (token == "server") {
 				ss >> token;
 				if (!token.empty() && token[0] == '{') {
 					while (std::getline(inputFile, line)) {
-						ss << line; ss >> token;
+						std::stringstream ss(line); ss >> token;
 						if (token == "}") //Server block closing
 							break;
 						if (token.empty() || token[0] == '#')

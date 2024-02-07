@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/30 12:38:18 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/01/30 13:12:43 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 11:55:16 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,9 @@ int	main(int argc, char** argv) {
 
 	std::cout << "Input: ";
 	std::getline(std::cin, input);
-	std::stringstream ss(input);
+	std::stringstream ss;
+	ss << input;
 
 	while (ss >> var)
-		std::cout << "Your input>" << var << std::endl;
+		std::cout << "Your input: " << var << std::endl;
 }
