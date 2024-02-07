@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 14:38:33 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 17:00:26 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,9 @@ vectorInitializer(const char** list) {
 
 bool
 isTokenInDirectives(const std::string& token) {
-	const char* directives[] = {"listen", "server_name", "root", "index", "charset",
-								"access_log","error_log", "error_page", "location", NULL};
+	const char* directives[] = {"listen", "server_name", "host", "root", "index",
+								"charset", "access_log","error_log", "error_page",
+								"location", "client_max_body_size" , NULL};
 	std::vector<std::string> server_directives(vectorInitializer(directives));
 
 	for (size_t i = 0; i < server_directives.size(); i++) {
@@ -44,3 +45,5 @@ splitString (const std::string& input) {
 			result.push_back(token);
 	return (result);
 }
+
+

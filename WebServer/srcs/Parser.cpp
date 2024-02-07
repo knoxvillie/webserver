@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 16:36:44 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 17:31:22 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,24 +34,19 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		std::string token;
 
 		while (std::getline(inputFile, line)) {
-			std::stringstream ss(line); ss >> token;
-			if (token.empty() || token[0] == '#')
-				continue; // It means that line is empty or a comment
+			std::stringstream ss(line);
+			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
 				throw std::runtime_error("Invalid block");
-			
-			ss >> token;
-			if (token.empty() || token[0] != '{')
+			if (!(ss >> token) || token[0] != '{')
 				throw std::runtime_error("Server block must be opened with `{");
-			
 			while (std::getline(inputFile, line)) {
-				std::stringstream ss(line); ss >> token;
-				if (token.empty() || token[0] == '#')
-					continue;
+				std::stringstream ss(line);
+				if (!(ss >> token) || token[0] == '#') continue;
 				if (token == "}") // Server block closing
 					break;
 				if (!isTokenInDirectives(token)) // missing location block
-					throw std::runtime_error("Invalid server directive");
+					throw std::runtime_error(token + " is an invalid server directive");
 				std::vector<std::string> vec(splitString(line));
 				Parser::parsingDirectives(token, vec);
 				Parser::_directives[token] = vec;
@@ -59,7 +54,8 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
-	// Close inputFile
+	inputFile.close();
+	printMap(_directives);
 }
 
 void
