@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 12:52:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 14:42:38 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <map>
 #include <stdexcept>
 #include <arpa/inet.h>
 
@@ -49,7 +50,7 @@
 
 //	Prototypes
 bool isTokenInDirectives(const std::string& token);
-std::vector<std::string> splitString (const std::string& input, char delimiter);
+std::vector<std::string> splitString (const std::string& input);
 std::vector<std::string> vectorInitializer(const char **list);
 
 #endif

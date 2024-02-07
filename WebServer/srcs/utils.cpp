@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 15:10:55 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 14:38:33 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ vectorInitializer(const char** list) {
 
 bool
 isTokenInDirectives(const std::string& token) {
-	// Maybe this should be stored in the Parser class ?
 	const char* directives[] = {"listen", "server_name", "root", "index", "charset",
 								"access_log","error_log", "error_page", "location", NULL};
 	std::vector<std::string> server_directives(vectorInitializer(directives));
@@ -35,12 +34,13 @@ isTokenInDirectives(const std::string& token) {
 }
 
 std::vector<std::string>
-splitString (const std::string& input, char delimiter) {
+splitString (const std::string& input) {
 	std::vector<std::string> result;
-	std::istringstream stream(input);
+	std::stringstream ss(input);
 	std::string token;
 
-	while(std::getline(stream, token, delimiter))
-		result.push_back(token);
+	ss >> token;
+	for (;ss >> token;)
+			result.push_back(token);
 	return (result);
 }

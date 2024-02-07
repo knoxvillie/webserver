@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 12:49:33 by diogmart         ###   ########.fr       */
+/*   Updated: 2023/11/14 14:09:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ HTTP Server:
     It processes these requests, retrieves web content, and sends it back to the clients.
 */
 
-#define MPORT 80 // typical port for an HTTP server, not sure if we need a macro for it
+#define PORT 80 // typical port for an HTTP server
 
 class TcpServer {
 

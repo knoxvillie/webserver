@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 12:53:28 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 15:47:06 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,12 @@
 
 
 class Parser {
+	private:
+		Parser(void);
+		~Parser(void);
+		static std::map<std::string, std::vector<std::string> >	_directives;
 
-    private:
-        Parser(void);
-    	~Parser(void);
-    
-    public:
-    	static void parsingConfigFile(const std::string& config_file);
-    	static void parsingDirectives(const std::vector<std::string>& split);
+	public:
+		static void parsingConfigFile(const std::string& config_file);
+		static void parsingDirectives(const std::string& directive, std::vector<std::string>& split);
 };
