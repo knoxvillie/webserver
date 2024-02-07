@@ -6,11 +6,14 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 12:37:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:43:27 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
 #ifdef DEBUG
 # define MLOG(a,b) std::cout << "DEBUG" << std::endl;
@@ -37,7 +40,6 @@
 #include <sstream>
 #include <vector>
 #include <stdexcept>
-
 #include <arpa/inet.h>
 
 
@@ -49,3 +51,5 @@
 bool isTokenInDirectives(const std::string& token);
 std::vector<std::string> splitString (const std::string& input, char delimiter);
 std::vector<std::string> vectorInitializer(const char **list);
+
+#endif
