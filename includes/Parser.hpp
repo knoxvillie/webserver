@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/01 13:48:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 11:23:06 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,5 +60,3 @@ class Parser {
     	static void parsingConfigFile(const std::string& config_file);
     	static void parsingDirectives(const std::vector<std::string>& split);
 };
-
-#endif

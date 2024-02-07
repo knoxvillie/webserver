@@ -6,22 +6,11 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/01 12:47:21 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 11:22:08 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-
-#ifdef DEBUG
-# define MESSAGE(a,b) std::cout << "DEBUG" << std::endl;
-#else
-# define MESSAGE
-#endif
-
-# define SERVER_DIRECTIVES { \
-	"listen", "server_name", "root", "index", "charset", \
-	"access_log", "error_log", "error_page", "location"};
-
 
 // ========================
 //  C++ Standard Libraries	

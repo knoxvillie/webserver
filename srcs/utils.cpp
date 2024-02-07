@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/01 15:03:17 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 11:25:08 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ vectorInitializer(const char** list) {
 }
 
 bool
-isTokenInDirectives(const std::string& token) { char **
+isTokenInDirectives(const std::string& token) {
 	const char* directives[] = {"listen", "server_name", "root", "index", "charset",
 								"access_log","error_log", "error_page", "location", NULL};
 	std::vector<std::string> server_directives(vectorInitializer(directives));

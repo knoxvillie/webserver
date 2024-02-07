@@ -15,7 +15,7 @@ RM = rm -rf
 AR = ar -rcs
 
 #_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_ FLAGS _/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_
-CPPFLAGS	= -Wall -Wextra -Werror -std=c++98
+CPPFLAGS	= -Wall -Wextra -Werror -std=c++98 -g -DDEBUG
 MK		= --no-print-directory
 
 #_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_ FOLDERS _/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_
@@ -26,7 +26,7 @@ OBJ_DIR			= bin
 
 #_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_ FILES _/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_
 NAME			= webserv
-_FILES			= main error TcpServer
+_FILES			= main Parser utils
 OBJS			= $(_FILES:%=%.o)
 TARGET			= $(addprefix $(OBJ_DIR)/, $(OBJS))
 
