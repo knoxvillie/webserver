@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 12:50:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 14:50:52 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,14 @@ Parser::parsingConfigFile(const std::string &config_file) {
 	if (inputFile.is_open()) {
 		// Peek looks at the next character in the stream. If peek returns EOF the file is empty.
 		if (inputFile.peek() == std::ifstream::traits_type::eof())
-			throw std::runtime_error("The config file hasn't content");
+			throw std::runtime_error("The config file doesn't have content");	
 		std::string line;
 		std::string token;
 
 		while (std::getline(inputFile, line)) {
 			std::stringstream ss(line); ss >> token;
 			if (token.empty() || token[0] == '#')
-				continue; // It means that line is empty
+				continue; // It means that line is empty or a comment
 			if (token == "server") {
 				ss >> token;
 				if (!token.empty() && token[0] == '{') {
