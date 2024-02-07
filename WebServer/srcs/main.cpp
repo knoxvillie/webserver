@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   webserver.cpp                                      :+:      :+:    :+:   */
+/*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/01 14:15:26 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:37:21 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/webserver.hpp"
-#include "../includes/Parser.hpp"
+#include "webserv.hpp"
+#include "Parser.hpp"
 
 int	main(int argc, char* argv[]) {
 	if (argc > 2) {
@@ -19,7 +19,7 @@ int	main(int argc, char* argv[]) {
 		return (1);
 	}
 	const std::string config_file(argc == 1 ? "../conf/default.conf" : argv[1]);
-	MESSAGE("Config file path", config_file);
+	MLOG("Config file path", config_file);
 	try {
 		Parser::parsingConfigFile(config_file);
 	} catch (const std::runtime_error& except) {

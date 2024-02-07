@@ -6,11 +6,22 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 11:22:08 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:37:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+#ifdef DEBUG
+# define MLOG(a,b) std::cout << "DEBUG" << std::endl;
+#else
+# define MLOG(a,b) do {} while(false);
+#endif
+
+#ifndef MERROR 
+# define MERROR(message) std::cout << "Error: " << message << std::endl; exit(1);
+#endif
+
 
 // ========================
 //  C++ Standard Libraries	
@@ -31,13 +42,10 @@
 
 
 // ======================
-//		 Functions		
+//       Functions       
 // ======================
 
 //	Prototypes
-bool	isTokenInDirectives(const std::string& token);
+bool isTokenInDirectives(const std::string& token);
 std::vector<std::string> splitString (const std::string& input, char delimiter);
-
-//	error.cpp
-void exitWithError(const std::string &errorMessage);
-void log(const std::string &message);
+std::vector<std::string> vectorInitializer(const char **list);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2023/11/14 14:16:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:33:32 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ TcpServer::TcpServer(std::string ip_address, int port) : m_ip_address(ip_address
     m_sockaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
 
     if (setupServer() != 0)
-        exitWithError("couldn't start server.");
+        MERROR("couldn't start server.");
 }
 
 TcpServer::~TcpServer() {
@@ -31,12 +31,12 @@ int TcpServer::setupServer(void) {
     
     this->m_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->m_socket < 0) {
-        exitWithError("couldn't create socket.");
+        MERROR("couldn't create socket.");
         return (1);
     }
 
     if (bind(m_socket, (sockaddr *)&m_sockaddr, m_sockaddr_len) < 0) {
-        exitWithError("couldn't bind socket.");
+        MERROR("couldn't bind socket.");
         return (1);
     }
 
@@ -51,7 +51,7 @@ void TcpServer::closeServer(void) {
 void TcpServer::startListen(void) {
     
     if (listen(m_socket, 42) < 0) // the max number of clients is just a placeholder
-        exitWithError("socket listen failed.");
+        MERROR("socket listen failed.");
 
     // look for connection and accept them
 }
