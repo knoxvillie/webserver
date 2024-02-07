@@ -6,13 +6,18 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 16:14:56 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 16:36:44 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Parser.hpp"
 
 Parser::Parser(void) {}
+
+Parser::~Parser(void) {}
+
+//static members need to be defined outside the class.
+std::map<std::string, std::vector<std::string> > Parser::_directives;
 
 void
 Parser::parsingConfigFile(const std::string &config_file) {
@@ -41,14 +46,15 @@ Parser::parsingConfigFile(const std::string &config_file) {
 			
 			while (std::getline(inputFile, line)) {
 				std::stringstream ss(line); ss >> token;
-				if (token == "}") // Server block closing
-					break;
 				if (token.empty() || token[0] == '#')
 					continue;
+				if (token == "}") // Server block closing
+					break;
 				if (!isTokenInDirectives(token)) // missing location block
 					throw std::runtime_error("Invalid server directive");
 				std::vector<std::string> vec(splitString(line));
 				Parser::parsingDirectives(token, vec);
+				Parser::_directives[token] = vec;
 			}
 		}
 	} else

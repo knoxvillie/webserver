@@ -52,9 +52,9 @@
 
 class Parser {
 	private:
-		Parser(void);
-		~Parser(void);
-		static std::map<std::string, std::vector<std::string> >	_directives;
+	Parser(void);
+	~Parser(void);
+	static std::map<std::string, std::vector<std::string> >	_directives;
 
 	public:
 		static void parsingConfigFile(const std::string& config_file);
