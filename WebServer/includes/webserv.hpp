@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 14:42:38 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 15:58:47 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,9 @@
 # define WEBSERV_HPP
 
 #ifdef DEBUG
-# define MLOG(a,b) std::cout << "DEBUG" << std::endl;
+# define MLOG(str) std::cout << str << std::endl;
 #else
-# define MLOG(a,b) do {} while(false);
+# define MLOG(str) do {} while(false);
 #endif
 
 #ifndef MERROR 

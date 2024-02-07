@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 15:53:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 16:07:26 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,10 @@ void
 Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& split) {
 	if (split.empty())
 		throw std::runtime_error(directive + " doesn't have values");
-	std::vector<std::string>::iterator str = (split.end())--;
-	std::string::iterator xar = ((*str).end())--;
+	std::vector<std::string>::iterator str = split.end();
+	str--;
+	std::string::iterator xar = str->end();
+	xar--;
 
 	// Missing the logic to append the directive's values to the Class
 	// location is a block, need to implement verify all the block
