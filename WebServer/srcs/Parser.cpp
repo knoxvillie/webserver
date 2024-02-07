@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 14:38:59 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/07 15:53:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,37 +24,36 @@ Parser::parsingConfigFile(const std::string &config_file) {
 	if (inputFile.is_open()) {
 		// Peek looks at the next character in the stream. If peek returns EOF the file is empty.
 		if (inputFile.peek() == std::ifstream::traits_type::eof())
-			throw std::runtime_error("The config file hasn't content");
+			throw std::runtime_error("The config file doesn't have content");	
 		std::string line;
 		std::string token;
 
 		while (std::getline(inputFile, line)) {
 			std::stringstream ss(line); ss >> token;
 			if (token.empty() || token[0] == '#')
-				continue; // It means that line is empty
-			if (token == "server") {
-				ss >> token;
-				if (!token.empty() && token[0] == '{') {
-					while (std::getline(inputFile, line)) {
-						std::stringstream ss(line); ss >> token;
-						if (token.empty() || token[0] == '#')
-							continue; // It means that line is empty
-						if (token == "}") //Server block closing
-							break;
-						if (token.empty() || token[0] == '#')
-							continue;
-						if (!isTokenInDirectives(token)) // missing location block
-							throw std::runtime_error("Invalid server directive");
-						std::vector<std::string> vec(splitString(line));
-						Parser::parsingDirectives(token, vec);
-					}
-				} else
-					throw std::runtime_error("Server block must be opened with `{");
-			} else
+				continue; // It means that line is empty or a comment
+			if (token != "server")
 				throw std::runtime_error("Invalid block");
+			
+			ss >> token;
+			if (token.empty() || token[0] != '{')
+				throw std::runtime_error("Server block must be opened with `{");
+			
+			while (std::getline(inputFile, line)) {
+				std::stringstream ss(line); ss >> token;
+				if (token == "}") // Server block closing
+					break;
+				if (token.empty() || token[0] == '#')
+					continue;
+				if (!isTokenInDirectives(token)) // missing location block
+					throw std::runtime_error("Invalid server directive");
+				std::vector<std::string> vec(splitString(line));
+				Parser::parsingDirectives(token, vec);
+			}
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
+	// Close inputFile
 }
 
 void
