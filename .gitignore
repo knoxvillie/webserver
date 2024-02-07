@@ -1,4 +1,10 @@
 .vscode/
 .idea/
+bin/
+cmake*/
+CMakeLists.txt
+junk.cpp
 *.a
 *.o
+*.out
+webserv
