@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/07 12:33:32 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 12:48:53 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,15 +30,11 @@ TcpServer::~TcpServer() {
 int TcpServer::setupServer(void) {
     
     this->m_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->m_socket < 0) {
+    if (this->m_socket < 0)
         MERROR("couldn't create socket.");
-        return (1);
-    }
 
-    if (bind(m_socket, (sockaddr *)&m_sockaddr, m_sockaddr_len) < 0) {
+    if (bind(m_socket, (sockaddr *)&m_sockaddr, m_sockaddr_len) < 0)
         MERROR("couldn't bind socket.");
-        return (1);
-    }
 
     return (0);
 }
