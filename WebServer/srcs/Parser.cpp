@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 14:50:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 15:08:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,26 +32,27 @@ Parser::parsingConfigFile(const std::string &config_file) {
 			std::stringstream ss(line); ss >> token;
 			if (token.empty() || token[0] == '#')
 				continue; // It means that line is empty or a comment
-			if (token == "server") {
-				ss >> token;
-				if (!token.empty() && token[0] == '{') {
-					while (std::getline(inputFile, line)) {
-						std::stringstream ss(line); ss >> token;
-						if (token == "}") //Server block closing
-							break;
-						if (token.empty() || token[0] == '#')
-							continue;
-						if (!isTokenInDirectives(token)) // missing location block
-							throw std::runtime_error("Invalid server directive");
-						Parser::parsingDirectives(splitString(line, ' '));
-					}
-				} else
-					throw std::runtime_error("Server block must be opened with `{");
-			} else
+			if (token != "server")
 				throw std::runtime_error("Invalid block");
+			
+			ss >> token;
+			if (token.empty() || token[0] != '{')
+				throw std::runtime_error("Server block must be opened with `{");
+			
+			while (std::getline(inputFile, line)) {
+				std::stringstream ss(line); ss >> token;
+				if (token == "}") // Server block closing
+					break;
+				if (token.empty() || token[0] == '#')
+					continue;
+				if (!isTokenInDirectives(token)) // missing location block
+					throw std::runtime_error("Invalid server directive");
+				Parser::parsingDirectives(splitString(line, ' '));
+			}
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
+	// Close inputFile
 }
 
 void

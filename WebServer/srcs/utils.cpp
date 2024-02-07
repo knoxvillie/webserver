@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 12:38:29 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/07 15:10:55 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ vectorInitializer(const char** list) {
 
 bool
 isTokenInDirectives(const std::string& token) {
+	// Maybe this should be stored in the Parser class ?
 	const char* directives[] = {"listen", "server_name", "root", "index", "charset",
 								"access_log","error_log", "error_page", "location", NULL};
 	std::vector<std::string> server_directives(vectorInitializer(directives));
