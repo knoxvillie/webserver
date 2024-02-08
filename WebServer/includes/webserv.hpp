@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 17:19:27 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/08 14:19:18 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,42 +15,8 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-// ========================
-//  C++ Standard Libraries
-// ========================
-
-#include <iostream>
-#include <iomanip>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <cstdlib> //stdlib deprecated
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <stdexcept>
-#include <arpa/inet.h>
-
-// ========================
-// 		Macros and struct
-// ========================
-
-class FuncLogger;
-
-// ANSI escape codes for text color
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_CYAN    "\033[1;36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-#define ANSI_COLOR_YELLOW  "\033[1;33m"
-// Emojis
-#define E_IN "\U0001F51C"
-#define E_OUT "\U0001F519"
-
 #ifdef DEBUG
-# define GPS FuncLogger gps_obj(__FILE__, __FUNCTION__, __LINE__);
+# define MLOG(str) std::cout << str << std::endl;
 #else
 # define MLOG(str) do {} while(false);
 #endif
@@ -59,31 +25,23 @@ class FuncLogger;
 # define MERROR(message) std::cout << "Error: " << message << std::endl; exit(1);
 #endif
 
-enum enum_server {
-	LISTEN, 		//0
-	SERVER_NAME, 	//1
-	ROOT, 			//2
-	INDEX,			//3
-	AUTOINDEX,		//4
-	ALLOW_METHODS,	//5
-	CLIENT_MAX_SIZE,//6
-	ERROR_PAGE		//7
-};
 
-class FuncLogger {
-	private:
-		const char* file;
-		const char* func;
-		const int line;
+// ========================
+//  C++ Standard Libraries	
+// ========================
 
-	public:
-		FuncLogger(const char* file, const char* func, const int line) : file(file), func(func), line(line) {
-			std::cout << "[" << ANSI_COLOR_GREEN << "IN" << ANSI_COLOR_RESET << "]" << "  " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << "," << line << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
-		};
-		~FuncLogger(void) {
-			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
-		};
-};
+#include <iostream>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <map>
+#include <stdexcept>
+#include <arpa/inet.h>
 
 
 // ======================
@@ -91,31 +49,21 @@ class FuncLogger {
 // ======================
 
 //	Prototypes
-class Server;
-std::vector<std::string> splitStringToVector(const std::string&);
-std::vector<std::string> extractValues (const std::string&);
-std::vector<std::string> vectorInitializer(const char**);
-void printServer(std::vector<Server>&);
-
+bool isTokenInDirectives(const std::string& token, const std::string&);
+std::vector<std::string> splitString (const std::string& input);
+std::vector<std::string> vectorInitializer(const char **list);
 
 //	Templates
-template <typename T>
-void printMapVec(const std::map<T, std::vector<T> >& myMap) {
+template <typename T, typename U>
+void printMap(const std::map<T, U>& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
-	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Directive: " << std::left << std::setw(25) << it->first << "-> ";
-		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
+	std::cout << "printing MAP:" << std::endl;
+	for (typename std::map<T, U>::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
+		std::cout << "Key: [" << it->first << "] -> Values: {";
+		for (typename U::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++) {
 			std::cout << *ut << " ";
-		std::cout << std::endl;
-	}
-}
-
-template <typename T>
-void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
-	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "\nLocation: " << it->first << std::endl;
-		printMapVec(it->second);
-		std::cout << std::endl;
+		}
+		std::cout << "}" << std::endl;
 	}
 }
 
