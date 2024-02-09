@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2023/11/14 14:09:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/09 12:31:59 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
+#include "Config.hpp"
 
 /*
 HTTP Server: 
@@ -21,15 +22,11 @@ HTTP Server:
     It processes these requests, retrieves web content, and sends it back to the clients.
 */
 
-#define PORT 80 // typical port for an HTTP server
-
 class TcpServer {
 
-    public:
-        TcpServer(std::string ip_address, int port);
-        ~TcpServer();
-    
     private:
+        Config m_config;
+
         std::string m_ip_address;
         int m_port;
         int m_socket;
@@ -39,11 +36,15 @@ class TcpServer {
         //int m_clientSocket;
         //struct sockaddr_in m_clientAddress;
 
-        int setupServer(void);
+        int startServer(void);
         void closeServer(void);
         void startListen(void);
         void acceptConnection(void);
 
         std::string buildResponse(void);
         void sendResponse(void);
+
+    public:
+        TcpServer(const Config& config);
+        ~TcpServer();
 };
