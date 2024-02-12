@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/07 15:47:06 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/12 16:57:48 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,14 @@
         autoindex: Controls directory listing.
 */
 
+// Server prototype only
+class Server;
 
 class Parser {
 	private:
 	Parser(void);
 	~Parser(void);
+	static std::vector<Server> _servers;
 	static std::map<std::string, std::vector<std::string> >	_directives;
 	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
