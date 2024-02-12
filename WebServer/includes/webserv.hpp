@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/12 13:03:55 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/12 17:16:18 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib> //stdlib deprecated
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -49,15 +49,16 @@
 // ======================
 
 //	Prototypes
-bool isTokenInDirectives(const std::string& token, const std::string&);
+class Server;
 std::vector<std::string> extractValues (const std::string& input);
 std::vector<std::string> vectorInitializer(const char **list);
+void printServer(std::vector<Server>& serverList);
+
 
 //	Templates
 template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
-	std::cout << "printing MAP:" << std::endl;
 	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
 		std::cout << "Key: [" << it->first << "] -> Values: {";
 		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
@@ -70,9 +71,9 @@ template <typename T>
 void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
 	std::cout << "printing MAP MAP:" << std::endl;
 	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << it->first << ">>>>>>>>>>>"<< std::endl;
+		std::cout << "map: " << it->first << std::endl;
 		printMapVec(it->second);
-		std::cout << ">>>>>>>>>>>" << std::endl;
+		std::cout << std::endl << std::endl;
 	}
 }
 
