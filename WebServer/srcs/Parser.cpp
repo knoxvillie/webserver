@@ -6,17 +6,22 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 13:28:15 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/12 17:17:06 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Parser.hpp"
+#include "Server.hpp"
+
+//Prototypes:
+static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
 Parser::Parser(void) {}
 
 Parser::~Parser(void) {}
 
 //static members need to be defined outside the class.
+std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
 
@@ -38,12 +43,14 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		while (std::getline(inputFile, line)) {
 			std::stringstream ss(line);
 
-			//Only empty lines and >isolated< commentaries are allowed outside the block
+			// Only empty lines and >isolated< commentaries are allowed outside the block
+			// Isolated commentaries means a full commented line.
 			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
 				throw std::runtime_error("Invalid block");
 			if (!(ss >> token) || token[0] != '{')
 				throw std::runtime_error("Server block must be opened with `{");
+
 			//Inside the server block
 			while (std::getline(inputFile, line)) {
 				std::stringstream ss(line);
@@ -70,19 +77,20 @@ Parser::parsingConfigFile(const std::string &config_file) {
 						Parser::parsingDirectives(token, vec);
 						Parser::_locations[uri][token] = vec; //shit is crazy my man
 					}
-				} else {
+				} else { // Server directives not location block
 					Parser::parsingDirectives(token, vec);
 					Parser::_directives[token] = vec;
 				}
 			}
+			_servers.push_back(Server(_directives, _locations));
+			_directives.clear(); _locations.clear();
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
 	if (token != "}")
 		throw std::runtime_error("all blocks must be closed");
 	inputFile.close();
-	printMapMapVec(_locations);
-	printMapVec(_directives);
+	printServer(_servers);
 }
 
 void
@@ -125,4 +133,19 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 		if ((*it)[0] != '/' && (*it)[0] != '.')
 			throw std::runtime_error("URI must begin with /");
 	}
+}
+
+static bool
+isTokenInDirectives(const std::string& token, const std::string& block) {
+	const char* server_directives[] = {"listen", "server_name", "host", "root", "index",
+									   "charset", "access_log","error_log", "error_page",
+									   "location", "client_max_body_size" , NULL};
+	const char* location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
+	const char** directives = (block == "location" ? location_directives : server_directives);
+
+	for (int i = 0; directives[i]; i++) {
+		if (token == directives[i])
+			return (true);
+	}
+	return (false);
 }

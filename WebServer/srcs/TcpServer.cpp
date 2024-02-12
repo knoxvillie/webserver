@@ -12,7 +12,7 @@
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const Config& config) : m_config(config)
+TcpServer::TcpServer(const Server& config) : m_config(config)
 //, m_ip_address(), m_port(), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
 {
     /* m_sockaddr.sin_family = AF_INET;

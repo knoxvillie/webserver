@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "webserv.hpp"
-#include "Config.hpp"
+#include "Server.hpp"
 
 /*
 HTTP Server: 
@@ -25,7 +25,7 @@ HTTP Server:
 class TcpServer {
 
     private:
-        Config m_config;
+        Server m_config;
 
         std::string m_ip_address;
         int m_port;
@@ -45,6 +45,6 @@ class TcpServer {
         void sendResponse(void);
 
     public:
-        TcpServer(const Config& config);
+        TcpServer(const Server& Server);
         ~TcpServer();
 };
