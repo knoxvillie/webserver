@@ -55,8 +55,10 @@ class Parser {
 	Parser(void);
 	~Parser(void);
 	static std::map<std::string, std::vector<std::string> >	_directives;
+	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
 	public:
 		static void parsingConfigFile(const std::string& config_file);
-		static void parsingDirectives(const std::string& directive, std::vector<std::string>& split);
+		static void parsingDirectives(const std::string& directive, std::vector<std::string>& vec);
+		static void parsingLocationBlock(std::vector<std::string>&);
 };
