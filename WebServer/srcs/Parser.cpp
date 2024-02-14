@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/29 16:30:16 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/12 17:27:57 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,29 +16,22 @@
 //Prototypes:
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
-//static members need to be defined outside the class.
-std::vector<Server> Parser::_servers;
-std::map<std::string, std::vector<std::string> > Parser::_directives;
-std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
-const char* Parser::server_directives[] = {"listen", "server_name", "root",
-										   "index", "autoindex", "allow_methods",
-										   "client_max_body_size" , "error_page", NULL};
-const char* Parser::location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
-
 Parser::Parser(void) {}
 
 Parser::~Parser(void) {}
 
-// Methods to parser the config file
+//static members need to be defined outside the class.
+std::vector<Server> Parser::_servers;
+std::map<std::string, std::vector<std::string> > Parser::_directives;
+std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
+
 void
 Parser::parsingConfigFile(const std::string &config_file) {
-	GPS;
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
 	std::ifstream inputFile(config_file.c_str());
-	std::string token;
-	std::string line;
+	std::string line, token;
 
 	if (inputFile.is_open()) {
 		// Peek looks at the next character in the stream. If peek returns EOF the file is empty.
@@ -49,12 +42,12 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		while (std::getline(inputFile, line)) {
 			std::stringstream ss(line);
 
-			// Only empty lines and >isolated< comments are allowed outside the block
+			// Only empty lines and >isolated< commentaries are allowed outside the block
 			// Isolated commentaries means a full commented line.
 			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
 				throw std::runtime_error("Invalid block");
-			if (!(ss >> token) || token != "{")
+			if (!(ss >> token) || token[0] != '{')
 				throw std::runtime_error("Server block must be opened with `{");
 
 			//Inside the server block
@@ -68,28 +61,27 @@ Parser::parsingConfigFile(const std::string &config_file) {
 
 				if (token == "location") {
 					Parser::parsingLocationBlock(vec);
-					//URI - Uniform Resource Identifier
-					std::string uri(vec[0]);
-
 					//Inside the location block
 					while (std::getline(inputFile, line)) {
 						std::stringstream ss(line);
 						if (!(ss >> token) || token[0] == '#') continue;
 						if (token == "}") break; //Closing location block
+						//URI - Uniform Resource Identifier
+						std::string uri(vec[0]);
 
 						vec.clear();
+						vec = extractValues(line);
 						if (!isTokenInDirectives(token, "location")) // missing location block
 							throw std::runtime_error(token + " is an invalid location directive");
-						vec = extractValues(line);
-						Parser::parsingDirectives(token, vec, Parser::_locations[uri]);
-						Parser::_locations[uri][token] = vec;
+						Parser::parsingDirectives(token, vec);
+						Parser::_locations[uri][token] = vec; //shit is crazy my man
 					}
 				} else { // Server directives not location block
-					Parser::parsingDirectives(token, vec, Parser::_directives);
+					Parser::parsingDirectives(token, vec);
 					Parser::_directives[token] = vec;
 				}
 			}
-			_servers.push_back(Server(_directives, _locations));
+			_servers.push_back(Server(_directives, _locations)); //new or not?
 			_directives.clear(); _locations.clear();
 		}
 	} else
@@ -101,18 +93,13 @@ Parser::parsingConfigFile(const std::string &config_file) {
 }
 
 void
-Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec, std::map<std::string, std::vector<std::string> >& map) {
+Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec) {
 	if (vec.empty())
 		throw std::runtime_error(directive + " doesn't have values");
-	//std::vector<std::string>::iterator it = vec.begin();
 	std::vector<std::string>::iterator str = vec.end(); --str;
 	std::string::iterator xar = str->end(); --xar;
-
 	if (*xar != ';')
 		throw std::runtime_error("Directive line must end in ;");
-	std::map<std::string, std::vector<std::string> >::const_iterator it = map.find(directive);
-	if (it != map.end())
-		throw std::runtime_error("Parser Error: Server block has multiples directives: " + directive);
 }
 
 /*
@@ -135,7 +122,7 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// even if some vec[string] is empty, is ok to index it. No segfault
 	std::vector<std::string>::const_iterator end = vec.end(); --end;
 	// The last element os the location line has to be '{'
-	if ((*end) != "{") // check if \n is included in >> extract
+	if (end->size() != 1 || (*end)[0] != '{')
 		throw std::runtime_error("Location block must has a opening {");
 	// for used if location block can receive more than one URI
 	for (std::vector<std::string>::const_iterator it = vec.begin(); it != end; ++it) {
@@ -145,23 +132,13 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	}
 }
 
-// Methods to parser Server objects
-
-
-
-
-// Getters
-
-std::vector<Server>&
-Parser::getServers(void) {return (_servers);}
-
-// Related functions
-
 static bool
 isTokenInDirectives(const std::string& token, const std::string& block) {
-	if (token == "location" && block == "server")
-		return (true);
-	const char** directives = (block == "location" ? Parser::location_directives : Parser::server_directives);
+	const char* server_directives[] = {"listen", "server_name", "host", "root", "index",
+									   "charset", "access_log","error_log", "error_page",
+									   "location", "client_max_body_size" , NULL};
+	const char* location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
+	const char** directives = (block == "location" ? location_directives : server_directives);
 
 	for (int i = 0; directives[i]; i++) {
 		if (token == directives[i])

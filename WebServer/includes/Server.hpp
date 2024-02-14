@@ -5,20 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/19 09:20:34 by kfaustin         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:26:05 by diogmart         ###   ########.fr       */
+/*   Created: 2024/02/14 12:09:39 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/02/14 12:09:39 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +16,6 @@
 # define SERVER_HPP
 
 #include "webserv.hpp"
-#include "Parser.hpp"
-
 
 /*
 	This class should contain all basic configuration needed to start a server,
@@ -43,11 +29,8 @@ class Server {
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
-
-		// Variables to store data from the config file
-		struct in_addr ipAddress;
-		std::string s_host;
-		uint16_t s_port;
+//		// Variables to store data from the config file
+//        std::string m_listen;               // Will give us the port (and protocols ??)
 //        std::string m_server_name;          // Server domain name
 //        std::string m_host;                 // IP
 //        std::string m_root;                 // Root repository for the server files
@@ -57,18 +40,13 @@ class Server {
 //        std::string m_error_log;            // Where to log errors
 //        std::string m_error_page;           // Default error page
 //        std::string m_location;             // Where to look for requested files
-//        std::string m_clien_max_body_size; // Max allowed size of a client request body
+//        std::string m_client_max_body_size; // Max allowed size of a client request body
 
 	public:
-		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
+		Server(std::map<std::string, std::vector<std::string> >&,
+		        std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
-		void applyServerDirectives(void);
-		void validateServerDirectives(void);
-
-		//Directives parser
-		void checkListen(std::vector<std::string>&);
-		void checkServerName(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP
