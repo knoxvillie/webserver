@@ -5,20 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 16:31:48 by kfaustin         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:26:05 by diogmart         ###   ########.fr       */
+/*   Created: 2024/02/14 12:09:39 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/02/14 12:09:39 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +46,7 @@ class Server {
 		Server(std::map<std::string, std::vector<std::string> >&,
 		        std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
-	std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
 };
 
 #endif //SERVER_HPP

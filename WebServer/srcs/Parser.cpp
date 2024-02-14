@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 17:17:06 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/12 17:27:57 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
 	std::ifstream inputFile(config_file.c_str());
-	std::string token;
-	std::string line;
+	std::string line, token;
 
 	if (inputFile.is_open()) {
 		// Peek looks at the next character in the stream. If peek returns EOF the file is empty.
@@ -82,7 +81,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
-			_servers.push_back(Server(_directives, _locations));
+			_servers.push_back(Server(_directives, _locations)); //new or not?
 			_directives.clear(); _locations.clear();
 		}
 	} else
@@ -99,8 +98,6 @@ Parser::parsingDirectives(const std::string& directive, std::vector<std::string>
 		throw std::runtime_error(directive + " doesn't have values");
 	std::vector<std::string>::iterator str = vec.end(); --str;
 	std::string::iterator xar = str->end(); --xar;
-	// Missing the logic to append the directive's values to the Class
-	// location is a block, need to implement verify all the block
 	if (*xar != ';')
 		throw std::runtime_error("Directive line must end in ;");
 }

@@ -24,6 +24,7 @@
 
 #include "Server.hpp"
 
+// Static default constructor prevent the compiler from implementing it.
 Server::Server(void) {}
 
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
