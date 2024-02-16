@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/16 16:23:54 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/16 19:43:07 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ enum enum_server {
 // ========================
 
 #include <iostream>
+#include <iomanip>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -72,20 +73,19 @@ template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
 	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Key: [" << it->first << "] -> Values: {";
+		std::cout << "Directive: " << std::left << std::setw(25) << it->first << "-> ";
 		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
 			std::cout << *ut << " ";
-		std::cout << "}" << std::endl;
+		std::cout << std::endl;
 	}
 }
 
 template <typename T>
 void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
-	std::cout << "printing MAP MAP:" << std::endl;
 	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "map: " << it->first << std::endl;
+		std::cout << "\nLocation: " << it->first << std::endl;
 		printMapVec(it->second);
-		std::cout << std::endl << std::endl;
+		std::cout << std::endl;
 	}
 }
 

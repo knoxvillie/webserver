@@ -67,13 +67,14 @@ Parser::parsingConfigFile(const std::string &config_file) {
 
 				if (token == "location") {
 					Parser::parsingLocationBlock(vec);
+					//URI - Uniform Resource Identifier
+					std::string uri(vec[0]);
+
 					//Inside the location block
 					while (std::getline(inputFile, line)) {
 						std::stringstream ss(line);
 						if (!(ss >> token) || token[0] == '#') continue;
 						if (token == "}") break; //Closing location block
-						//URI - Uniform Resource Identifier
-						std::string uri(vec[0]);
 
 						vec.clear();
 						vec = extractValues(line);
