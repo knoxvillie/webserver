@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/15 16:25:02 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/16 19:43:23 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Server::Server(std::map<std::string, std::vector<std::string> >& server, std::ma
 			   std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
 	this->applyServerDirectives();
+	this->validateServerDirectives();
 }
 
 void
@@ -44,9 +45,21 @@ Server::validateServerDirectives(void) {
 	(void)server; (void) location;
 	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++) {
 		for (std::vector<std::string>::iterator ut = it->second.begin(); ut != it->second.end(); ut++) {
+			// Listen directive
 			if (it->first == "listen") {
+				int port;
 				if (it->second.size() > 1)
 					throw std::runtime_error("Error: listen directive has too many arguments");
+				if ((*ut).find(':') == std::string::npos) {
+					port =  ((*ut).find(';') != std::string::npos) ? std::atoi((*ut).substr(0, (*ut).find(';')).c_str()) : std::atoi((*ut).c_str());
+					if (port == 0 || port > 65535)
+						throw std::runtime_error("Error: invalid server port");
+					this->s_port = (unsigned short)port;
+					break;
+				}
+				this->s_host = (*ut).substr(0, (*ut).find(':'));
+				if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
+					throw std::runtime_error("IP PROBLEM");
 			}
 		}
 	}

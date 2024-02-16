@@ -49,7 +49,7 @@ extractValues(const std::string& input) {
 void
 printServer(std::vector<Server>& serverList) {
 	for (size_t i = 0; i < serverList.size(); i++) {
-		std::cout << "Server " << i << " :" << std::endl;
+		std::cout << "\nServer " << i << " :" << std::endl;
 		printMapVec(serverList[i].getServerDirectives());
 		if (serverList[i].getLocationDirectives().empty())
 			std::cout << "None Location block" << std::endl;

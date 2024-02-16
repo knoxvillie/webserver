@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 16:32:22 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/16 18:18:40 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ int	main(int argc, char* argv[]) {
 	MLOG("Config file path " + config_file);
 	try {
 		Parser::parsingConfigFile(config_file);
-		TcpServer var(Parser::getServers());
 	}
 	catch (const std::runtime_error& except) {
 		std::cerr << except.what() << std::endl;
