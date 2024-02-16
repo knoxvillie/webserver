@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 16:31:48 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/16 17:10:37 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@
 # define SERVER_HPP
 
 #include "webserv.hpp"
+#include "Parser.hpp"
+
 
 /*
 	This class should contain all basic configuration needed to start a server,
@@ -55,10 +57,11 @@ class Server {
 //        std::string m_client_max_body_size; // Max allowed size of a client request body
 
 	public:
-		Server(std::map<std::string, std::vector<std::string> >&,
-		        std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
+		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
-	std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		void applyServerDirectives(void);
+		void validateServerDirectives(void);
 };
 
 #endif //SERVER_HPP

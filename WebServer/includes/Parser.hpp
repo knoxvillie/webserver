@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/29 14:19:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/12 16:57:48 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ class Parser {
 		static const char* server_directives[];
 		static const char* location_directives[];
 		static void parsingConfigFile(const std::string&);
-		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
+		static void parsingDirectives(const std::string&, std::vector<std::string>&);
 		static void parsingLocationBlock(std::vector<std::string>&);
 		static std::vector<Server> &getServers(void);
 };
