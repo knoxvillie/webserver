@@ -21,6 +21,19 @@ vectorInitializer(const char** list) {
 	return (result);
 }
 
+// Split for general propose, delimiter one or more spaces.
+std::vector<std::string>
+splitStringToVector(const std::string& string) {
+	std::vector<std::string> split;
+	std::stringstream ss(string);
+	std::string token;
+	for (;ss >> token;)
+		split.push_back(token);
+	return (split);
+}
+
+
+// Split config file directive line, values only
 std::vector<std::string>
 extractValues(const std::string& input) {
 	std::vector<std::string> result;

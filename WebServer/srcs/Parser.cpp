@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 17:17:06 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/16 17:51:33 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,15 +16,20 @@
 //Prototypes:
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
-Parser::Parser(void) {}
-
-Parser::~Parser(void) {}
-
 //static members need to be defined outside the class.
 std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
+const char* Parser::server_directives[] = {"listen", "server_name", "root",
+										   "index", "autoindex", "allow_methods",
+										   "client_max_body_size" , "error_page", NULL};
+const char* Parser::location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
 
+Parser::Parser(void) {}
+
+Parser::~Parser(void) {}
+
+// Methods to parser the config file
 void
 Parser::parsingConfigFile(const std::string &config_file) {
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
@@ -97,8 +102,10 @@ void
 Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec) {
 	if (vec.empty())
 		throw std::runtime_error(directive + " doesn't have values");
+	//std::vector<std::string>::iterator it = vec.begin();
 	std::vector<std::string>::iterator str = vec.end(); --str;
 	std::string::iterator xar = str->end(); --xar;
+
 	// Missing the logic to append the directive's values to the Class
 	// location is a block, need to implement verify all the block
 	if (*xar != ';')
@@ -135,13 +142,23 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	}
 }
 
+// Methods to parser Server objects
+
+
+
+
+// Getters
+
+std::vector<Server>&
+Parser::getServers(void) {return (_servers);}
+
+// Related functions
+
 static bool
 isTokenInDirectives(const std::string& token, const std::string& block) {
-	const char* server_directives[] = {"listen", "server_name", "host", "root", "index",
-									   "charset", "access_log","error_log", "error_page",
-									   "location", "client_max_body_size" , NULL};
-	const char* location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
-	const char** directives = (block == "location" ? location_directives : server_directives);
+	if (token == "location" && block == "server")
+		return (true);
+	const char** directives = (block == "location" ? Parser::location_directives : Parser::server_directives);
 
 	for (int i = 0; directives[i]; i++) {
 		if (token == directives[i])
