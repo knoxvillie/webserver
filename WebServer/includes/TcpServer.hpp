@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:31:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/15 16:56:40 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,29 +22,14 @@ HTTP Server:
     It processes these requests, retrieves web content, and sends it back to the clients.
 */
 
+class Server;
+
 class TcpServer {
 
-    private:
-        Server m_config;
+	private:
 
-        std::string m_ip_address;
-        int m_port;
-        int m_socket;
-        struct sockaddr_in m_sockaddr;
-        unsigned int m_sockaddr_len;
-        
-        //int m_clientSocket;
-        //struct sockaddr_in m_clientAddress;
 
-        int startServer(void);
-        void closeServer(void);
-        void startListen(void);
-        void acceptConnection(void);
+	public:
+		TcpServer(std::vector<Server>&);
 
-        std::string buildResponse(void);
-        void sendResponse(void);
-
-    public:
-        TcpServer(const Server& Server);
-        ~TcpServer();
 };
