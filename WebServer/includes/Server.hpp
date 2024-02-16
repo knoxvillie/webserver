@@ -43,9 +43,12 @@ class Server {
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
-//		// Variables to store data from the config file
-//        std::string m_listen;               // Will give us the port (and protocols ??)
-//        std::string m_server_name;          // Server domain name
+
+		// Variables to store data from the config file
+		struct in_addr ipAddress;
+		std::string s_host;
+		unsigned short s_port;
+		//        std::string m_server_name;          // Server domain name
 //        std::string m_host;                 // IP
 //        std::string m_root;                 // Root repository for the server files
 //        std::string m_index;                // Index page
