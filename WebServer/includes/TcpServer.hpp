@@ -6,12 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:31:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/19 11:59:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
-#include "Config.hpp"
+#include "ServerConfig.hpp"
 
 /*
 HTTP Server: 
@@ -25,7 +25,7 @@ HTTP Server:
 class TcpServer {
 
     private:
-        Config m_config;
+        ServerConfig m_config;
 
         std::string m_ip_address;
         int m_port;
@@ -45,6 +45,6 @@ class TcpServer {
         void sendResponse(void);
 
     public:
-        TcpServer(const Config& config);
+        TcpServer(const ServerConfig& config);
         ~TcpServer();
 };

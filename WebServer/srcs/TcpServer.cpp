@@ -6,13 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:32:41 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/19 11:59:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const Config& config) : m_config(config)
+TcpServer::TcpServer(const ServerConfig& config) : m_config(config)
 //, m_ip_address(), m_port(), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
 {
     /* m_sockaddr.sin_family = AF_INET;

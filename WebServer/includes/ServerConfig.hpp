@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.hpp                                   :+:      :+:    :+:   */
+/*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:26:05 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/19 11:59:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 	this class.
 */
 
-class Config {
+class ServerConfig {
 	
 	private:
 		// The vector needs to be private so it won't be altered outside of the class,
@@ -43,9 +43,9 @@ class Config {
         void setConfigFileVariables(const std::map<std::string, std::vector<std::string> > &directives);
 
 	public:
-		Config();
-		Config(const Config& obj);
-		~Config();
+		ServerConfig();
+		ServerConfig(const ServerConfig& obj);
+		~ServerConfig();
 		
 		static void initDirectivesVec();
 		static std::vector<std::string> getDirectives(); 
