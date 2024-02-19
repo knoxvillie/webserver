@@ -46,20 +46,25 @@ Server::validateServerDirectives(void) {
 	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++) {
 		for (std::vector<std::string>::iterator ut = it->second.begin(); ut != it->second.end(); ut++) {
 			// Listen directive
+			// Need to create methods to verify each directive later.
 			if (it->first == "listen") {
 				int port;
 				if (it->second.size() > 1)
 					throw std::runtime_error("Error: listen directive has too many arguments");
 				if ((*ut).find(':') == std::string::npos) {
-					port =  ((*ut).find(';') != std::string::npos) ? std::atoi((*ut).substr(0, (*ut).find(';')).c_str()) : std::atoi((*ut).c_str());
-					if (port == 0 || port > 65535)
-						throw std::runtime_error("Error: invalid server port");
-					this->s_port = (unsigned short)port;
-					break;
+					this->s_host = "0.0.0.0";
+					port = ((*ut).find(';') != std::string::npos) ? std::atoi((*ut).substr(0, (*ut).find(';')).c_str()) : std::atoi((*ut).c_str());
+				} else {
+					size_t	pos = (*ut).find(';');
+					this->s_host = (*ut).substr(0, pos);
+					port = (std::atoi((*ut).substr(pos + 1).c_str()));
+					if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
+						throw std::runtime_error("IP PROBLEM");
 				}
-				this->s_host = (*ut).substr(0, (*ut).find(':'));
-				if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
-					throw std::runtime_error("IP PROBLEM");
+				if (port <= 0 || port > 65535)
+					throw std::runtime_error("Error: invalid server port");
+				this->s_port = (unsigned short)port;
+				break;
 			}
 		}
 	}
