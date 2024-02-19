@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/16 17:10:37 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/19 09:20:34 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,9 @@ class Server {
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
+
+		//Directives parser
+		bool checkListen(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP

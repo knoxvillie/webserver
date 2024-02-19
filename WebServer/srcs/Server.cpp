@@ -70,6 +70,29 @@ Server::validateServerDirectives(void) {
 	}
 }
 
+// Kind of a directives parser
+bool
+Server::checkListen(std::vector<std::string>& vec) {
+	if (vec.size() > 1)
+		throw std::runtime_error("Error: listen directive has too many arguments");
+	int port;
+	std::string value(vec[0]);
+	if (value.find(':') == std::string::npos) {
+		this->s_host = "0.0.0.0";
+		port = (value.find(';') != std::string::npos) ? std::atoi(value.substr(0, value.find(';')).c_str()) : std::atoi(value.c_str());
+	} else {
+		size_t	pos = value.find(';');
+		this->s_host = value.substr(0, pos);
+		port = (std::atoi(value.substr(pos + 1).c_str()));
+		if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
+			throw std::runtime_error("IP PROBLEM");
+	}
+	if (port <= 0 || port > 65535)
+		throw std::runtime_error("Error: invalid server port");
+	this->s_port = (unsigned short)port;
+	return (true);
+}
+
 
 //Getters
 std::map<std::string, std::vector<std::string> >&
