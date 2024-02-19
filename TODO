@@ -1,8 +1,8 @@
 
-* Complete Config class
+* Complete ServerConfig class
 
-* Change some functions that need the directives listed to use the static variable in the Config class
+* Change some functions that need the directives listed to use the static variable in the ServerConfig class
 
-* Make it so the TcpServer Class is initialized with a Config class object
+* Make it so the TcpServer Class is initialized with a ServerConfig class object
 
 * A lot more...

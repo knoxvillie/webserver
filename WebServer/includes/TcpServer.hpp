@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 11:59:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/19 12:01:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,9 @@ HTTP Server:
 class TcpServer {
 
     private:
+        TcpServer(); // Prevent the use of the default constructor
+
+
         ServerConfig m_config;
 
         std::string m_ip_address;
