@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/20 12:30:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/20 12:57:47 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ m_config(config), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
     m_sockaddr.sin_port = htons(m_port);
     m_sockaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
 
-    if (startServer() != 0) { // this-> omitted
+    if (startServer() != 0) { // omitted this->
         MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
     }
 }

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 12:00:44 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/20 12:34:09 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/20 12:40:32 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,8 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
 
 ServerConfig::~ServerConfig() {}
 
-void ServerConfig::setConfigFileVariables(const std::map<std::string, std::vector<std::string> >& directives) {
+void
+ServerConfig::setConfigFileVariables(const std::map<std::string, std::vector<std::string> >& directives) {
 
 	for (std::map<std::string, std::vector<std::string> >::const_iterator it = directives.begin(); it != directives.end(); it++) {
 		std::string value_sum;
@@ -85,7 +86,8 @@ void ServerConfig::setConfigFileVariables(const std::map<std::string, std::vecto
 	}
 }
 
-bool ServerConfig::changeVariable(const std::string &name, const std::string& value) {
+bool
+ServerConfig::changeVariable(const std::string &name, const std::string& value) {
 	
 	if (name == "listen") {
 		this->m_listen = value;
@@ -134,66 +136,77 @@ bool ServerConfig::changeVariable(const std::string &name, const std::string& va
 
 
 // Listen
-std::string ServerConfig::getListen() const {
+std::string
+ServerConfig::getListen() const {
 	return this->m_listen;
 }
 
 
 // Server name
-std::string ServerConfig::getServerName() const {
+std::string
+ServerConfig::getServerName() const {
 	return this->m_server_name;
 }
 
 
 // Host
-std::string ServerConfig::getHost() const {
+std::string
+ServerConfig::getHost() const {
 	return this->m_host;
 }
 
 
 // Root
-std::string ServerConfig::getRoot() const {
+std::string
+ServerConfig::getRoot() const {
 	return this->m_root;
 }
 
 
 // Index
-std::string ServerConfig::getIndex() const {
+std::string
+ServerConfig::getIndex() const {
 	return this->m_index;
 }
 
 
 // Charset
-std::string ServerConfig::getCharset() const {
+std::string
+ServerConfig::getCharset() const {
 	return this->m_charset;
 }
 
 
 // AccessLog
-std::string ServerConfig::getAccessLog() const {
+std::string
+ServerConfig::getAccessLog() const {
 	return this->m_access_log;
 }
 
 
 // Error log
-std::string ServerConfig::getErrorLog() const {
+std::string
+ServerConfig::getErrorLog() const {
 	return this->m_error_log;
 }
 
 
 // Error page
-std::string ServerConfig::getErrorPage() const {
+std::string
+ServerConfig::getErrorPage() const {
 	return this->m_error_page;
 }
 
 
 // Location
-std::string ServerConfig::getLocation() const {
+std::string
+ServerConfig::getLocation() const {
 	return this->m_location;
 }
 
 
 // Client max body size
-std::string ServerConfig::getClientMaxBodySize() const {
+std::string
+ServerConfig::getClientMaxBodySize() const {
 	return this->m_client_max_body_size;
 }
