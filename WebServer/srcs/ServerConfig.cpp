@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 12:00:44 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 13:22:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/20 12:34:09 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,4 +122,78 @@ bool ServerConfig::changeVariable(const std::string &name, const std::string& va
 		return true;
 	}
 	return false;
+}
+
+
+
+/*
+========================================
+				GETTERS						
+========================================
+*/
+
+
+// Listen
+std::string ServerConfig::getListen() const {
+	return this->m_listen;
+}
+
+
+// Server name
+std::string ServerConfig::getServerName() const {
+	return this->m_server_name;
+}
+
+
+// Host
+std::string ServerConfig::getHost() const {
+	return this->m_host;
+}
+
+
+// Root
+std::string ServerConfig::getRoot() const {
+	return this->m_root;
+}
+
+
+// Index
+std::string ServerConfig::getIndex() const {
+	return this->m_index;
+}
+
+
+// Charset
+std::string ServerConfig::getCharset() const {
+	return this->m_charset;
+}
+
+
+// AccessLog
+std::string ServerConfig::getAccessLog() const {
+	return this->m_access_log;
+}
+
+
+// Error log
+std::string ServerConfig::getErrorLog() const {
+	return this->m_error_log;
+}
+
+
+// Error page
+std::string ServerConfig::getErrorPage() const {
+	return this->m_error_page;
+}
+
+
+// Location
+std::string ServerConfig::getLocation() const {
+	return this->m_location;
+}
+
+
+// Client max body size
+std::string ServerConfig::getClientMaxBodySize() const {
+	return this->m_client_max_body_size;
 }

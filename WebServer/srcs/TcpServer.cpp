@@ -6,20 +6,23 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 11:59:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/20 12:30:50 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const ServerConfig& config) : m_config(config)
-//, m_ip_address(), m_port(), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
+TcpServer::TcpServer(const ServerConfig& config) : 
+m_config(config), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
 {
-    /* m_sockaddr.sin_family = AF_INET;
-    m_sockaddr.sin_port = htons(m_port);
-    m_sockaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str()); */
+    m_ip_address = m_config.getHost();
+    m_port = atoi((m_config.getListen()).c_str());
 
-    if (startServer() != 0) {
+    m_sockaddr.sin_family = AF_INET;
+    m_sockaddr.sin_port = htons(m_port);
+    m_sockaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
+
+    if (startServer() != 0) { // this-> omitted
         MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
     }
 }

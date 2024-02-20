@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 12:45:39 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/20 12:32:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,32 @@ class ServerConfig {
 		ServerConfig(const ServerConfig& obj);
 		ServerConfig& operator=(const ServerConfig& obj);
 		~ServerConfig();
+
+		// Getter functions
+		std::string getListen() const;
+		std::string getServerName() const;
+		std::string getHost() const;
+		std::string getRoot() const;
+		std::string getIndex() const;
+		std::string getCharset() const;
+		std::string getAccessLog() const;
+		std::string getErrorLog() const;
+		std::string getErrorPage() const;
+		std::string getLocation() const;
+		std::string getClientMaxBodySize() const;
+
+		// Setter functions
+/* 		void setListen(const std::string& listen);
+		void setServerName(const std::string& serverName);
+		void setHost(const std::string& host);
+		void setRoot(const std::string& root);
+		void setIndex(const std::string& index);
+		void setCharset(const std::string& charset);
+		void setAccessLog(const std::string& accessLog);
+		void setErrorLog(const std::string& errorLog);
+		void setErrorPage(const std::string& errorPage);
+		void setLocation(const std::string& location);
+		void setClientMaxBodySize(const std::string& clientMaxBodySize);	 */	
 		
 		static void initDirectivesVec();
 		static std::vector<std::string> getDirectives(); 
