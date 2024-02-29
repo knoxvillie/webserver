@@ -47,8 +47,8 @@ class Server {
 		// Variables to store data from the config file
 		struct in_addr ipAddress;
 		std::string s_host;
-		unsigned short s_port;
-		//        std::string m_server_name;          // Server domain name
+		uint16_t s_port;
+//        std::string m_server_name;          // Server domain name
 //        std::string m_host;                 // IP
 //        std::string m_root;                 // Root repository for the server files
 //        std::string m_index;                // Index page
@@ -57,7 +57,7 @@ class Server {
 //        std::string m_error_log;            // Where to log errors
 //        std::string m_error_page;           // Default error page
 //        std::string m_location;             // Where to look for requested files
-//        std::string m_client_max_body_size; // Max allowed size of a client request body
+//        std::string m_clien_max_body_size; // Max allowed size of a client request body
 
 	public:
 		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
@@ -67,7 +67,8 @@ class Server {
 		void validateServerDirectives(void);
 
 		//Directives parser
-		bool checkListen(std::vector<std::string>&);
+		void checkListen(std::vector<std::string>&);
+		void checkServerName(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP
