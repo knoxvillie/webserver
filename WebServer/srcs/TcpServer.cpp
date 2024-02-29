@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:24:21 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:58:55 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 TcpServer::TcpServer(const ServerConfig& config) : 
 m_config(config), m_sockaddr(), m_sockaddr_len(sizeof(m_sockaddr))
 {
-    m_ip_address = m_config.getHost();
-    m_port = atoi((m_config.getListen()).c_str());
+    m_ip_address = m_config.getHostIP();
+    m_port = atoi((m_config.getListenPort()).c_str());
 
     m_sockaddr.sin_family = AF_INET;
     m_sockaddr.sin_port = htons(m_port);

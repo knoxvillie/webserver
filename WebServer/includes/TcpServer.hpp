@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:20:33 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:52:40 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,6 @@ class TcpServer {
 
     private:
         TcpServer(); // Prevent the use of the default constructor
-
 
         ServerConfig m_config;
 

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/29 14:22:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:38:41 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,6 @@ int	main(int argc, char* argv[]) {
 	}
 	const std::string config_file(argc == 1 ? "../conf/default.conf" : argv[1]);
 	MLOG("Config file path " + config_file);
-
-	ServerConfig::initDirectivesVec();
 
 	try {
 		Parser::parsingConfigFile(config_file);
