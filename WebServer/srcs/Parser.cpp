@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/16 17:51:33 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/29 16:30:16 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ Parser::~Parser(void) {}
 // Methods to parser the config file
 void
 Parser::parsingConfigFile(const std::string &config_file) {
+	GPS;
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
@@ -48,12 +49,12 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		while (std::getline(inputFile, line)) {
 			std::stringstream ss(line);
 
-			// Only empty lines and >isolated< commentaries are allowed outside the block
+			// Only empty lines and >isolated< comments are allowed outside the block
 			// Isolated commentaries means a full commented line.
 			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
 				throw std::runtime_error("Invalid block");
-			if (!(ss >> token) || token[0] != '{')
+			if (!(ss >> token) || token != "{")
 				throw std::runtime_error("Server block must be opened with `{");
 
 			//Inside the server block
@@ -77,14 +78,14 @@ Parser::parsingConfigFile(const std::string &config_file) {
 						if (token == "}") break; //Closing location block
 
 						vec.clear();
-						vec = extractValues(line);
 						if (!isTokenInDirectives(token, "location")) // missing location block
 							throw std::runtime_error(token + " is an invalid location directive");
-						Parser::parsingDirectives(token, vec);
-						Parser::_locations[uri][token] = vec; //shit is crazy my man
+						vec = extractValues(line);
+						Parser::parsingDirectives(token, vec, Parser::_locations[uri]);
+						Parser::_locations[uri][token] = vec;
 					}
 				} else { // Server directives not location block
-					Parser::parsingDirectives(token, vec);
+					Parser::parsingDirectives(token, vec, Parser::_directives);
 					Parser::_directives[token] = vec;
 				}
 			}
@@ -100,17 +101,18 @@ Parser::parsingConfigFile(const std::string &config_file) {
 }
 
 void
-Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec) {
+Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec, std::map<std::string, std::vector<std::string> >& map) {
 	if (vec.empty())
 		throw std::runtime_error(directive + " doesn't have values");
 	//std::vector<std::string>::iterator it = vec.begin();
 	std::vector<std::string>::iterator str = vec.end(); --str;
 	std::string::iterator xar = str->end(); --xar;
 
-	// Missing the logic to append the directive's values to the Class
-	// location is a block, need to implement verify all the block
 	if (*xar != ';')
 		throw std::runtime_error("Directive line must end in ;");
+	std::map<std::string, std::vector<std::string> >::const_iterator it = map.find(directive);
+	if (it != map.end())
+		throw std::runtime_error("Parser Error: Server block has multiples directives: " + directive);
 }
 
 /*
@@ -133,7 +135,7 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// even if some vec[string] is empty, is ok to index it. No segfault
 	std::vector<std::string>::const_iterator end = vec.end(); --end;
 	// The last element os the location line has to be '{'
-	if (end->size() != 1 || (*end)[0] != '{')
+	if ((*end) != "{") // check if \n is included in >> extract
 		throw std::runtime_error("Location block must has a opening {");
 	// for used if location block can receive more than one URI
 	for (std::vector<std::string>::const_iterator it = vec.begin(); it != end; ++it) {

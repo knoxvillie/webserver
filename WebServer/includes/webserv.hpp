@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/16 19:43:07 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/02/29 17:19:27 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,42 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
+// ========================
+//  C++ Standard Libraries
+// ========================
+
+#include <iostream>
+#include <iomanip>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <cstdlib> //stdlib deprecated
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <map>
+#include <stdexcept>
+#include <arpa/inet.h>
+
+// ========================
+// 		Macros and struct
+// ========================
+
+class FuncLogger;
+
+// ANSI escape codes for text color
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_CYAN    "\033[1;36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_COLOR_YELLOW  "\033[1;33m"
+// Emojis
+#define E_IN "\U0001F51C"
+#define E_OUT "\U0001F519"
+
 #ifdef DEBUG
-# define MLOG(str) std::cout << str << std::endl;
+# define GPS FuncLogger gps_obj(__FILE__, __FUNCTION__, __LINE__);
 #else
 # define MLOG(str) do {} while(false);
 #endif
@@ -36,24 +70,20 @@ enum enum_server {
 	ERROR_PAGE		//7
 };
 
+class FuncLogger {
+	private:
+		const char* file;
+		const char* func;
+		const int line;
 
-// ========================
-//  C++ Standard Libraries	
-// ========================
-
-#include <iostream>
-#include <iomanip>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <cstdlib> //stdlib deprecated
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <stdexcept>
-#include <arpa/inet.h>
+	public:
+		FuncLogger(const char* file, const char* func, const int line) : file(file), func(func), line(line) {
+			std::cout << "[" << ANSI_COLOR_GREEN << "IN" << ANSI_COLOR_RESET << "]" << "  " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << "," << line << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
+		};
+		~FuncLogger(void) {
+			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
+		};
+};
 
 
 // ======================

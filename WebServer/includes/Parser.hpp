@@ -64,7 +64,7 @@ class Parser {
 		static const char* server_directives[];
 		static const char* location_directives[];
 		static void parsingConfigFile(const std::string&);
-		static void parsingDirectives(const std::string&, std::vector<std::string>&);
+		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
 		static void parsingLocationBlock(std::vector<std::string>&);
 		static std::vector<Server> &getServers(void);
 };
