@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 12:01:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:20:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ HTTP Server:
     HTTP requests from clients, such as web browsers. 
     It processes these requests, retrieves web content, and sends it back to the clients.
 */
+
+class Server;
 
 class TcpServer {
 

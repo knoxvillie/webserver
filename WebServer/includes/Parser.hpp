@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/19 12:23:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:19:52 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,16 +49,22 @@
         autoindex: Controls directory listing.
 */
 
+// Server prototype only
+class Server;
 
 class Parser {
 	private:
 	Parser(void);
 	~Parser(void);
+	static std::vector<Server> _servers;
 	static std::map<std::string, std::vector<std::string> >	_directives;
 	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
 	public:
-		static void parsingConfigFile(const std::string& config_file);
-		static void parsingDirectives(const std::string& directive, std::vector<std::string>& vec);
+		static const char* server_directives[];
+		static const char* location_directives[];
+		static void parsingConfigFile(const std::string&);
+		static void parsingDirectives(const std::string&, std::vector<std::string>&);
 		static void parsingLocationBlock(std::vector<std::string>&);
+		static std::vector<Server> &getServers(void);
 };

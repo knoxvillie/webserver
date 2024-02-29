@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/19 12:22:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:22:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,16 +25,28 @@
 # define MERROR(message) std::cout << "Error: " << message << std::endl; exit(1);
 #endif
 
+enum enum_server {
+	LISTEN, 		//0
+	SERVER_NAME, 	//1
+	ROOT, 			//2
+	INDEX,			//3
+	AUTOINDEX,		//4
+	ALLOW_METHODS,	//5
+	CLIENT_MAX_SIZE,//6
+	ERROR_PAGE		//7
+};
+
 
 // ========================
 //  C++ Standard Libraries	
 // ========================
 
 #include <iostream>
+#include <iomanip>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib> //stdlib deprecated
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -49,21 +61,31 @@
 // ======================
 
 //	Prototypes
-bool isTokenInDirectives(const std::string& token, const std::string&);
-std::vector<std::string> splitString (const std::string& input);
-std::vector<std::string> vectorInitializer(const char **list);
+class Server;
+std::vector<std::string> splitStringToVector(const std::string&);
+std::vector<std::string> extractValues (const std::string&);
+std::vector<std::string> vectorInitializer(const char**);
+void printServer(std::vector<Server>&);
+
 
 //	Templates
-template <typename T, typename U>
-void printMap(const std::map<T, U>& myMap) {
+template <typename T>
+void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
-	std::cout << "printing MAP:" << std::endl;
-	for (typename std::map<T, U>::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Key: [" << it->first << "] -> Values: {";
-		for (typename U::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++) {
+	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
+		std::cout << "Directive: " << std::left << std::setw(25) << it->first << "-> ";
+		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
 			std::cout << *ut << " ";
-		}
-		std::cout << "}" << std::endl;
+		std::cout << std::endl;
+	}
+}
+
+template <typename T>
+void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
+	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
+		std::cout << "\nLocation: " << it->first << std::endl;
+		printMapVec(it->second);
+		std::cout << std::endl;
 	}
 }
 
