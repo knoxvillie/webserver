@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 12:00:44 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/20 12:40:32 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:05:14 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,7 @@ ServerConfig::setConfigFileVariables(const std::map<std::string, std::vector<std
 bool
 ServerConfig::changeVariable(const std::string &name, const std::string& value) {
 	
+	// USE SWITCH CASE
 	if (name == "listen") {
 		this->m_listen = value;
 		return true;
@@ -116,11 +117,11 @@ ServerConfig::changeVariable(const std::string &name, const std::string& value) 
 	} else if (name == "error_page") {
 		this->m_error_page = value;
 		return true;
-	} else if (name == "location") {
-		this->m_location = value;
-		return true;
 	} else if (name == "client_max_body_size") {
 		this->m_client_max_body_size = value;
+		return true;
+	} else if (name == "location") {
+		//this->m_location = value;
 		return true;
 	}
 	return false;
@@ -198,11 +199,6 @@ ServerConfig::getErrorPage() const {
 }
 
 
-// Location
-std::string
-ServerConfig::getLocation() const {
-	return this->m_location;
-}
 
 
 // Client max body size
@@ -210,3 +206,9 @@ std::string
 ServerConfig::getClientMaxBodySize() const {
 	return this->m_client_max_body_size;
 }
+
+// Location
+/* std::string
+ServerConfig::getLocation() const {
+	return this->m_location;
+} */

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/20 12:32:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 14:05:41 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,10 @@ class ServerConfig {
         std::string m_access_log;           // Where to log accesses
         std::string m_error_log;            // Where to log errors
         std::string m_error_page;           // Default error page
-        std::string m_location;             // Where to look for requested files
         std::string m_client_max_body_size; // Max allowed size of a client request body
+		// Location: Where to look for requested files
+        std::map<std::string, std::map<std::string, std::vector<std::string> > > m_location;
+		// map< URI, map< Directive, values > >
 
         void setConfigFileVariables(const std::map<std::string, std::vector<std::string> >& directives);
 		bool changeVariable(const std::string &name, const std::string& value);
@@ -63,8 +65,8 @@ class ServerConfig {
 		std::string getAccessLog() const;
 		std::string getErrorLog() const;
 		std::string getErrorPage() const;
-		std::string getLocation() const;
 		std::string getClientMaxBodySize() const;
+		std::string getLocation() const;
 
 		// Setter functions
 /* 		void setListen(const std::string& listen);
@@ -76,8 +78,8 @@ class ServerConfig {
 		void setAccessLog(const std::string& accessLog);
 		void setErrorLog(const std::string& errorLog);
 		void setErrorPage(const std::string& errorPage);
-		void setLocation(const std::string& location);
-		void setClientMaxBodySize(const std::string& clientMaxBodySize);	 */	
+		void setClientMaxBodySize(const std::string& clientMaxBodySize);
+		void setLocation(const std::string& location);	 */
 		
 		static void initDirectivesVec();
 		static std::vector<std::string> getDirectives(); 

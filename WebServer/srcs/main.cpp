@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/19 12:22:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 11:38:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ int	main(int argc, char* argv[]) {
 	try {
 		Parser::parsingConfigFile(config_file);
 	}
-	catch (const std::runtime_error& except) {
+	catch (const std::exception& except) {
 		std::cerr << except.what() << std::endl;
 	}
 	
