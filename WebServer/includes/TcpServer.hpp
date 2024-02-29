@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:52:40 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 17:03:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,18 +32,19 @@ class TcpServer {
         ServerConfig m_config;
 
         std::string m_ip_address;
-        int m_port;
-        int m_socket;
-        struct sockaddr_in m_sockaddr;
-        unsigned int m_sockaddr_len;
-        
-        //int m_clientSocket;
-        //struct sockaddr_in m_clientAddress;
+        int m_port, m_socket;
+        struct sockaddr_in m_servaddr;
+        unsigned int m_servaddr_len;
+
+        fd_set current_sockets, ready_sockets;
 
         int startServer(void);
         void closeServer(void);
         void startListen(void);
-        void acceptConnection(void);
+        int acceptConnection(void);
+
+        void serverLoop(void);
+        void handleConnection(int connection_socket);
 
         std::string buildResponse(void);
         void sendResponse(void);
