@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:57:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 15:32:27 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,6 @@ class ServerConfig {
 		// Variables to store data from the config file
 		/*
 			NOTE: MOST VARIABLES ARE STRINGS FOR NO REASON, FEEL FREE TO CHANGE IF NEEDED
-				  (Would also need to change copy constructor and etc)
 		*/
         std::vector<std::string> m_listen;               // Will give us the port (and protocols ??)
         std::vector<std::string> m_server_name;          // Server domain name
@@ -49,6 +48,7 @@ class ServerConfig {
 
 	public:
 		ServerConfig(); // Should either be private or initiate with default values
+		ServerConfig(std::map<std::string, std::vector<std::string> >& server, std::map<std::string, std::map<std::string, std::vector<std::string> > >& location);
 		ServerConfig(const ServerConfig& obj);
 		ServerConfig& operator=(const ServerConfig& obj);
 		~ServerConfig();
@@ -56,27 +56,4 @@ class ServerConfig {
 		// Getter functions
 		std::string getListenPort() const;
 		std::string getHostIP() const;
-
-		/* std::string getServerName() const;
-		std::string getRoot() const;
-		std::string getIndex() const;
-		std::string getCharset() const;
-		std::string getAccessLog() const;
-		std::string getErrorLog() const;
-		std::string getErrorPage() const;
-		std::string getClientMaxBodySize() const; */
-		//std::string getLocation() const;
-
-		// Setter functions
-		/* void setListen(const std::vector<std::string>& listen);
-		void setServerName(const std::vector<std::string>& serverName);
-		void setHost(const std::vector<std::string>& host);
-		void setRoot(const std::vector<std::string>& root);
-		void setIndex(const std::vector<std::string>& index);
-		void setCharset(const std::vector<std::string>& charset);
-		void setAccessLog(const std::vector<std::string>& accessLog);
-		void setErrorLog(const std::vector<std::string>& errorLog);
-		void setErrorPage(const std::vector<std::string>& errorPage);
-		void setClientMaxBodySize(const std::vector<std::string>& clientMaxBodySize);
-		//void setLocation(const std::string& location); */	
 };

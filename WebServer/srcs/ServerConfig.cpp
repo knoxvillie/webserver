@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/09 12:00:44 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:58:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/02/29 15:10:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,24 @@
 
 ServerConfig::ServerConfig() {}
 
-ServerConfig::ServerConfig(const ServerConfig& obj) {
-	this->m_listen = obj.m_listen;
-    this->m_server_name = obj.m_server_name;
-    this->m_host = obj.m_host;
-    this->m_root = obj.m_root;
-    this->m_index = obj.m_index;
-    this->m_charset = obj.m_charset;
-    this->m_access_log = obj.m_access_log;
-    this->m_error_log = obj.m_error_log;
-    this->m_error_page = obj.m_error_page;
-    this->m_location = obj.m_location;
-    this->m_client_max_body_size = obj.m_client_max_body_size;
+ServerConfig::ServerConfig(std::map<std::string, std::vector<std::string> >& server,
+std::map<std::string, std::map<std::string, std::vector<std::string> > >& location) : m_location(location) {
+	this->setConfigFileVariables(server);
 }
+
+ServerConfig::ServerConfig(const ServerConfig& obj) :
+	m_listen				( obj.m_listen ),
+    m_server_name			( obj.m_server_name ),
+    m_host					( obj.m_host ),
+    m_root					( obj.m_root ),
+    m_index					( obj.m_index ),
+    m_charset				( obj.m_charset ),
+    m_access_log			( obj.m_access_log ),
+    m_error_log				( obj.m_error_log ),
+    m_error_page			( obj.m_error_page ),
+    m_client_max_body_size	( obj.m_client_max_body_size ),
+    m_location				( obj.m_location )
+{}
 
 ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
 	if (this == &obj)
@@ -41,8 +46,8 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
     this->m_access_log = obj.m_access_log;
     this->m_error_log = obj.m_error_log;
     this->m_error_page = obj.m_error_page;
-    this->m_location = obj.m_location;
     this->m_client_max_body_size = obj.m_client_max_body_size;
+    this->m_location = obj.m_location; // does this do a deep copy ?
 
 	return *this;
 }
@@ -108,11 +113,13 @@ ServerConfig::changeVariable(const std::string &name, const std::vector<std::str
 // Port
 std::string
 ServerConfig::getListenPort() const {
-	return this->m_listen[0]; // Should probably do some checking and not just return the first string
+	// Should probably do some checking and not just return the first string
+	return this->m_listen[0];
 }
 
 // IP address
 std::string
 ServerConfig::getHostIP() const {
-	return this->m_host[0]; // Should probably do some checking and not just return the first string
+	// Should probably do some checking and not just return the first string
+	return this->m_host[0];
 }
