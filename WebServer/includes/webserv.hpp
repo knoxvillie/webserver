@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 17:19:27 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/01 13:48:32 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,6 @@ class FuncLogger;
 #define ANSI_COLOR_CYAN    "\033[1;36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 #define ANSI_COLOR_YELLOW  "\033[1;33m"
-// Emojis
-#define E_IN "\U0001F51C"
-#define E_OUT "\U0001F519"
 
 #ifdef DEBUG
 # define GPS FuncLogger gps_obj(__FILE__, __FUNCTION__, __LINE__);
@@ -78,10 +75,10 @@ class FuncLogger {
 
 	public:
 		FuncLogger(const char* file, const char* func, const int line) : file(file), func(func), line(line) {
-			std::cout << "[" << ANSI_COLOR_GREEN << "IN" << ANSI_COLOR_RESET << "]" << "  " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << "," << line << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
+			std::cout << "[" << ANSI_COLOR_GREEN << "IN" << ANSI_COLOR_RESET << "]" << "  " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << ANSI_COLOR_YELLOW << ":" << ANSI_COLOR_RESET << line << " - " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
 		};
 		~FuncLogger(void) {
-			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
+			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " - " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
 		};
 };
 
