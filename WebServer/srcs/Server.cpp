@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:50:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:57:22 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ Server::validateServerDirectives(void) {
 			this->checkServerName(it->second);
 		else if(it->first == "root")
 			this->checkRoot(it->second);
+		else if (it->first == "index")
+			this->checkIndex(it->second);
 		else if (it->first == "auto_index")
 			this->checkAutoIndex(it->second);
 		else if (it->first == "allow_methods")
