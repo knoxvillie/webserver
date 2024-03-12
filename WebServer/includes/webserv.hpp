@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 14:31:41 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 14:40:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,11 @@ class FuncLogger;
 #define ANSI_COLOR_YELLOW  "\033[1;33m"
 
 #ifdef DEBUG
+# define MLOG(str) std::cout << str << std::endl;
 # define GPS FuncLogger gps_obj(__FILE__, __FUNCTION__, __LINE__);
 #else
 # define MLOG(str) do {} while(false);
+# define GPS do {} while(false);
 #endif
 
 #ifndef MERROR 

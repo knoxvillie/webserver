@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 14:01:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:29:20 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ TcpServer::startListen(void) {
     if (listen(m_socket, 42) < 0) { // the max number of clients is just a placeholder
         MERROR("listen failed.");
     }
-    // look for connections and accept them
+
     serverLoop();
 }
 
@@ -102,11 +102,26 @@ TcpServer::serverLoop(void) {
         }
 
         for (int i = 0; i < nfds; ++i) {
-            if (events[i].data.fd == m_socket) { // New connections
+            m_conn_socket = events[i].data.fd;
+
+            if (m_conn_socket == m_socket) { // New connections
                 m_conn_socket = acceptConnection();
+                
+                // maybe need to set the conn_socket to nonblocking ?
+                
+                struct epoll_event ev1;
+                ev1.events = EPOLLIN;
+                ev1.data.fd = m_conn_socket;
+                
+                epoll_ctl(epollfd, EPOLL_CTL_ADD, m_conn_socket, &ev1);
+            }
+            else if (events[i].events == EPOLLHUP) {
+                close(m_conn_socket); // might need to call epoll_ctl + EPOLL_CTL_DEL
+            }
+            else {
+                handleConnection(m_conn_socket); // might need to send the event and not only the fd
             }
         }
-
     }
 }
 
@@ -144,7 +159,7 @@ TcpServer::serverLoop(void) {
 
 void
 TcpServer::handleConnection(int connection_socket) {
-    
+    (void)connection_socket;
 }
 
 std::string

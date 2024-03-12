@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 12:17:32 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:10:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,16 +102,18 @@ Server::checkRoot(std::vector<std::string>& vec) {
 	// Assuming only onde path
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Root paths");
-	if (stat(vec[0].c_str(), &buf) != 0)
+	std::string path(vec[0].substr(0, vec[0].find(';')));
+
+	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Root path doesn't exist");
-	this->root = vec[0];
+	this->root = path;
 }
 
 void
 Server::checkAutoIndex(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
-	if (vec[0] == "on" || vec[0] == "off") {
+	if (vec[0] == "on;" || vec[0] == "off;") {
 		this->auto_index = vec[0] == "on";
 		return ;
 	}
@@ -123,10 +125,12 @@ Server::checkAllowMethods(std::vector<std::string>& vec) {
 	if (vec.empty())
 		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
 	for (size_t i = 0; i < vec.size(); i++) {
-		if (vec[i] == "GET" || vec[i] == "POST" || vec[i] == "DELETE")
-			this->allow_methods.push_back(vec[i]);
+		std::string method = (i == vec.size() - 1) ? vec[i].substr(0, vec[i].find(';')) : vec[i];
+
+		if (method == "GET" || method == "POST" || method == "DELETE")
+			this->allow_methods.push_back(method);
 		else
-			throw std::runtime_error("Error: Invalid allow method: " + vec[i]);
+			throw std::runtime_error("Error: Invalid allow method: " + method);
 	}
 	// Verify if there is any repeated method
 	std::vector<std::string> sortedVec(this->allow_methods);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 14:33:13 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:14:36 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ class Server {
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
 		void checkRoot(std::vector<std::string>&);
+		void checkIndex(std::vector<std::string>&);
 		void checkAutoIndex(std::vector<std::string>&);
 		void checkAllowMethods(std::vector<std::string>&);
 };
