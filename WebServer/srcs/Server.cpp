@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:10:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:57:22 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ Server::validateServerDirectives(void) {
 			this->checkServerName(it->second);
 		else if(it->first == "root")
 			this->checkRoot(it->second);
+		else if (it->first == "index")
+			this->checkIndex(it->second);
 		else if (it->first == "auto_index")
 			this->checkAutoIndex(it->second);
 		else if (it->first == "allow_methods")
@@ -85,6 +87,7 @@ Server::checkListen(std::vector<std::string>& vec) {
 
 void
 Server::checkServerName(std::vector<std::string>& vec) {
+	GPS;
 	/*
 	 * When you set server_name default; in an Nginx server block, it means that this block will respond
 	 * to requests that do not match any other server_name specified in the server configuration.
@@ -97,6 +100,7 @@ Server::checkServerName(std::vector<std::string>& vec) {
 
 void
 Server::checkRoot(std::vector<std::string>& vec) {
+	GPS;
 	struct stat buf;
 
 	// Assuming only onde path
@@ -107,14 +111,29 @@ Server::checkRoot(std::vector<std::string>& vec) {
 	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Root path doesn't exist");
 	this->root = path;
+
+	// Handling Index directive here because it depends on the root.
+	if (!this->index.empty()) {
+		if (stat(std::string(this->root + "/" + this->index).c_str(), &buf) != 0)
+		throw std::runtime_error("Error: " + this->index + " doesn't exist");
+	}
+}
+
+void
+Server::checkIndex(std::vector<std::string>& vec) {
+	GPS;
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples indes values");
+	this->index = vec[0];
 }
 
 void
 Server::checkAutoIndex(std::vector<std::string>& vec) {
+	GPS;
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
 	if (vec[0] == "on;" || vec[0] == "off;") {
-		this->auto_index = vec[0] == "on";
+		this->auto_index = (vec[0] == "on;");
 		return ;
 	}
 	throw std::runtime_error("Error: Invalid auto index option. Lower case only");
@@ -122,6 +141,7 @@ Server::checkAutoIndex(std::vector<std::string>& vec) {
 
 void
 Server::checkAllowMethods(std::vector<std::string>& vec) {
+	GPS;
 	if (vec.empty())
 		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
 	for (size_t i = 0; i < vec.size(); i++) {
