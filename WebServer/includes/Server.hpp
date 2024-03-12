@@ -46,9 +46,23 @@ class Server {
 
 		// Variables to store data from the config file
 		struct in_addr ipAddress;
+
+		// Listen
 		std::string s_host;
 		uint16_t s_port;
-//        std::string m_server_name;          // Server domain name
+		// Server_name
+		std::string server_name;
+		// Root
+		std::string root;
+		// Auto Index
+		bool auto_index;
+		// Allow Methods
+		std::vector<std::string> allow_methods;
+
+
+
+
+		//        std::string m_server_name;          // Server domain name
 //        std::string m_host;                 // IP
 //        std::string m_root;                 // Root repository for the server files
 //        std::string m_index;                // Index page
@@ -69,6 +83,9 @@ class Server {
 		//Directives parser
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
+		void checkRoot(std::vector<std::string>&);
+		void checkAutoIndex(std::vector<std::string>&);
+		void checkAllowMethods(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP

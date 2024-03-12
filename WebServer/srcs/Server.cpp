@@ -6,10 +6,9 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/29 16:34:45 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/12 12:17:32 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "Server.hpp"
 
@@ -50,7 +49,14 @@ Server::validateServerDirectives(void) {
 	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++) {
 		if (it->first == "listen")
 			this->checkListen(it->second);
-		//else if (it->first == "server_name")
+		else if (it->first == "server_name")
+			this->checkServerName(it->second);
+		else if(it->first == "root")
+			this->checkRoot(it->second);
+		else if (it->first == "auto_index")
+			this->checkAutoIndex(it->second);
+		else if (it->first == "allow_methods")
+			this->checkAllowMethods(it->second);
 	}
 }
 
@@ -83,8 +89,54 @@ Server::checkServerName(std::vector<std::string>& vec) {
 	 * When you set server_name default; in an Nginx server block, it means that this block will respond
 	 * to requests that do not match any other server_name specified in the server configuration.
 	 * */
-	(void)vec;
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples server names");
+
+	this->server_name = vec[0];
 }
+
+void
+Server::checkRoot(std::vector<std::string>& vec) {
+	struct stat buf;
+
+	// Assuming only onde path
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Root paths");
+	if (stat(vec[0].c_str(), &buf) != 0)
+		throw std::runtime_error("Error: Root path doesn't exist");
+	this->root = vec[0];
+}
+
+void
+Server::checkAutoIndex(std::vector<std::string>& vec) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Auto index options");
+	if (vec[0] == "on" || vec[0] == "off") {
+		this->auto_index = vec[0] == "on";
+		return ;
+	}
+	throw std::runtime_error("Error: Invalid auto index option. Lower case only");
+}
+
+void
+Server::checkAllowMethods(std::vector<std::string>& vec) {
+	if (vec.empty())
+		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
+	for (size_t i = 0; i < vec.size(); i++) {
+		if (vec[i] == "GET" || vec[i] == "POST" || vec[i] == "DELETE")
+			this->allow_methods.push_back(vec[i]);
+		else
+			throw std::runtime_error("Error: Invalid allow method: " + vec[i]);
+	}
+	// Verify if there is any repeated method
+	std::vector<std::string> sortedVec(this->allow_methods);
+	std::sort(sortedVec.begin(), sortedVec.end());
+	if (std::adjacent_find(sortedVec.begin(), sortedVec.end()) != sortedVec.end())
+		throw std::runtime_error("Error: Allow methods directive has duplicated values");
+}
+
+
+
 
 
 //Getters
