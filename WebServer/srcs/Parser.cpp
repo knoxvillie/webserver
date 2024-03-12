@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 14:35:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:50:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 
 void
 Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec, std::map<std::string, std::vector<std::string> >& map) {
+	GPS;
 	if (vec.empty())
 		throw std::runtime_error(directive + " doesn't have values");
 	//std::vector<std::string>::iterator it = vec.begin();

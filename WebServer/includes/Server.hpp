@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:14:36 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 15:50:44 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ class Server {
 		std::string server_name;
 		// Root
 		std::string root;
+		// Index
+		std::string index;
 		// Auto Index
 		bool auto_index;
 		// Allow Methods
