@@ -3,22 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/19 09:20:34 by kfaustin         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/09 11:52:38 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/09 12:26:05 by diogmart         ###   ########.fr       */
+/*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/03/12 15:14:36 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +72,7 @@ class Server {
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
 		void checkRoot(std::vector<std::string>&);
+		void checkIndex(std::vector<std::string>&);
 		void checkAutoIndex(std::vector<std::string>&);
 		void checkAllowMethods(std::vector<std::string>&);
 };

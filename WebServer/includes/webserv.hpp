@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 12:55:27 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/12 14:40:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
+#include <sys/epoll.h>
+
 // ========================
 // 		Macros and struct
 // ========================
@@ -49,13 +51,15 @@ class FuncLogger;
 #define ANSI_COLOR_YELLOW  "\033[1;33m"
 
 #ifdef DEBUG
+# define MLOG(str) std::cout << str << std::endl;
 # define GPS FuncLogger gps_obj(__FILE__, __FUNCTION__, __LINE__);
 #else
 # define MLOG(str) do {} while(false);
+# define GPS do {} while(false);
 #endif
 
 #ifndef MERROR 
-# define MERROR(message) std::cout << "Error: " << message << std::endl; exit(1);
+# define MERROR(message) std::cerr << "Error: " << message << std::endl; exit(1);
 #endif
 
 enum enum_server {
