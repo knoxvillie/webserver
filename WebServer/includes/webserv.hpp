@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/01 13:48:32 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/12 12:55:27 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,12 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <stdexcept>
 #include <arpa/inet.h>
+#include <sys/stat.h>
 
 // ========================
 // 		Macros and struct

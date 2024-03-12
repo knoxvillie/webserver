@@ -6,10 +6,9 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/16 19:43:23 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/12 12:17:32 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "Server.hpp"
 
@@ -21,18 +20,22 @@ Server::Server(void) {}
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
 			   std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
+	GPS;
 	this->applyServerDirectives();
 	this->validateServerDirectives();
 }
 
+// This method stands to check which "essentials directives" are not in the server block and initialize it.
 void
 Server::applyServerDirectives(void) {
 	std::map<std::string, std::vector<std::string> >::iterator it;
 
 	for (int i = 0; Parser::server_directives[i]; ++i) {
 		it = this->_serverDirectives.find(Parser::server_directives[i]);
+		// Directive [i] not in the server block
 		if (it == this->_serverDirectives.end()) {
 			// Add the key into the map, and initialize it with default values.
+			// splitStringToVector handles the case that the directive has more than 1 value. (Allow_methods)
 			this->_serverDirectives[Parser::server_directives[i]] = splitStringToVector(defaultServerConfig(i));
 		}
 	}
@@ -44,35 +47,23 @@ Server::validateServerDirectives(void) {
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >& location = this->_locationDirectives;
 	(void)server; (void) location;
 	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++) {
-		for (std::vector<std::string>::iterator ut = it->second.begin(); ut != it->second.end(); ut++) {
-			// Listen directive
-			// Need to create methods to verify each directive later.
-			if (it->first == "listen") {
-				int port;
-				if (it->second.size() > 1)
-					throw std::runtime_error("Error: listen directive has too many arguments");
-				if ((*ut).find(':') == std::string::npos) {
-					this->s_host = "0.0.0.0";
-					port = ((*ut).find(';') != std::string::npos) ? std::atoi((*ut).substr(0, (*ut).find(';')).c_str()) : std::atoi((*ut).c_str());
-				} else {
-					size_t	pos = (*ut).find(';');
-					this->s_host = (*ut).substr(0, pos);
-					port = (std::atoi((*ut).substr(pos + 1).c_str()));
-					if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
-						throw std::runtime_error("IP PROBLEM");
-				}
-				if (port <= 0 || port > 65535)
-					throw std::runtime_error("Error: invalid server port");
-				this->s_port = (unsigned short)port;
-				break;
-			}
-		}
+		if (it->first == "listen")
+			this->checkListen(it->second);
+		else if (it->first == "server_name")
+			this->checkServerName(it->second);
+		else if(it->first == "root")
+			this->checkRoot(it->second);
+		else if (it->first == "auto_index")
+			this->checkAutoIndex(it->second);
+		else if (it->first == "allow_methods")
+			this->checkAllowMethods(it->second);
 	}
 }
 
 // Kind of a directives parser
-bool
+void
 Server::checkListen(std::vector<std::string>& vec) {
+	GPS;
 	if (vec.size() > 1)
 		throw std::runtime_error("Error: listen directive has too many arguments");
 	int port;
@@ -89,9 +80,63 @@ Server::checkListen(std::vector<std::string>& vec) {
 	}
 	if (port <= 0 || port > 65535)
 		throw std::runtime_error("Error: invalid server port");
-	this->s_port = (unsigned short)port;
-	return (true);
+	this->s_port = (uint16_t)port;
 }
+
+void
+Server::checkServerName(std::vector<std::string>& vec) {
+	/*
+	 * When you set server_name default; in an Nginx server block, it means that this block will respond
+	 * to requests that do not match any other server_name specified in the server configuration.
+	 * */
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples server names");
+
+	this->server_name = vec[0];
+}
+
+void
+Server::checkRoot(std::vector<std::string>& vec) {
+	struct stat buf;
+
+	// Assuming only onde path
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Root paths");
+	if (stat(vec[0].c_str(), &buf) != 0)
+		throw std::runtime_error("Error: Root path doesn't exist");
+	this->root = vec[0];
+}
+
+void
+Server::checkAutoIndex(std::vector<std::string>& vec) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Auto index options");
+	if (vec[0] == "on" || vec[0] == "off") {
+		this->auto_index = vec[0] == "on";
+		return ;
+	}
+	throw std::runtime_error("Error: Invalid auto index option. Lower case only");
+}
+
+void
+Server::checkAllowMethods(std::vector<std::string>& vec) {
+	if (vec.empty())
+		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
+	for (size_t i = 0; i < vec.size(); i++) {
+		if (vec[i] == "GET" || vec[i] == "POST" || vec[i] == "DELETE")
+			this->allow_methods.push_back(vec[i]);
+		else
+			throw std::runtime_error("Error: Invalid allow method: " + vec[i]);
+	}
+	// Verify if there is any repeated method
+	std::vector<std::string> sortedVec(this->allow_methods);
+	std::sort(sortedVec.begin(), sortedVec.end());
+	if (std::adjacent_find(sortedVec.begin(), sortedVec.end()) != sortedVec.end())
+		throw std::runtime_error("Error: Allow methods directive has duplicated values");
+}
+
+
+
 
 
 //Getters
