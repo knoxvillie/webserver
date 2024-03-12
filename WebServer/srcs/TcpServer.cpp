@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 15:29:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 16:10:55 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,12 @@ TcpServer::buildResponse(void) {
     -A status message, a non-authoritative short description of the status code.
     -HTTP headers, like those for requests.
     -Optionally, a body containing the fetched resource.
+
+    - List possible response codes and status messages;
+    - Define an index.html;
+    - Define function to handle the different types of requests that can be received = GET/POST/DELETE
+    - List possible response types (cgi goes here, how to handle it?);
+    - 
 */
     return (NULL); // temp
 }
