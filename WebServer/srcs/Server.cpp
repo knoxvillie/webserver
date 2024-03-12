@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:57:22 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 16:10:26 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,9 +122,16 @@ Server::checkRoot(std::vector<std::string>& vec) {
 void
 Server::checkIndex(std::vector<std::string>& vec) {
 	GPS;
+	struct stat	buf;
+
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples indes values");
-	this->index = vec[0];
+	std::string path(vec[0].substr(0, vec[0].find(';')));
+	this->index = path;
+	if (!this->root.empty()) {
+		if (stat(std::string(this->root + "/" + this->index).c_str(), &buf) != 0)
+			throw std::runtime_error("Error: " + this->index + " doesn't exist");
+	}
 }
 
 void
