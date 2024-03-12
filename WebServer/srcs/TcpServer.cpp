@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 17:11:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 14:01:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,14 +17,14 @@ m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
 {
     FD_ZERO(&current_sockets);
 
-    m_ip_address = m_config.getHostIP();
-    m_port = atoi((m_config.getListenPort()).c_str());
+    m_ip_address = "127.0.0.1"; //m_config.host[1];      index???????????????
+    m_port = 80;                //atoi((m_config.listen[1]).c_str());       index???????????????
 
     m_servaddr.sin_family = AF_INET;
     m_servaddr.sin_port = htons(m_port);
     m_servaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
 
-    if (startServer() != 0) { // omitted this->
+    if (startServer() != 0) {
         MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
     }
 }
@@ -69,17 +69,48 @@ TcpServer::startListen(void) {
 int
 TcpServer::acceptConnection(void) {
     
-    int connection_socket;
+    int conn_socket;
     socklen_t c_addr_len;
     struct sockaddr_in client_addr;
     
-    if (connection_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len) < 0) {
+    if (conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len) < 0) {
         MERROR("connection failed.");
     }
-    return connection_socket;
+    return conn_socket;
 }
 
 void
+TcpServer::serverLoop(void) {
+
+    epollfd = epoll_create1(0);
+    if (epollfd < 0) {
+        MERROR("epoll_create() failed.");
+    }
+
+    ev.events = EPOLLIN; // EPOLLOUT ?
+    ev.data.fd = m_socket;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, m_socket, &ev) < 0) {
+        MERROR("epoll_ctl() failed.");
+    }
+
+    while (true) {
+        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << "... " <<std::endl;
+        
+        nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+        if (nfds < 0) {
+            MERROR("epoll_wait() failed.");
+        }
+
+        for (int i = 0; i < nfds; ++i) {
+            if (events[i].data.fd == m_socket) { // New connections
+                m_conn_socket = acceptConnection();
+            }
+        }
+
+    }
+}
+
+/* void
 TcpServer::serverLoop(void) {
 
     FD_SET(m_socket, &current_sockets);
@@ -99,8 +130,8 @@ TcpServer::serverLoop(void) {
             if (FD_ISSET(i, &ready_sockets)) {
                 if (i == m_socket) {
                     // This means its a new connection
-                    int client_socket = acceptConnection();
-                    FD_SET(client_socket, &current_sockets);
+                    m_conn_socket = acceptConnection();
+                    FD_SET(m_conn_socket, &current_sockets);
                 } 
                 else {
                     handleConnection(i);
@@ -109,7 +140,7 @@ TcpServer::serverLoop(void) {
             }
         }
     }
-}
+} */
 
 void
 TcpServer::handleConnection(int connection_socket) {

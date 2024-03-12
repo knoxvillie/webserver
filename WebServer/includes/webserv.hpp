@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/02/29 14:22:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/12 12:44:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #endif
 
 #ifndef MERROR 
-# define MERROR(message) std::cout << "Error: " << message << std::endl; exit(1);
+# define MERROR(message) std::cerr << "Error: " << message << std::endl; exit(1);
 #endif
 
 enum enum_server {
@@ -54,6 +54,8 @@ enum enum_server {
 #include <map>
 #include <stdexcept>
 #include <arpa/inet.h>
+
+#include <sys/epoll.h>
 
 
 // ======================
