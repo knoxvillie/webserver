@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:33:49 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:48:02 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,33 +21,6 @@ HTTP Server:
     HTTP requests from clients, such as web browsers. 
     It processes these requests, retrieves web content, and sends it back to the clients.
 */
-
-// ========================
-//      Config Struct	
-// ========================
-
-typedef struct s_config
-{
-    // Variables to store data from the config file
-	/*
-		NOTE: MOST VARIABLES ARE STRINGS FOR NO REASON, FEEL FREE TO CHANGE IF NEEDED
-	*/
-    std::vector<std::string> listen;               // Will give us the port (and protocols ??)
-    std::vector<std::string> server_name;          // Server domain name
-    std::vector<std::string> host;                 // IP
-    std::vector<std::string> root;                 // Root repository for the server files
-    std::vector<std::string> index;                // Index page
-    std::vector<std::string> charset;              // charset to be used, eg. uft-8
-    std::vector<std::string> access_log;           // Where to log accesses
-    std::vector<std::string> error_log;            // Where to log errors
-    std::vector<std::string> error_page;           // Default error page
-    std::vector<std::string> client_max_body_size; // Max allowed size of a client request body
-	// Location: Where to look for requested files
-    std::map<std::string, std::map<std::string, std::vector<std::string> > > location;
-	// map< URI, map< Directive, values > >
-
-}   ServerConfig;
-
 
 // ========================
 //     TcpServer Class
