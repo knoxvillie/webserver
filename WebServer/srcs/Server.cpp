@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 16:10:26 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:04:45 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,6 +166,21 @@ Server::checkAllowMethods(std::vector<std::string>& vec) {
 		throw std::runtime_error("Error: Allow methods directive has duplicated values");
 }
 
+void
+Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Invalid number of arguments Client Max Body Size");
+	for (size_t i = 0; i < vec[0].size(); i++) {
+		if (vec[0][i] == 'M' && (i != vec.size() - 1))
+			throw std::runtime_error("Error: invalid argument " + vec[0]);
+		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M')
+			throw std::runtime_error("Error: invalid argument " + vec[0]);
+	}
+	int value = (vec[0].find('M') != std::string::npos) ? atoi(vec[0].substr(0, vec[0].find('M')).c_str()) : atoi(vec[0].c_str());
+	if (value < 0 || value > 65535)
+		throw std::runtime_error("Error: Client Max Body Size out of bound");
+	this->cMaxBodySize = (uint16_t)value;
+}
 
 
 
