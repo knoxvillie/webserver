@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:50:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:33:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 */
 class Server {
 	
+	friend class TcpServer; // so TcpServer class can access private members
+
 	private:
 		Server(void); // Preventing the compiler from creating a default constructor.
 

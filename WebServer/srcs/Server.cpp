@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 15:04:45 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:36:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ Server::checkListen(std::vector<std::string>& vec) {
 		this->s_host = "0.0.0.0";
 		port = (value.find(';') != std::string::npos) ? std::atoi(value.substr(0, value.find(';')).c_str()) : std::atoi(value.c_str());
 	} else {
-		size_t	pos = value.find(';');
+		size_t	pos = value.find(':');
 		this->s_host = value.substr(0, pos);
 		port = (std::atoi(value.substr(pos + 1).c_str()));
 		if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)

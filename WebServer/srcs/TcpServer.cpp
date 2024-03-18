@@ -6,19 +6,19 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:05:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:34:52 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const ServerConfig& config) : 
+TcpServer::TcpServer(const Server& config) : 
 m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
 {
     FD_ZERO(&current_sockets);
 
-    m_ip_address = "0.0.0.0"; //m_config.host[1];      index???????????????
-    m_port = 8080;                //atoi((m_config.listen[1]).c_str());       index???????????????
+    m_ip_address = m_config.s_host;
+    m_port = m_config.s_port;
 
     struct sockaddr_in test;
     test.sin_family = AF_INET;
@@ -189,7 +189,7 @@ TcpServer::handleConnection(int connection_socket) {
         
     }
 
-/*  // test sending something for now
+ // test sending something for now
     std::ostringstream oss;
     oss << "HTTP/1.1 200 OK\r\n";
     oss << "Cache-Control: no-cache, private\r\n";
@@ -201,7 +201,7 @@ TcpServer::handleConnection(int connection_socket) {
     std::string output = oss.str();
     int size = output.size() + 1;
 
-    send(connection_socket, output.c_str(), size, 0); */
+    send(connection_socket, output.c_str(), size, 0);
 }
 
 std::string

@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 13:02:19 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:33:49 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
+#include "Server.hpp"
 
 /*
 HTTP Server: 
@@ -54,17 +55,16 @@ typedef struct s_config
 
 #define MAX_EVENTS 10
 
-class Server;
-
 class TcpServer {
 
     private:
         TcpServer(); // Prevent the use of the default constructor
 
-        ServerConfig m_config;
+        Server m_config;
 
         std::string m_ip_address;
-        int m_port, m_socket, m_conn_socket;
+        uint16_t m_port;
+        int m_socket, m_conn_socket;
         struct sockaddr_in m_servaddr;
         unsigned int m_servaddr_len;
         
@@ -85,6 +85,6 @@ class TcpServer {
         void sendResponse(void);
 
     public:
-        TcpServer(const ServerConfig& config);
+        TcpServer(const Server& config);
         ~TcpServer();
 };
