@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 15:04:45 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/18 16:44:45 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ Server::validateServerDirectives(void) {
 			this->checkAutoIndex(it->second);
 		else if (it->first == "allow_methods")
 			this->checkAllowMethods(it->second);
+		else if (it->first == "client_max_body_size")
+			this->checkClientMaxBodySize(it->second);
 	}
 }
 
@@ -74,7 +76,7 @@ Server::checkListen(std::vector<std::string>& vec) {
 		this->s_host = "0.0.0.0";
 		port = (value.find(';') != std::string::npos) ? std::atoi(value.substr(0, value.find(';')).c_str()) : std::atoi(value.c_str());
 	} else {
-		size_t	pos = value.find(';');
+		size_t	pos = value.find(':');
 		this->s_host = value.substr(0, pos);
 		port = (std::atoi(value.substr(pos + 1).c_str()));
 		if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
@@ -170,11 +172,16 @@ void
 Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Invalid number of arguments Client Max Body Size");
+	if (vec[0][vec[0].size() - 2] != 'M')
+		throw std::runtime_error("Error: Missing type value");
 	for (size_t i = 0; i < vec[0].size(); i++) {
-		if (vec[0][i] == 'M' && (i != vec.size() - 1))
+		if (vec[0][i] == 'M' && (i != (vec[0].size() - 2)))
 			throw std::runtime_error("Error: invalid argument " + vec[0]);
-		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M')
-			throw std::runtime_error("Error: invalid argument " + vec[0]);
+		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M') {
+			if (vec[0][i] == ';' && (i == vec[0].size() - 1))
+				break;
+			throw std::runtime_error("Error: AAAAAAA invalid argument " + vec[0]);
+		}
 	}
 	int value = (vec[0].find('M') != std::string::npos) ? atoi(vec[0].substr(0, vec[0].find('M')).c_str()) : atoi(vec[0].c_str());
 	if (value < 0 || value > 65535)
@@ -182,7 +189,17 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
 	this->cMaxBodySize = (uint16_t)value;
 }
 
+void
+Server::checkErrorPage(std::vector<std::string>& vec) {
+	struct stat buf;
 
+	if (vec.size() != 2)
+		throw std::runtime_error("Error: Invalid Error Page arguments");
+	if (!isStringNum(vec[0]))
+		throw std::runtime_error("Error: The error code must be numerical: " + vec[0]);
+	if (stat(vec[1].c_str(), &buf) != 0)
+		throw std::runtime_error("Invalid Error Page Path");
+}
 
 
 //Getters

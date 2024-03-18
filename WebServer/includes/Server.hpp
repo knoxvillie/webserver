@@ -80,6 +80,7 @@ class Server {
 		void checkAutoIndex(std::vector<std::string>&);
 		void checkAllowMethods(std::vector<std::string>&);
 		void checkClientMaxBodySize(std::vector<std::string>&);
+		void checkErrorPage(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP
