@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 16:10:55 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/18 15:05:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,14 @@ m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
 {
     FD_ZERO(&current_sockets);
 
-    m_ip_address = "127.0.0.1"; //m_config.host[1];      index???????????????
-    m_port = 80;                //atoi((m_config.listen[1]).c_str());       index???????????????
+    m_ip_address = "0.0.0.0"; //m_config.host[1];      index???????????????
+    m_port = 8080;                //atoi((m_config.listen[1]).c_str());       index???????????????
 
-    m_servaddr.sin_family = AF_INET;
-    m_servaddr.sin_port = htons(m_port);
-    m_servaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
+    struct sockaddr_in test;
+    test.sin_family = AF_INET;
+    test.sin_port = htons(m_port);
+    test.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
+    m_servaddr = test;
 
     if (startServer() != 0) {
         MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
@@ -41,7 +43,8 @@ TcpServer::startServer(void) {
         MERROR("couldn't create socket.");
     }
 
-    if (bind(m_socket, (sockaddr *)&m_servaddr, m_servaddr_len) < 0) {
+
+    if (bind(m_socket, (sockaddr *)&m_servaddr, sizeof(m_servaddr)) < 0) {
         MERROR("couldn't bind socket.");
     }
 
@@ -73,7 +76,7 @@ TcpServer::acceptConnection(void) {
     socklen_t c_addr_len;
     struct sockaddr_in client_addr;
     
-    if (conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len) < 0) {
+    if ((conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len)) < 0) {
         MERROR("connection failed.");
     }
     return conn_socket;
@@ -82,20 +85,21 @@ TcpServer::acceptConnection(void) {
 void
 TcpServer::serverLoop(void) {
 
+    GPS;
     epollfd = epoll_create1(0);
     if (epollfd < 0) {
         MERROR("epoll_create() failed.");
     }
 
-    ev.events = EPOLLIN; // EPOLLOUT ?
+    ev.events = EPOLLIN | EPOLLOUT; // ?
     ev.data.fd = m_socket;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, m_socket, &ev) < 0) {
         MERROR("epoll_ctl() failed.");
     }
 
     while (true) {
-        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << "... " <<std::endl;
-        
+        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << ":" << m_port << " ... " <<std::endl;
+
         nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
         if (nfds < 0) {
             MERROR("epoll_wait() failed.");
@@ -110,7 +114,7 @@ TcpServer::serverLoop(void) {
                 // maybe need to set the conn_socket to nonblocking ?
                 
                 struct epoll_event ev1;
-                ev1.events = EPOLLIN;
+                ev1.events = EPOLLIN | EPOLLOUT; // ?
                 ev1.data.fd = m_conn_socket;
                 
                 epoll_ctl(epollfd, EPOLL_CTL_ADD, m_conn_socket, &ev1);
@@ -159,7 +163,45 @@ TcpServer::serverLoop(void) {
 
 void
 TcpServer::handleConnection(int connection_socket) {
-    (void)connection_socket;
+    
+    GPS;
+
+    // GET index.html HTTP/1.1
+    // <command> <filename> HTTP/1.1
+    /*
+        - Parse the document
+        - Open the file in the local system
+        - Write the document back to the client
+    */
+
+    // Change this to max client bodysize ???
+    char buf[4096];
+
+    int bytesIn = recv(connection_socket, buf, 4096, 0); // change here too    
+
+    (void)bytesIn;
+
+
+    if (bytesIn <= 0) {
+        // drop client ?
+    }
+    else {
+        
+    }
+
+/*  // test sending something for now
+    std::ostringstream oss;
+    oss << "HTTP/1.1 200 OK\r\n";
+    oss << "Cache-Control: no-cache, private\r\n";
+    oss << "Content-Type: text/plain\r\n";
+    oss << "Content-Length: 5\r\n";
+    oss << "\r\n";
+    oss << "Hello";
+    
+    std::string output = oss.str();
+    int size = output.size() + 1;
+
+    send(connection_socket, output.c_str(), size, 0); */
 }
 
 std::string
