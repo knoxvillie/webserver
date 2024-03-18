@@ -48,6 +48,8 @@ class Server {
 		bool auto_index;
 		// Allow Methods
 		std::vector<std::string> allow_methods;
+		// Client Max Body Size
+		uint16_t cMaxBodySize;
 
 
 
@@ -77,6 +79,7 @@ class Server {
 		void checkIndex(std::vector<std::string>&);
 		void checkAutoIndex(std::vector<std::string>&);
 		void checkAllowMethods(std::vector<std::string>&);
+		void checkClientMaxBodySize(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP
