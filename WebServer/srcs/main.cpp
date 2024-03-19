@@ -13,7 +13,6 @@
 #include "webserv.hpp"
 #include "Parser.hpp"
 #include "TcpServer.hpp"
-#include "Server.hpp"
 
 int	main(int argc, char* argv[]) {
 	GPS;
@@ -24,7 +23,8 @@ int	main(int argc, char* argv[]) {
 
 	try {
 		Parser::parsingConfigFile(config_file);
-		TcpServer server(Parser::getServers()[0]);
+		for (size_t i = 0; i < Parser::getServers().size(); i++)
+			TcpServer server(Parser::getServers()[i]);
 	}
 	catch (const std::runtime_error& except) {
 		std::cerr << except.what() << std::endl;

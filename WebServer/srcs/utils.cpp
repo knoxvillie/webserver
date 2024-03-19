@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 17:15:12 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/18 16:28:16 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,17 @@ printServer(std::vector<Server>& serverList) {
 		else
 			printMapMapVec(serverList[i].getLocationDirectives());
 	}
+}
+
+bool
+isStringNum(const std::string& string) {
+	if (string.empty())
+		return false;
+	for (size_t i = 0; i < string.size(); i++) {
+		if (string[i] < '0' || string[i] > '9')
+			return false;
+	}
+	return true;
 }
 
 

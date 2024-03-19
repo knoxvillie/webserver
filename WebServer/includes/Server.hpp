@@ -34,9 +34,6 @@ class Server {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
-		// Variables to store data from the config file
-		struct in_addr ipAddress;
-
 		// Listen
 		std::string s_host;
 		uint16_t s_port;
@@ -82,6 +79,7 @@ class Server {
 		void checkAutoIndex(std::vector<std::string>&);
 		void checkAllowMethods(std::vector<std::string>&);
 		void checkClientMaxBodySize(std::vector<std::string>&);
+		void checkErrorPage(std::vector<std::string>&);
 };
 
 #endif //SERVER_HPP

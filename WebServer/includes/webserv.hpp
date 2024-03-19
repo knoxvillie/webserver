@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:28:01 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 15:51:04 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib> //stdlib deprecated
+#include <cstring>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -85,7 +86,6 @@ class FuncLogger {
 		~FuncLogger(void) {
 			(void)line;
 			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " - " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
-			(void)line;
 		};
 };
 
@@ -96,11 +96,13 @@ class FuncLogger {
 
 //	Prototypes
 class Server;
+
+//	Utils.cpp
 std::vector<std::string> splitStringToVector(const std::string&);
 std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
-
+bool isStringNum(const std::string&);
 
 //	Templates
 template <typename T>
