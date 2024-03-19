@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:48:02 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 11:44:23 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ HTTP Server:
 // ========================
 
 #define MAX_EVENTS 10
+#define BUFFER_SIZE 4096 // Change this ??
 
 class TcpServer {
 
@@ -53,9 +54,10 @@ class TcpServer {
 
         void serverLoop(void);
         void handleConnection(int connection_socket);
+        void parseRequest(int connection_socket, std::string& request);
 
         std::string buildResponse(void);
-        void sendResponse(void);
+        void sendResponse(int connection_socket);
 
     public:
         TcpServer(const Server& config);

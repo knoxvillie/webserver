@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:34:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 11:46:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 TcpServer::TcpServer(const Server& config) : 
 m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
 {
-    FD_ZERO(&current_sockets);
 
     m_ip_address = m_config.s_host;
     m_port = m_config.s_port;
@@ -129,37 +128,37 @@ TcpServer::serverLoop(void) {
     }
 }
 
-/* void
-TcpServer::serverLoop(void) {
+/*
+    Example of the first request firefox does to a server:
 
-    FD_SET(m_socket, &current_sockets);
+    - ChatGPT:
+        GET / HTTP/1.1
+        Host: www.example.com
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,* / *;q=0.8
+        Accept-Language: en-US,en;q=0.5
+        Accept-Encoding: gzip, deflate, br
+        Connection: keep-alive
 
-    while (true) {
-        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << "... " <<std::endl;
+    - Printing the buffer:
+        GET / HTTP/1.1
+        Host: 127.0.0.1:8080
+        User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,* / *;q=0.8
+        Accept-Language: en-US,en;q=0.5
+        Accept-Encoding: gzip, deflate, br
+        Connection: keep-alive
+        Upgrade-Insecure-Requests: 1
+        Sec-Fetch-Dest: document
+        Sec-Fetch-Mode: navigate
+        Sec-Fetch-Site: none
+        Sec-Fetch-User: ?1
+        DNT: 1
+        Sec-GPC: 1
         
-        // Because select() is destructive
-        ready_sockets = current_sockets;
+         d*��
 
-        // max nbr of FDs in a set, read FD set, write FD set, error FD set, timeout value  
-        if (select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) < 0) {
-            MERROR("select failed.");
-        }
-
-        for (int i = 0; i < FD_SETSIZE; i++) {
-            if (FD_ISSET(i, &ready_sockets)) {
-                if (i == m_socket) {
-                    // This means its a new connection
-                    m_conn_socket = acceptConnection();
-                    FD_SET(m_conn_socket, &current_sockets);
-                } 
-                else {
-                    handleConnection(i);
-                    FD_CLR(i, &current_sockets); // This should be done after closing the socket
-                }
-            }
-        }
-    }
-} */
+*/
 
 void
 TcpServer::handleConnection(int connection_socket) {
@@ -175,33 +174,25 @@ TcpServer::handleConnection(int connection_socket) {
     */
 
     // Change this to max client bodysize ???
-    char buf[4096];
+    std::string buf;
+    buf.resize(BUFFER_SIZE);
 
-    int bytesIn = recv(connection_socket, buf, 4096, 0); // change here too    
-
-    (void)bytesIn;
-
+    int bytesIn = recv(connection_socket, &buf, BUFFER_SIZE, 0);  
 
     if (bytesIn <= 0) {
         // drop client ?
     }
     else {
-        
+        MLOG(buf);
+        parseRequest(connection_socket, buf);
     }
 
- // test sending something for now
-    std::ostringstream oss;
-    oss << "HTTP/1.1 200 OK\r\n";
-    oss << "Cache-Control: no-cache, private\r\n";
-    oss << "Content-Type: text/plain\r\n";
-    oss << "Content-Length: 5\r\n";
-    oss << "\r\n";
-    oss << "Hello";
-    
-    std::string output = oss.str();
-    int size = output.size() + 1;
+    sendResponse(connection_socket);
+}
 
-    send(connection_socket, output.c_str(), size, 0);
+void
+TcpServer::parseRequest(int connection_socket, std::string& request) {
+    // Check the command thats being used
 }
 
 std::string
@@ -228,8 +219,22 @@ TcpServer::buildResponse(void) {
 }
 
 void
-TcpServer::sendResponse(void) {
+TcpServer::sendResponse(int connection_socket) {
     // We should use the send() function instead of write() as it gives us more
     // option on how to handle the content we send as well as being particularly 
     // useful for working with network sockets, such as those used in HTTP server development.
+
+    // test sending something for now
+    std::ostringstream oss;
+    oss << "HTTP/1.1 200 OK\r\n";
+    oss << "Cache-Control: no-cache, private\r\n";
+    oss << "Content-Type: text/plain\r\n";
+    oss << "Content-Length: 5\r\n";
+    oss << "\r\n";
+    oss << "Hello";
+    
+    std::string output = oss.str();
+    int size = output.size() + 1;
+
+    send(connection_socket, output.c_str(), size, 0);
 }
