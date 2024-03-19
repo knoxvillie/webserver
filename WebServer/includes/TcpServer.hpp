@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 13:02:19 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 11:44:23 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
+#include "Server.hpp"
 
 /*
 HTTP Server: 
@@ -22,49 +23,22 @@ HTTP Server:
 */
 
 // ========================
-//      Config Struct	
-// ========================
-
-typedef struct s_config
-{
-    // Variables to store data from the config file
-	/*
-		NOTE: MOST VARIABLES ARE STRINGS FOR NO REASON, FEEL FREE TO CHANGE IF NEEDED
-	*/
-    std::vector<std::string> listen;               // Will give us the port (and protocols ??)
-    std::vector<std::string> server_name;          // Server domain name
-    std::vector<std::string> host;                 // IP
-    std::vector<std::string> root;                 // Root repository for the server files
-    std::vector<std::string> index;                // Index page
-    std::vector<std::string> charset;              // charset to be used, eg. uft-8
-    std::vector<std::string> access_log;           // Where to log accesses
-    std::vector<std::string> error_log;            // Where to log errors
-    std::vector<std::string> error_page;           // Default error page
-    std::vector<std::string> client_max_body_size; // Max allowed size of a client request body
-	// Location: Where to look for requested files
-    std::map<std::string, std::map<std::string, std::vector<std::string> > > location;
-	// map< URI, map< Directive, values > >
-
-}   ServerConfig;
-
-
-// ========================
 //     TcpServer Class
 // ========================
 
 #define MAX_EVENTS 10
-
-class Server;
+#define BUFFER_SIZE 4096 // Change this ??
 
 class TcpServer {
 
     private:
         TcpServer(); // Prevent the use of the default constructor
 
-        ServerConfig m_config;
+        Server m_config;
 
         std::string m_ip_address;
-        int m_port, m_socket, m_conn_socket;
+        uint16_t m_port;
+        int m_socket, m_conn_socket;
         struct sockaddr_in m_servaddr;
         unsigned int m_servaddr_len;
         
@@ -80,11 +54,12 @@ class TcpServer {
 
         void serverLoop(void);
         void handleConnection(int connection_socket);
+        void parseRequest(int connection_socket, std::string& request);
 
         std::string buildResponse(void);
-        void sendResponse(void);
+        void sendResponse(int connection_socket);
 
     public:
-        TcpServer(const ServerConfig& config);
+        TcpServer(const Server& config);
         ~TcpServer();
 };

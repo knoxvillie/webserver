@@ -6,23 +6,24 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/12 15:29:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 11:46:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const ServerConfig& config) : 
+TcpServer::TcpServer(const Server& config) : 
 m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
 {
-    FD_ZERO(&current_sockets);
 
-    m_ip_address = "127.0.0.1"; //m_config.host[1];      index???????????????
-    m_port = 80;                //atoi((m_config.listen[1]).c_str());       index???????????????
+    m_ip_address = m_config.s_host;
+    m_port = m_config.s_port;
 
-    m_servaddr.sin_family = AF_INET;
-    m_servaddr.sin_port = htons(m_port);
-    m_servaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
+    struct sockaddr_in test;
+    test.sin_family = AF_INET;
+    test.sin_port = htons(m_port);
+    test.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
+    m_servaddr = test;
 
     if (startServer() != 0) {
         MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
@@ -41,7 +42,8 @@ TcpServer::startServer(void) {
         MERROR("couldn't create socket.");
     }
 
-    if (bind(m_socket, (sockaddr *)&m_servaddr, m_servaddr_len) < 0) {
+
+    if (bind(m_socket, (sockaddr *)&m_servaddr, sizeof(m_servaddr)) < 0) {
         MERROR("couldn't bind socket.");
     }
 
@@ -73,7 +75,7 @@ TcpServer::acceptConnection(void) {
     socklen_t c_addr_len;
     struct sockaddr_in client_addr;
     
-    if (conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len) < 0) {
+    if ((conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len)) < 0) {
         MERROR("connection failed.");
     }
     return conn_socket;
@@ -82,20 +84,21 @@ TcpServer::acceptConnection(void) {
 void
 TcpServer::serverLoop(void) {
 
+    GPS;
     epollfd = epoll_create1(0);
     if (epollfd < 0) {
         MERROR("epoll_create() failed.");
     }
 
-    ev.events = EPOLLIN; // EPOLLOUT ?
+    ev.events = EPOLLIN | EPOLLOUT; // ?
     ev.data.fd = m_socket;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, m_socket, &ev) < 0) {
         MERROR("epoll_ctl() failed.");
     }
 
     while (true) {
-        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << "... " <<std::endl;
-        
+        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << ":" << m_port << " ... " <<std::endl;
+
         nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
         if (nfds < 0) {
             MERROR("epoll_wait() failed.");
@@ -110,7 +113,7 @@ TcpServer::serverLoop(void) {
                 // maybe need to set the conn_socket to nonblocking ?
                 
                 struct epoll_event ev1;
-                ev1.events = EPOLLIN;
+                ev1.events = EPOLLIN | EPOLLOUT; // ?
                 ev1.data.fd = m_conn_socket;
                 
                 epoll_ctl(epollfd, EPOLL_CTL_ADD, m_conn_socket, &ev1);
@@ -125,41 +128,71 @@ TcpServer::serverLoop(void) {
     }
 }
 
-/* void
-TcpServer::serverLoop(void) {
+/*
+    Example of the first request firefox does to a server:
 
-    FD_SET(m_socket, &current_sockets);
+    - ChatGPT:
+        GET / HTTP/1.1
+        Host: www.example.com
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,* / *;q=0.8
+        Accept-Language: en-US,en;q=0.5
+        Accept-Encoding: gzip, deflate, br
+        Connection: keep-alive
 
-    while (true) {
-        std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << "... " <<std::endl;
+    - Printing the buffer:
+        GET / HTTP/1.1
+        Host: 127.0.0.1:8080
+        User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,* / *;q=0.8
+        Accept-Language: en-US,en;q=0.5
+        Accept-Encoding: gzip, deflate, br
+        Connection: keep-alive
+        Upgrade-Insecure-Requests: 1
+        Sec-Fetch-Dest: document
+        Sec-Fetch-Mode: navigate
+        Sec-Fetch-Site: none
+        Sec-Fetch-User: ?1
+        DNT: 1
+        Sec-GPC: 1
         
-        // Because select() is destructive
-        ready_sockets = current_sockets;
+         d*��
 
-        // max nbr of FDs in a set, read FD set, write FD set, error FD set, timeout value  
-        if (select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) < 0) {
-            MERROR("select failed.");
-        }
-
-        for (int i = 0; i < FD_SETSIZE; i++) {
-            if (FD_ISSET(i, &ready_sockets)) {
-                if (i == m_socket) {
-                    // This means its a new connection
-                    m_conn_socket = acceptConnection();
-                    FD_SET(m_conn_socket, &current_sockets);
-                } 
-                else {
-                    handleConnection(i);
-                    FD_CLR(i, &current_sockets); // This should be done after closing the socket
-                }
-            }
-        }
-    }
-} */
+*/
 
 void
 TcpServer::handleConnection(int connection_socket) {
-    (void)connection_socket;
+    
+    GPS;
+
+    // GET index.html HTTP/1.1
+    // <command> <filename> HTTP/1.1
+    /*
+        - Parse the document
+        - Open the file in the local system
+        - Write the document back to the client
+    */
+
+    // Change this to max client bodysize ???
+    std::string buf;
+    buf.resize(BUFFER_SIZE);
+
+    int bytesIn = recv(connection_socket, &buf, BUFFER_SIZE, 0);  
+
+    if (bytesIn <= 0) {
+        // drop client ?
+    }
+    else {
+        MLOG(buf);
+        parseRequest(connection_socket, buf);
+    }
+
+    sendResponse(connection_socket);
+}
+
+void
+TcpServer::parseRequest(int connection_socket, std::string& request) {
+    // Check the command thats being used
 }
 
 std::string
@@ -175,13 +208,33 @@ TcpServer::buildResponse(void) {
     -A status message, a non-authoritative short description of the status code.
     -HTTP headers, like those for requests.
     -Optionally, a body containing the fetched resource.
+
+    - List possible response codes and status messages;
+    - Define an index.html;
+    - Define function to handle the different types of requests that can be received = GET/POST/DELETE
+    - List possible response types (cgi goes here, how to handle it?);
+    - 
 */
     return (NULL); // temp
 }
 
 void
-TcpServer::sendResponse(void) {
+TcpServer::sendResponse(int connection_socket) {
     // We should use the send() function instead of write() as it gives us more
     // option on how to handle the content we send as well as being particularly 
     // useful for working with network sockets, such as those used in HTTP server development.
+
+    // test sending something for now
+    std::ostringstream oss;
+    oss << "HTTP/1.1 200 OK\r\n";
+    oss << "Cache-Control: no-cache, private\r\n";
+    oss << "Content-Type: text/plain\r\n";
+    oss << "Content-Length: 5\r\n";
+    oss << "\r\n";
+    oss << "Hello";
+    
+    std::string output = oss.str();
+    int size = output.size() + 1;
+
+    send(connection_socket, output.c_str(), size, 0);
 }
