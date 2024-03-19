@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 16:29:08 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/19 15:51:04 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib> //stdlib deprecated
+#include <cstring>
 #include <string>
 #include <fstream>
 #include <sstream>

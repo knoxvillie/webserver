@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 16:44:45 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/19 15:03:14 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,21 +68,24 @@ Server::validateServerDirectives(void) {
 void
 Server::checkListen(std::vector<std::string>& vec) {
 	GPS;
+	int port;
+	struct in_addr ipAddress;
+
+	std::memset(&ipAddress, 0, sizeof(ipAddress));
 	if (vec.size() > 1)
 		throw std::runtime_error("Error: listen directive has too many arguments");
-	int port;
 	std::string value(vec[0]);
 	if (value.find(':') == std::string::npos) {
 		this->s_host = "0.0.0.0";
-		port = (value.find(';') != std::string::npos) ? std::atoi(value.substr(0, value.find(';')).c_str()) : std::atoi(value.c_str());
+		port = std::atoi(value.substr(0, value.find(';')).c_str());
 	} else {
 		size_t	pos = value.find(':');
 		this->s_host = value.substr(0, pos);
 		port = (std::atoi(value.substr(pos + 1).c_str()));
-		if (inet_pton(AF_INET, this->s_host.c_str(), &this->ipAddress) <= 0)
+		if (inet_pton(AF_INET, this->s_host.c_str(), &ipAddress) <= 0)
 			throw std::runtime_error("IP PROBLEM");
 	}
-	if (port <= 0 || port > 65535)
+	if (port < 1024 || port > 65535)
 		throw std::runtime_error("Error: invalid server port");
 	this->s_port = (uint16_t)port;
 }
@@ -202,7 +205,7 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 }
 
 
-//Getters
+//	Getters
 std::map<std::string, std::vector<std::string> >&
 Server::getServerDirectives(void) {
 	return (_serverDirectives);
@@ -213,7 +216,7 @@ Server::getLocationDirectives(void) {
 	return (_locationDirectives);
 }
 
-//Static
+//	Static
 std::string
 defaultServerConfig(int directive) {
 	switch (directive) {

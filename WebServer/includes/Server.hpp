@@ -34,9 +34,6 @@ class Server {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
-		// Variables to store data from the config file
-		struct in_addr ipAddress;
-
 		// Listen
 		std::string s_host;
 		uint16_t s_port;
