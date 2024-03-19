@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/19 11:46:10 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/19 16:26:13 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,13 @@ m_config(config), m_servaddr(), m_servaddr_len(sizeof(m_servaddr))
     m_ip_address = m_config.s_host;
     m_port = m_config.s_port;
 
-    struct sockaddr_in test;
-    test.sin_family = AF_INET;
-    test.sin_port = htons(m_port);
-    test.sin_addr.s_addr = inet_addr(m_ip_address.c_str());
-    m_servaddr = test;
+    
+    m_servaddr.sin_family = AF_INET;
+    m_servaddr.sin_port = htons(m_port);
+    m_servaddr.sin_addr.s_addr = inet_addr(m_ip_address.c_str()); // Probably need to change this
 
     if (startServer() != 0) {
-        MERROR("couldn't start server."); // maybe its better to throw an exception to avoid leaks?
+        MERROR("couldn't start server."); // maybe its better to throw an exception?
     }
 }
 
@@ -174,8 +173,10 @@ TcpServer::handleConnection(int connection_socket) {
     */
 
     // Change this to max client bodysize ???
-    std::string buf;
-    buf.resize(BUFFER_SIZE);
+    std::string buf1;
+    buf1.resize(BUFFER_SIZE);
+
+    char buf[BUFFER_SIZE];
 
     int bytesIn = recv(connection_socket, &buf, BUFFER_SIZE, 0);  
 
@@ -184,7 +185,7 @@ TcpServer::handleConnection(int connection_socket) {
     }
     else {
         MLOG(buf);
-        parseRequest(connection_socket, buf);
+        //parseRequest(connection_socket, buf);
     }
 
     sendResponse(connection_socket);
@@ -193,6 +194,8 @@ TcpServer::handleConnection(int connection_socket) {
 void
 TcpServer::parseRequest(int connection_socket, std::string& request) {
     // Check the command thats being used
+    (void)connection_socket;
+    (void)request;
 }
 
 std::string
