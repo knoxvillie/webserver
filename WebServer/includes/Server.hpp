@@ -51,20 +51,6 @@ class Server {
 		// Client Max Body Size
 		uint16_t cMaxBodySize;
 
-
-
-
-		//        std::string m_server_name;          // Server domain name
-//        std::string m_host;                 // IP
-//        std::string m_root;                 // Root repository for the server files
-//        std::string m_index;                // Index page
-//        std::string m_charset;              // charset to be used, eg. uft-8
-//        std::string m_access_log;           // Where to log accesses
-//        std::string m_error_log;            // Where to log errors
-//        std::string m_error_page;           // Default error page
-//        std::string m_location;             // Where to look for requested files
-//        std::string m_clien_max_body_size; // Max allowed size of a client request body
-
 	public:
 		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);

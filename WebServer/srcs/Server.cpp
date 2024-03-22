@@ -61,6 +61,8 @@ Server::validateServerDirectives(void) {
 			this->checkAllowMethods(it->second);
 		else if (it->first == "client_max_body_size")
 			this->checkClientMaxBodySize(it->second);
+		else if (it-> first == "error_page")
+			this->checkErrorPage(it->second);
 	}
 }
 
