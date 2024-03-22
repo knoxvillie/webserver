@@ -34,6 +34,7 @@ class Server {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
+		struct sockaddr_in server_address;
 		// Listen
 		std::string s_host;
 		uint16_t s_port;

@@ -6,115 +6,89 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/19 16:32:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/22 16:02:44 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const Server& config) : m_config(config) {
-	struct sockaddr_in server_address;
+/*
+ *
+ *
+ * */
+TcpServer::TcpServer(const Server& object) : data(object) {
+	 /*
+	 * domain	: Specifies the communication domain. Protocol family that the socket will belong to.
+	 * 			For a TCP/IP socket using the IPv4 Internet protocols defined by the AF_INET domain.
+	 * type 	: Type of communication structure the socket will allow for this protocol family.
+	 *			SOCK_STREAM - to allow for reliable, full-duplex byte streams.
+	 * protocol	: Particular protocol the socket will use from the given family of protocols that
+	 * 			support the chosen type of communication. For the AF_INET family, there is only
+	 * 			one protocol that supports SOCK_STREAM. We will be setting this parameter to 0.
+	 * backlog	: argument is the maximum number of connection threads we want to be able to hold at once.
+	 * 			If a client tries to connect when the queue is full, they will get rejected by the server.
+	 * */
+	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	std::memset(&server_address, 0, sizeof(server_address));
-	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(this->m_config.s_port); //Why short?
-	server_address.sin_addr.s_addr = inet_addr(this->m_config.s_host.c_str());
-	this->m_servaddr = server_address;
-
-    if (startServer() != 0) {
-        MERROR("couldn't start server."); // maybe its better to throw an exception?
-    }
+	if (this->server_sock < 0)
+		throw std::runtime_error("Error: Couldn't create socket");
+	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
+	if (bind(this->server_sock, (sockaddr *)(&this->data.server_address), sizeof(this->data.server_address)) < 0)
+		throw std::runtime_error("Error: Couldn't bind socket");
+	if (listen(this->server_sock, BACKLOG) < 0) //SOMAXCONN
+		throw std::runtime_error("Error: Couldn't listen");
+	this->serverLoop();
 }
 
 TcpServer::~TcpServer() {
 	closeServer();
 }
 
-int
-TcpServer::startServer(void) {
-	this->m_socket = socket(AF_INET, SOCK_STREAM, 0);
+void
+TcpServer::serverLoop(void) {
+	GPS;
+	int epoll_fd, num_ready_events, client_sock;
+	struct epoll_event event, event_buffer[MAX_EVENTS];
 
-	if (this->m_socket < 0) {
-		MERROR("couldn't create socket.");
+	epoll_fd = epoll_create(10);
+	if (epoll_fd < 0)
+		throw std::runtime_error("Error: Creating epoll instance");
+	event.events = EPOLLIN;
+	event.data.fd = this->server_sock;
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, this->server_sock, &event) < 0)
+		throw std::runtime_error("Error: epoll_ctl failed");
+	while (true) {
+		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
+		if (num_ready_events < 0)
+			throw std::runtime_error("Error: epoll_wait failed");
+		for (int i = 0; i < num_ready_events; i++) {
+			if (event_buffer[i].data.fd == this->server_sock) {
+				client_sock = this->acceptConnection();
+				event.events = EPOLLIN;
+				event.data.fd = client_sock;
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) < 0)
+					throw std::runtime_error("Error: epoll_ctl failed");
+			} else {
+				this->handleConnection(client_sock);
+			}
+		}
 	}
-	if (bind(this->m_socket, (sockaddr *)(&this->m_servaddr), sizeof(this->m_servaddr)) < 0) {
-		MERROR("couldn't bind socket.");
-	}
-	startListen();
-	return (0);
+}
+
+int
+TcpServer::acceptConnection(void) { //Keep client info locally?
+	int client_sock;
+	struct sockaddr_in client_address;
+	socklen_t client_address_len = sizeof(client_address);
+
+	client_sock = accept(this->server_sock, (sockaddr *)&client_address, (socklen_t*)&client_address_len);
+	return (client_sock < 0 ? throw std::runtime_error("Error: Client socket failed") : client_sock);
 }
 
 void
 TcpServer::closeServer(void) {
-	close(this->m_socket);
-	exit(0);
-}
-
-void
-TcpServer::startListen(void) {
-	if (listen(this->m_socket, 42) < 0) { // the max number of clients is just a placeholder
-		MERROR("listen failed.");
-	}
-	serverLoop();
-}
-
-int
-TcpServer::acceptConnection(void) {
-	
-	int conn_socket;
-	socklen_t c_addr_len;
-	struct sockaddr_in client_addr;
-	
-	if ((conn_socket = accept(m_socket, (sockaddr *)&client_addr, (socklen_t*)&c_addr_len)) < 0) {
-		MERROR("connection failed.");
-	}
-	return conn_socket;
-}
-
-void
-TcpServer::serverLoop(void) {
-
-	GPS;
-	this->epollfd = epoll_create1(0);
-	if (this->epollfd < 0) {
-		MERROR("epoll_create() failed.");
-	}
-	ev.events = EPOLLIN | EPOLLOUT; // ?
-	ev.data.fd = m_socket;
-	if (epoll_ctl(epollfd, EPOLL_CTL_ADD, m_socket, &ev) < 0) {
-		MERROR("epoll_ctl() failed.");
-	}
-
-	while (true) {
-		std::cout << "Looking for connections on address " << inet_ntoa(this->m_servaddr.sin_addr) << ":" << m_config.s_port << " ... " <<std::endl;
-
-		nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
-		if (nfds < 0) {
-			MERROR("epoll_wait() failed.");
-		}
-
-		for (int i = 0; i < nfds; ++i) {
-			m_conn_socket = events[i].data.fd;
-
-			if (m_conn_socket == m_socket) { // New connections
-				m_conn_socket = acceptConnection();
-				
-				// maybe need to set the conn_socket to nonblocking ?
-				
-				struct epoll_event ev1;
-				ev1.events = EPOLLIN | EPOLLOUT; // ?
-				ev1.data.fd = m_conn_socket;
-				
-				epoll_ctl(epollfd, EPOLL_CTL_ADD, m_conn_socket, &ev1);
-			}
-			else if (events[i].events == EPOLLHUP) {
-				close(m_conn_socket); // might need to call epoll_ctl + EPOLL_CTL_DEL
-			}
-			else {
-				handleConnection(m_conn_socket); // might need to send the event and not only the fd
-			}
-		}
-	}
+	std::cout << "The server was close" << std::endl;
+	close(this->server_sock);
 }
 
 /*
@@ -151,7 +125,6 @@ TcpServer::serverLoop(void) {
 
 void
 TcpServer::handleConnection(int connection_socket) {
-	
 	GPS;
 
 	// GET index.html HTTP/1.1
@@ -161,23 +134,10 @@ TcpServer::handleConnection(int connection_socket) {
 		- Open the file in the local system
 		- Write the document back to the client
 	*/
+	char content[BUFFER_SIZE] = {0};
 
-    // Change this to max client bodysize ???
-    std::string buf1;
-    buf1.resize(BUFFER_SIZE);
-
-    char buf[BUFFER_SIZE];
-
-	int bytesIn = recv(connection_socket, &buf, BUFFER_SIZE, 0);  
-
-    if (bytesIn <= 0) {
-        // drop client ?
-    }
-    else {
-        MLOG(buf);
-        //parseRequest(connection_socket, buf);
-    }
-
+	if (recv(connection_socket, content, BUFFER_SIZE, 0) < 0)
+		throw std::runtime_error("Error: Read from client socket");
 	sendResponse(connection_socket);
 }
 
@@ -224,7 +184,7 @@ TcpServer::sendResponse(int connection_socket) {
 	oss << "Content-Type: text/plain\r\n";
 	oss << "Content-Length: 5\r\n";
 	oss << "\r\n";
-	oss << "Hello";
+	oss << "<h1>Hello</h1>";
 	
 	std::string output = oss.str();
 	int size = output.size() + 1;

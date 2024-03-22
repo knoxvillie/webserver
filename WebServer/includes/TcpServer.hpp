@@ -26,6 +26,7 @@ HTTP Server:
 //     TcpServer Class
 // ========================
 
+#define BACKLOG 42
 #define MAX_EVENTS 10
 #define BUFFER_SIZE 4096 // Change this ??
 
@@ -34,24 +35,22 @@ class TcpServer {
 	private:
 		TcpServer(); // Prevent the use of the default constructor
 
-		Server m_config;
+		Server data;
+		int server_sock;
 
-		int m_socket, m_conn_socket;
-		struct sockaddr_in m_servaddr;
-		unsigned int m_servaddr_len;
-		
-		int epollfd, nfds;
+		int fd_epoll;
+		int nfds;
 		struct epoll_event ev, events[MAX_EVENTS];
 
 		fd_set current_sockets, ready_sockets;
 
-		int startServer(void);
+		void startServer(void);
+		void startListen(unsigned short);
 		void closeServer(void);
-		void startListen(void);
 		int acceptConnection(void);
 
 		void serverLoop(void);
-		void handleConnection(int connection_socket);
+		void handleConnection(int);
 		void parseRequest(int connection_socket, std::string& request);
 
 		std::string buildResponse(void);

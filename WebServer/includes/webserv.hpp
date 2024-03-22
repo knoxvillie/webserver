@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/19 15:51:04 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/22 12:45:49 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,7 @@ std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
 bool isStringNum(const std::string&);
+uint32_t ipParserHtonl(const std::string&);
 
 //	Templates
 template <typename T>

@@ -69,25 +69,27 @@ void
 Server::checkListen(std::vector<std::string>& vec) {
 	GPS;
 	int port;
-	struct in_addr ipAddress;
 
-	std::memset(&ipAddress, 0, sizeof(ipAddress));
+	std::memset(&this->server_address, 0, sizeof(this->server_address));
 	if (vec.size() > 1)
 		throw std::runtime_error("Error: listen directive has too many arguments");
-	std::string value(vec[0]);
-	if (value.find(':') == std::string::npos) {
+	std::string token(vec[0]);
+	// ':' not in token
+	if (token.find(':') == std::string::npos) {
 		this->s_host = "0.0.0.0";
-		port = std::atoi(value.substr(0, value.find(';')).c_str());
+		this->server_address.sin_addr.s_addr = INADDR_ANY;
+		port = std::atoi(token.substr(0, token.find(';')).c_str());
 	} else {
-		size_t	pos = value.find(':');
-		this->s_host = value.substr(0, pos);
-		port = (std::atoi(value.substr(pos + 1).c_str()));
-		if (inet_pton(AF_INET, this->s_host.c_str(), &ipAddress) <= 0)
-			throw std::runtime_error("IP PROBLEM");
+		size_t	pos = token.find(':');
+		this->s_host = token.substr(0, pos);
+		port = (std::atoi(token.substr(pos + 1).c_str()));
+		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->s_host);
 	}
 	if (port < 1024 || port > 65535)
 		throw std::runtime_error("Error: invalid server port");
 	this->s_port = (uint16_t)port;
+	this->server_address.sin_family = AF_INET;
+	this->server_address.sin_port = htons(this->s_port);
 }
 
 void

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 16:28:16 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/22 15:44:44 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,26 @@ isStringNum(const std::string& string) {
 			return false;
 	}
 	return true;
+}
+
+uint32_t ipParserHtonl(const std::string& ip_address) {
+	char* endptr;
+	uint32_t bytes = 0;
+	std::string token;
+	std::istringstream iss(ip_address);
+
+	for (short i = 0; i < 4; i++) {
+		if (!std::getline(iss, token, '.'))
+			throw  std::runtime_error("Error: Invalid IP address format");
+		long octet = std::strtol(token.c_str(), &endptr, 10);
+
+		if (*endptr != '\0')
+			throw std::runtime_error("Error: IP address conversion failed octet: " + token);
+		if (octet < 0 || octet > 255)
+			throw std::runtime_error("Error: Invalid IP address, octet out of range");
+		bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
+	}
+	return (bytes);
 }
 
 
