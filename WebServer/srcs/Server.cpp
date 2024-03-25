@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/19 15:03:14 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/25 10:47:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -204,7 +204,7 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 		throw std::runtime_error("Error: Invalid Error Page arguments");
 	if (!isStringNum(vec[0]))
 		throw std::runtime_error("Error: The error code must be numerical: " + vec[0]);
-	if (stat(vec[1].c_str(), &buf) != 0)
+	if (stat(vec[1].substr(0, vec[1].find(';')).c_str(), &buf) != 0)
 		throw std::runtime_error("Invalid Error Page Path");
 }
 

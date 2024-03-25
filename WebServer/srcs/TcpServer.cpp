@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/22 16:02:44 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/25 10:59:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,27 +49,32 @@ TcpServer::serverLoop(void) {
 	GPS;
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
-
-	epoll_fd = epoll_create(10);
+	
+	epoll_fd = epoll_create(1);
+	
 	if (epoll_fd < 0)
 		throw std::runtime_error("Error: Creating epoll instance");
 	event.events = EPOLLIN;
 	event.data.fd = this->server_sock;
+	
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, this->server_sock, &event) < 0)
 		throw std::runtime_error("Error: epoll_ctl failed");
+	
 	while (true) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
+		
 		if (num_ready_events < 0)
 			throw std::runtime_error("Error: epoll_wait failed");
+		
 		for (int i = 0; i < num_ready_events; i++) {
 			if (event_buffer[i].data.fd == this->server_sock) {
 				client_sock = this->acceptConnection();
-				event.events = EPOLLIN;
-				event.data.fd = client_sock;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) < 0)
+				event_buffer[i].events = EPOLLIN;
+				event_buffer[i].data.fd = client_sock;
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");
 			} else {
-				this->handleConnection(client_sock);
+				this->handleConnection(event_buffer[i].data.fd);
 			}
 		}
 	}
@@ -181,8 +186,8 @@ TcpServer::sendResponse(int connection_socket) {
 	std::ostringstream oss;
 	oss << "HTTP/1.1 200 OK\r\n";
 	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: text/plain\r\n";
-	oss << "Content-Length: 5\r\n";
+	oss << "Content-Type: text/html\r\n";
+	oss << "Content-Length: 15\r\n";
 	oss << "\r\n";
 	oss << "<h1>Hello</h1>";
 	
