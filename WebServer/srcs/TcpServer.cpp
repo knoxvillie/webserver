@@ -6,13 +6,14 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 13:48:18 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 14:45:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
 TcpServer::TcpServer(const Config& object) : data(object) {
+	GPS;
 	 /*
 	 * domain	: Specifies the communication domain. Protocol family that the socket will belong to.
 	 * 			For a TCP/IP socket using the IPv4 Internet protocols defined by the AF_INET domain.
@@ -38,10 +39,10 @@ TcpServer::TcpServer(const Config& object) : data(object) {
 
 TcpServer::~TcpServer() {
 	GPS;
-	closeServer();
+	//closeServer();
 }
 
-void
+/* void
 TcpServer::serverLoop(void) {
 	GPS;
 	int epoll_fd, num_ready_events, client_sock;
@@ -76,7 +77,7 @@ TcpServer::serverLoop(void) {
 		}
 	}
 	close (epoll_fd);
-}
+} */
 
 int
 TcpServer::acceptConnection(void) {
@@ -90,6 +91,7 @@ TcpServer::acceptConnection(void) {
 
 void
 TcpServer::closeServer(void) {
+	GPS;
 	std::cout << "The server was closed" << std::endl;
 	close(this->server_sock);
 }
@@ -142,6 +144,7 @@ TcpServer::handleConnection(int connection_socket) {
 	if (recv(connection_socket, content, BUFFER_SIZE, 0) < 0)
 		throw std::runtime_error("Error: Read from client socket");
 	sendResponse(connection_socket);
+	close(connection_socket);
 }
 
 void
