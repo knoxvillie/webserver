@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 14:52:53 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 15:12:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,10 @@ TcpServer::TcpServer(const Config& object) : data(object) {
 	if (this->server_sock < 0)
 		throw std::runtime_error("Error: Couldn't create socket");
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
-	if (bind(this->server_sock, (sockaddr *)(&this->data.server_address), sizeof(this->data.server_address)) < 0)
+	if (bind(this->server_sock, (sockaddr *)(&this->data.server_address), sizeof(this->data.server_address)) < 0) {
+		std::cerr << "Bind failed: " << strerror(errno) << std::endl;
 		throw std::runtime_error("Error: Couldn't bind socket");
+	}
 	if (listen(this->server_sock, BACKLOG) < 0) //SOMAXCONN
 		throw std::runtime_error("Error: Couldn't listen");
 	//this->serverLoop();
