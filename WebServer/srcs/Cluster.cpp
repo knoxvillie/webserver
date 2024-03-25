@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 14:50:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 15:05:32 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,6 @@ Cluster::serversLoop() {
 			}
 			else {
 				m_fdToServer[client_sock]->handleConnection(client_sock);
-				close(client_sock);
 			}
 		}
 	}
@@ -81,12 +80,23 @@ Cluster::serversLoop() {
 
 void
 Cluster::deleteServers(void) {
-	for (size_t i = 0; i < m_sockets.size(); i++) {
-		close(m_sockets[i]);
+	GPS;
+
+	for (std::map<int, TcpServer*>::iterator it = m_fdToServer.begin(); it != m_fdToServer.end(); it++) {
+		MLOG(it->first);
+		if (close(it->first) < 0) {
+			MERROR("couldn't close socket.");
+		}
 	}
 	
+
+/* 	for (size_t i = 0; i < m_sockets.size(); i++) {
+		if (close(m_sockets[i]) < 0) {
+			MERROR("couldn't close socket.");
+		}
+	} */
+
 	for (size_t i = 0; i < m_servers.size(); i++) {
-		m_servers[i]->closeServer();
 		delete m_servers[i];
 	}
 	MLOG("deleted all server");
