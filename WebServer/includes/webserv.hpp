@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/22 12:45:49 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/25 11:39:56 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/epoll.h>
+#include <csignal>
 
 // ========================
 // 		Macros and struct
@@ -89,7 +90,6 @@ class FuncLogger {
 		};
 };
 
-
 // ======================
 //       Functions       
 // ======================
@@ -104,6 +104,8 @@ std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
 bool isStringNum(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
+void signal_handler(int signum);
+
 
 //	Templates
 template <typename T>

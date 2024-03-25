@@ -6,16 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 10:59:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 11:51:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-/*
- *
- *
- * */
 TcpServer::TcpServer(const Server& object) : data(object) {
 	 /*
 	 * domain	: Specifies the communication domain. Protocol family that the socket will belong to.
@@ -41,6 +37,7 @@ TcpServer::TcpServer(const Server& object) : data(object) {
 }
 
 TcpServer::~TcpServer() {
+	GPS;
 	closeServer();
 }
 
@@ -64,7 +61,7 @@ TcpServer::serverLoop(void) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
 		if (num_ready_events < 0)
-			throw std::runtime_error("Error: epoll_wait failed");
+			break;
 		
 		for (int i = 0; i < num_ready_events; i++) {
 			if (event_buffer[i].data.fd == this->server_sock) {
@@ -81,7 +78,7 @@ TcpServer::serverLoop(void) {
 }
 
 int
-TcpServer::acceptConnection(void) { //Keep client info locally?
+TcpServer::acceptConnection(void) {
 	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
@@ -92,7 +89,7 @@ TcpServer::acceptConnection(void) { //Keep client info locally?
 
 void
 TcpServer::closeServer(void) {
-	std::cout << "The server was close" << std::endl;
+	std::cout << "The server was closed" << std::endl;
 	close(this->server_sock);
 }
 

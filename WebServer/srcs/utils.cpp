@@ -6,12 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/22 15:44:44 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/25 11:53:00 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "Server.hpp"
+#include "cluster.hpp"
 
 std::vector<std::string>
 vectorInitializer(const char** list) {
@@ -89,5 +90,11 @@ uint32_t ipParserHtonl(const std::string& ip_address) {
 	return (bytes);
 }
 
-
-
+void signal_handler(int signum) {
+	GPS;
+	
+	if (signum == SIGINT) {
+		MLOG("here");
+		deleteServers();
+	}
+}
