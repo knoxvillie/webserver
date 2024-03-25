@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 13:42:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 14:44:22 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ Config::Config(std::map<std::string, std::vector<std::string> >& server, std::ma
 // This method stands to check which "essentials directives" are not in the server block and initialize it.
 void
 Config::applyServerDirectives(void) {
+	GPS;
 	std::map<std::string, std::vector<std::string> >::iterator it;
 
 	for (int i = 0; Parser::server_directives[i]; ++i) {
@@ -43,14 +44,13 @@ Config::applyServerDirectives(void) {
 
 void
 Config::validateServerDirectives(void) {
+	GPS;
 	std::map<std::string, std::vector<std::string> >& server = this->_serverDirectives;
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >& location = this->_locationDirectives;
 	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++)
 		this->directiveSelector(it->first, it->second);
-	for (std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator it = location.begin(); it != location.end(); it++) {
-		std::cout << "LOCATION: " << it->second.begin()->first << " " << it->second.begin()->second.at(0) << std::endl;
+	for (std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator it = location.begin(); it != location.end(); it++)
 		this->directiveSelector(it->second.begin()->first, it->second.begin()->second);
-	}
 }
 
 void
@@ -78,7 +78,6 @@ Config::directiveSelector(const std::string& directive, std::vector<std::string>
 // Kind of a directives parser
 void
 Config::checkListen(std::vector<std::string>& vec) {
-	GPS;
 	int port;
 
 	std::memset(&this->server_address, 0, sizeof(this->server_address));
@@ -105,7 +104,6 @@ Config::checkListen(std::vector<std::string>& vec) {
 
 void
 Config::checkServerName(std::vector<std::string>& vec) {
-	GPS;
 	/*
 	 * When you set server_name default; in an Nginx server block, it means that this block will respond
 	 * to requests that do not match any other server_name specified in the server configuration.
@@ -118,7 +116,6 @@ Config::checkServerName(std::vector<std::string>& vec) {
 
 void
 Config::checkRoot(std::vector<std::string>& vec) {
-	GPS;
 	struct stat buf;
 
 	// Assuming only onde path
@@ -139,7 +136,6 @@ Config::checkRoot(std::vector<std::string>& vec) {
 
 void
 Config::checkIndex(std::vector<std::string>& vec) {
-	GPS;
 	struct stat	buf;
 
 	if (vec.size() != 1)
@@ -154,7 +150,6 @@ Config::checkIndex(std::vector<std::string>& vec) {
 
 void
 Config::checkAutoIndex(std::vector<std::string>& vec) {
-	GPS;
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
 	if (vec[0] == "on;" || vec[0] == "off;") {
@@ -166,7 +161,6 @@ Config::checkAutoIndex(std::vector<std::string>& vec) {
 
 void
 Config::checkAllowMethods(std::vector<std::string>& vec) {
-	GPS;
 	if (vec.empty())
 		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
 	for (size_t i = 0; i < vec.size(); i++) {

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 13:49:45 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:56:40 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int	main(int argc, char* argv[]) {
 
 	try {
 		Parser::parsingConfigFile(config_file);
-		Cluster cluster(Parser::getServers());
+		//Cluster cluster(Parser::getServers());
 	}
 	catch (const std::runtime_error& except) {
 		std::cerr << except.what() << std::endl;
