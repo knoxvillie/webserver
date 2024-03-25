@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 14:48:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 14:50:20 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,10 @@ Cluster::serversLoop() {
 
 void
 Cluster::deleteServers(void) {
+	for (size_t i = 0; i < m_sockets.size(); i++) {
+		close(m_sockets[i]);
+	}
+	
 	for (size_t i = 0; i < m_servers.size(); i++) {
 		m_servers[i]->closeServer();
 		delete m_servers[i];
