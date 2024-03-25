@@ -1,19 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 15:33:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 12:58:36 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
 #include "webserv.hpp"
 #include "Parser.hpp"
@@ -24,12 +24,12 @@
 	the point is that a TcpServer object can be created by passing an instance of
 	this class.
 */
-class Server {
+class Config {
 	
 	friend class TcpServer; // so TcpServer class can access private members
 
 	private:
-		Server(void); // Preventing the compiler from creating a default constructor.
+		Config(void); // Preventing the compiler from creating a default constructor.
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
@@ -52,13 +52,14 @@ class Server {
 		uint16_t cMaxBodySize;
 
 	public:
-		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
+		Config(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
 
 		//Directives parser
+		void directiveSelector(const std::string&, std::vector<std::string>&);
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
 		void checkRoot(std::vector<std::string>&);
@@ -69,4 +70,4 @@ class Server {
 		void checkErrorPage(std::vector<std::string>&);
 };
 
-#endif //SERVER_HPP
+#endif //CONFIG_HPP

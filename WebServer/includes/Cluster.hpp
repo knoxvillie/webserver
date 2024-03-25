@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cluster.hpp                                        :+:      :+:    :+:   */
+/*   Cluster.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:35:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 11:42:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:50:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,21 @@
 #include "webserv.hpp"
 #include "Parser.hpp"
 #include "TcpServer.hpp"
-#include "Server.hpp"
+#include "Config.hpp"
 
-extern std::vector<TcpServer*> servers;
+class Cluster {
+	
+	private:
+		std::vector<TcpServer*> m_servers;
+		std::vector<int> m_sockets;
+		std::map<int, TcpServer&> m_fdToServer;
+		std::vector<Config> m_configs;
 
-void createServers(void);
-void deleteServers(void);
+		void deleteServers(void);
+		void createServers(void);
+		void serversLoop(void);
+
+	public:
+		Cluster(const std::vector<Config>& configs);
+		~Cluster();
+};

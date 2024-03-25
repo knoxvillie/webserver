@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 16:57:48 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/25 12:46:56 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,13 +50,13 @@
 */
 
 // Server prototype only
-class Server;
+class Config;
 
 class Parser {
 	private:
 	Parser(void);
 	~Parser(void);
-	static std::vector<Server> _servers;
+	static std::vector<Config> _servers;
 	static std::map<std::string, std::vector<std::string> >	_directives;
 	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
@@ -66,5 +66,5 @@ class Parser {
 		static void parsingConfigFile(const std::string&);
 		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
 		static void parsingLocationBlock(std::vector<std::string>&);
-		static std::vector<Server> &getServers(void);
+		static std::vector<Config> &getServers(void);
 };

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 11:39:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:43:01 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,13 +95,13 @@ class FuncLogger {
 // ======================
 
 //	Prototypes
-class Server;
+class Config;
 
 //	Utils.cpp
 std::vector<std::string> splitStringToVector(const std::string&);
 std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
-void printServer(std::vector<Server>&);
+void printServer(std::vector<Config>&);
 bool isStringNum(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
 void signal_handler(int signum);

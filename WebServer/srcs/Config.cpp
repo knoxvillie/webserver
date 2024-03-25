@@ -1,23 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 10:47:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:42:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "Config.hpp"
 
 //Prototypes:
 static std::string defaultServerConfig(int);
 
-Server::Server(void) {}
+Config::Config(void) {}
 
-Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
+Config::Config(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
 			   std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
 	GPS;
@@ -27,7 +27,7 @@ Server::Server(std::map<std::string, std::vector<std::string> >& server, std::ma
 
 // This method stands to check which "essentials directives" are not in the server block and initialize it.
 void
-Server::applyServerDirectives(void) {
+Config::applyServerDirectives(void) {
 	std::map<std::string, std::vector<std::string> >::iterator it;
 
 	for (int i = 0; Parser::server_directives[i]; ++i) {
@@ -42,33 +42,42 @@ Server::applyServerDirectives(void) {
 }
 
 void
-Server::validateServerDirectives(void) {
+Config::validateServerDirectives(void) {
 	std::map<std::string, std::vector<std::string> >& server = this->_serverDirectives;
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >& location = this->_locationDirectives;
-	(void)server; (void) location;
-	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++) {
-		if (it->first == "listen")
-			this->checkListen(it->second);
-		else if (it->first == "server_name")
-			this->checkServerName(it->second);
-		else if(it->first == "root")
-			this->checkRoot(it->second);
-		else if (it->first == "index")
-			this->checkIndex(it->second);
-		else if (it->first == "auto_index")
-			this->checkAutoIndex(it->second);
-		else if (it->first == "allow_methods")
-			this->checkAllowMethods(it->second);
-		else if (it->first == "client_max_body_size")
-			this->checkClientMaxBodySize(it->second);
-		else if (it-> first == "error_page")
-			this->checkErrorPage(it->second);
+	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++)
+		this->directiveSelector(it->first, it->second);
+	for (std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator it = location.begin(); it != location.end(); it++) {
+		std::cout << "LOCATION: " << it->second.begin()->first << " " << it->second.begin()->second.at(0) << std::endl;
+		this->directiveSelector(it->second.begin()->first, it->second.begin()->second);
 	}
+}
+
+void
+Config::directiveSelector(const std::string& directive, std::vector<std::string>& vec) {
+		if (directive == "listen")
+			this->checkListen(vec);
+		else if (directive == "server_name")
+			this->checkServerName(vec);
+		else if(directive == "root")
+			this->checkRoot(vec);
+		else if (directive == "index")
+			this->checkIndex(vec);
+		else if (directive == "auto_index")
+			this->checkAutoIndex(vec);
+		else if (directive == "allow_methods")
+			this->checkAllowMethods(vec);
+		else if (directive == "client_max_body_size")
+			this->checkClientMaxBodySize(vec);
+		else if (directive == "error_page")
+			this->checkErrorPage(vec);
+		else
+			throw std::runtime_error("Error: Directive is not valid ");
 }
 
 // Kind of a directives parser
 void
-Server::checkListen(std::vector<std::string>& vec) {
+Config::checkListen(std::vector<std::string>& vec) {
 	GPS;
 	int port;
 
@@ -95,7 +104,7 @@ Server::checkListen(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkServerName(std::vector<std::string>& vec) {
+Config::checkServerName(std::vector<std::string>& vec) {
 	GPS;
 	/*
 	 * When you set server_name default; in an Nginx server block, it means that this block will respond
@@ -108,7 +117,7 @@ Server::checkServerName(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkRoot(std::vector<std::string>& vec) {
+Config::checkRoot(std::vector<std::string>& vec) {
 	GPS;
 	struct stat buf;
 
@@ -129,7 +138,7 @@ Server::checkRoot(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkIndex(std::vector<std::string>& vec) {
+Config::checkIndex(std::vector<std::string>& vec) {
 	GPS;
 	struct stat	buf;
 
@@ -144,7 +153,7 @@ Server::checkIndex(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkAutoIndex(std::vector<std::string>& vec) {
+Config::checkAutoIndex(std::vector<std::string>& vec) {
 	GPS;
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
@@ -156,7 +165,7 @@ Server::checkAutoIndex(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkAllowMethods(std::vector<std::string>& vec) {
+Config::checkAllowMethods(std::vector<std::string>& vec) {
 	GPS;
 	if (vec.empty())
 		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
@@ -176,7 +185,7 @@ Server::checkAllowMethods(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
+Config::checkClientMaxBodySize(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Invalid number of arguments Client Max Body Size");
 	if (vec[0][vec[0].size() - 2] != 'M')
@@ -197,7 +206,7 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
 }
 
 void
-Server::checkErrorPage(std::vector<std::string>& vec) {
+Config::checkErrorPage(std::vector<std::string>& vec) {
 	struct stat buf;
 
 	if (vec.size() != 2)
@@ -211,12 +220,12 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 
 //	Getters
 std::map<std::string, std::vector<std::string> >&
-Server::getServerDirectives(void) {
+Config::getServerDirectives(void) {
 	return (_serverDirectives);
 }
 
 std::map<std::string, std::map<std::string, std::vector<std::string> > >&
-Server::getLocationDirectives(void) {
+Config::getLocationDirectives(void) {
 	return (_locationDirectives);
 }
 
@@ -224,14 +233,14 @@ Server::getLocationDirectives(void) {
 std::string
 defaultServerConfig(int directive) {
 	switch (directive) {
-		case 0: return ("0.0.0.0:8080"); //Listen
-		case 1: return ("default"); //Server_name
-		case 2: return ("/home/kfaustin/webserver/"); //Root
-		case 3: return ("index.html"); //Index
-		case 4: return ("on"); //Autoindex (MAYBE)
-		case 5: return ("GET POST DELETE"); //Allow_methods
-		case 6: return ("1M"); //Client_max_body_size
-		case 7: return ("/error"); //Error_page
+		case 0: return ("0.0.0.0:8080;"); //Listen
+		case 1: return ("default;"); //Server_name
+		case 2: return ("/home/kfaustin/webserver/;"); //Root
+		case 3: return ("index.html;"); //Index
+		case 4: return ("on;"); //Autoindex (MAYBE)
+		case 5: return ("GET POST DELETE;"); //Allow_methods
+		case 6: return ("1M;"); //Client_max_body_size
+		case 7: return ("/error;"); //Error_page
 		default: throw std::runtime_error("Server.cpp defaultServerConfig Methods");
 	}
 }

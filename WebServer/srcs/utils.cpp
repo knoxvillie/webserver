@@ -6,13 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 11:53:00 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 12:48:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
-#include "Server.hpp"
-#include "cluster.hpp"
+#include "Config.hpp"
 
 std::vector<std::string>
 vectorInitializer(const char** list) {
@@ -48,7 +47,7 @@ extractValues(const std::string& input) {
 }
 
 void
-printServer(std::vector<Server>& serverList) {
+printServer(std::vector<Config>& serverList) {
 	for (size_t i = 0; i < serverList.size(); i++) {
 		std::cout << "\nServer " << i << " :" << std::endl;
 		printMapVec(serverList[i].getServerDirectives());
@@ -90,7 +89,7 @@ uint32_t ipParserHtonl(const std::string& ip_address) {
 	return (bytes);
 }
 
-void signal_handler(int signum) {
+/* void signal_handler(int signum) {
 	GPS;
 	
 	if (signum == SIGINT) {
@@ -98,3 +97,4 @@ void signal_handler(int signum) {
 		deleteServers();
 	}
 }
+ */

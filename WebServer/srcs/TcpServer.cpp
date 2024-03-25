@@ -6,13 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 11:51:54 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:48:18 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
 
-TcpServer::TcpServer(const Server& object) : data(object) {
+TcpServer::TcpServer(const Config& object) : data(object) {
 	 /*
 	 * domain	: Specifies the communication domain. Protocol family that the socket will belong to.
 	 * 			For a TCP/IP socket using the IPv4 Internet protocols defined by the AF_INET domain.
@@ -33,7 +33,7 @@ TcpServer::TcpServer(const Server& object) : data(object) {
 		throw std::runtime_error("Error: Couldn't bind socket");
 	if (listen(this->server_sock, BACKLOG) < 0) //SOMAXCONN
 		throw std::runtime_error("Error: Couldn't listen");
-	this->serverLoop();
+	//this->serverLoop();
 }
 
 TcpServer::~TcpServer() {
@@ -60,8 +60,8 @@ TcpServer::serverLoop(void) {
 	while (true) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
-		if (num_ready_events < 0)
-			break;
+		if (num_ready_events < 0) 
+			break; // ????
 		
 		for (int i = 0; i < num_ready_events; i++) {
 			if (event_buffer[i].data.fd == this->server_sock) {
@@ -75,6 +75,7 @@ TcpServer::serverLoop(void) {
 			}
 		}
 	}
+	close (epoll_fd);
 }
 
 int
@@ -192,4 +193,9 @@ TcpServer::sendResponse(int connection_socket) {
 	int size = output.size() + 1;
 
 	send(connection_socket, output.c_str(), size, 0);
+}
+
+int
+TcpServer::getSocket() {
+	return (server_sock);
 }

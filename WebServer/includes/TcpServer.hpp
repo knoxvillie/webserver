@@ -6,14 +6,14 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 11:34:08 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:46:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "webserv.hpp"
-#include "Server.hpp"
+#include "Config.hpp"
 
 /*
 HTTP Server: 
@@ -35,16 +35,16 @@ HTTP Server:
 class TcpServer {
 
 	private:
+		friend class Cluster;
+
 		TcpServer(); // Prevent the use of the default constructor
 
-		Server data;
+		Config data;
 		int server_sock;
 
 		int fd_epoll;
 		int nfds;
 		struct epoll_event ev, events[MAX_EVENTS];
-
-		fd_set current_sockets, ready_sockets;
 
 		void startServer(void);
 		void startListen(unsigned short);
@@ -59,6 +59,8 @@ class TcpServer {
 		void sendResponse(int connection_socket);
 
 	public:
-		TcpServer(const Server& config);
+		TcpServer(const Config& config);
 		~TcpServer();
+
+		int getSocket();
 };

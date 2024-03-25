@@ -6,22 +6,22 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:50:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/25 13:36:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Parser.hpp"
-#include "Server.hpp"
+#include "Config.hpp"
 
 //Prototypes:
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
 //static members need to be defined outside the class.
-std::vector<Server> Parser::_servers;
+std::vector<Config> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
 const char* Parser::server_directives[] = {"listen", "server_name", "root",
-										   "index", "autoindex", "allow_methods",
+										   "index", "auto_index", "allow_methods",
 										   "client_max_body_size" , "error_page", NULL};
 const char* Parser::location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
 
@@ -89,7 +89,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
-			_servers.push_back(Server(_directives, _locations));
+			_servers.push_back(Config(_directives, _locations));
 			_directives.clear(); _locations.clear();
 		}
 	} else
@@ -153,7 +153,7 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 
 // Getters
 
-std::vector<Server>&
+std::vector<Config>&
 Parser::getServers(void) {return (_servers);}
 
 // Related functions
