@@ -6,13 +6,18 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 12:14:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 12:19:14 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
 
 volatile sig_atomic_t gEndLoop = 0;
+
+std::vector<TcpServer*> Cluster::servers;
+std::vector<int> Cluster::serverSockets;
+std::map<int, TcpServer*> Cluster::fdToServer;
+std::vector<Config> Cluster::configs;
 
 void
 Cluster::startServers(const std::vector<Config>& configs) {
