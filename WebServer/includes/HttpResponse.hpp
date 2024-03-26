@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:51:02 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 12:12:22 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 14:21:39 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,17 @@
 class HttpResponse {
 	
 	private:
-	
-	public:
 		HttpResponse();
+
+		//std::string file_name;
+		std::string status_code;
+		std::string headers;
+		std::string body;
+		std::string content_type;
+
+		std::string getFile(std::string file_name);
+
+	public:
 		HttpResponse(const HttpRequest& request);
 		~HttpResponse();
 };
