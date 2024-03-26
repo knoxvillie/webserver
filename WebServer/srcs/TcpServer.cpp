@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 12:11:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 13:36:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,7 @@ TcpServer::handleConnection(int connection_socket) {
 
 	if (recv(connection_socket, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
+	MLOG(content);
 	sendResponse(connection_socket);
 }
 

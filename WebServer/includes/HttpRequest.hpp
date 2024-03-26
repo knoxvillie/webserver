@@ -6,25 +6,28 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 11:56:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 14:14:20 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+#ifndef HTTP_REQUEST_HPP
+# define HTTP_REQUEST_HPP
 
 #include "webserv.hpp"
 
 class HttpRequest {
 	
 	private:
-		std::string m_request;
+		HttpRequest(void);
 		
-		std::string m_method;
-		std::string m_file;
+		std::string request;
 
 	public:
-		HttpRequest();
-		HttpRequest(const std::string& request);
-		HttpRequest(const char *request);
+		HttpRequest(char *);
 		~HttpRequest();
+		void parser(void);
 };
+
+#endif
