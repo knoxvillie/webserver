@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:56:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 14:18:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 14:19:00 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ HttpRequest::HttpRequest(char* request) : request(std::string(request)) {
 HttpRequest::parser(void) {
 	std::string token;
 	std::string line;
-	std::stringstream(this->)
+	std::stringstream(this)
 	while (std::getline())
 }
 
