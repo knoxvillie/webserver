@@ -45,11 +45,21 @@ HttpRequest::HttpRequest(char* request) : request(std::string(request)) {
 	
 }
 
-HttpRequest::parser(void) {
+void HttpRequest::parser(void) {
 	std::string token;
 	std::string line;
-	std::stringstream(this)
-	while (std::getline())
+	std::stringstream ss(this->request);
+
+	for (int i = 0; std::getline(ss, line); i++) {
+		if (i == 0) {
+			// Request line
+			ss >> token; this->method = token;
+			ss >> token; this->uri = token;
+			ss >> token; this->http_version = token;
+		} else {
+
+		}
+	}
 }
 
 HttpRequest::~HttpRequest() {}

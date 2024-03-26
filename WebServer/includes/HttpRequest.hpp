@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 14:14:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 15:28:00 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,11 @@ class HttpRequest {
 		HttpRequest(void);
 		
 		std::string request;
+
+		std::string method;
+		std::string uri;
+		std::string http_version;
+		std::map<std::string, std::vector<std::string> > header_fields;
 
 	public:
 		HttpRequest(char *);
