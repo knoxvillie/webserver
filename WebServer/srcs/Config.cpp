@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/26 10:41:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 11:59:18 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
+#include "webserv.hpp"
 
 //Prototypes:
 static std::string defaultServerConfig(int);
@@ -190,11 +191,11 @@ Config::checkClientMaxBodySize(std::vector<std::string>& vec) {
 		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M') {
 			if (vec[0][i] == ';' && (i == vec[0].size() - 1))
 				break;
-			throw std::runtime_error("Error: AAAAAAA invalid argument " + vec[0]);
+			throw std::runtime_error("Error: Invalid argument " + vec[0]);
 		}
 	}
-	int value = (vec[0].find('M') != std::string::npos) ? atoi(vec[0].substr(0, vec[0].find('M')).c_str()) : atoi(vec[0].c_str());
-	if (value < 0 || value > 65535)
+	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
+	if (value < 1 || value > 1024)
 		throw std::runtime_error("Error: Client Max Body Size out of bound");
 	this->cMaxBodySize = (uint16_t)value;
 }
@@ -231,10 +232,10 @@ defaultServerConfig(int directive) {
 		case 1: return ("default;"); //Server_name
 		case 2: return ("/home/kfaustin/webserver/;"); //Root
 		case 3: return ("index.html;"); //Index
-		case 4: return ("on;"); //Autoindex (MAYBE)
+		case 4: return ("on;"); //Auto_index (MAYBE)
 		case 5: return ("GET POST DELETE;"); //Allow_methods
 		case 6: return ("1M;"); //Client_max_body_size
-		case 7: return ("/error;"); //Error_page
+		case 7: return ("/var/error_pages;"); //Error_page
 		default: throw std::runtime_error("Server.cpp defaultServerConfig Methods");
 	}
 }
