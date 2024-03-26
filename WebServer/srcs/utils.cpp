@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 14:16:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 12:24:44 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,15 +68,22 @@ isStringNum(const std::string& string) {
 		if (string[i] < '0' || string[i] > '9')
 			return false;
 	}
-	return true;
+	return (true);
 }
 
 uint32_t ipParserHtonl(const std::string& ip_address) {
 	char* endptr;
+	short dot_count = 0;
 	uint32_t bytes = 0;
 	std::string token;
 	std::istringstream iss(ip_address);
 
+	for (size_t i = 0; i < ip_address.size(); i++) {
+		if (ip_address[i] == '.')
+			dot_count += 1;
+	}
+	if (dot_count != 3)
+		throw std::runtime_error("Error: Invalid IP address format: " + ip_address);
 	for (short i = 0; i < 4; i++) {
 		if (!std::getline(iss, token, '.'))
 			throw  std::runtime_error("Error: Invalid IP address format");

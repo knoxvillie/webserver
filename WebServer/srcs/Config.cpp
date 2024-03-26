@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/26 11:59:18 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/26 12:29:49 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,8 @@ Config::checkServerName(std::vector<std::string>& vec) {
 		throw std::runtime_error("Error: Multiples server names");
 
 	this->server_name = vec[0].substr(0, vec[0].find(';'));
+	if (this->server_name.empty())
+		throw std::runtime_error("Error: Server Name is empty");
 }
 
 void
