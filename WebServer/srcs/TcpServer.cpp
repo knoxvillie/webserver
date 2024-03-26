@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 11:12:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 12:11:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ TcpServer::~TcpServer() {
 
 int
 TcpServer::acceptConnection(void) {
-	int client_sock, flags;
+	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
 
