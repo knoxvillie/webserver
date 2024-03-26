@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 14:14:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 10:47:40 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <sys/epoll.h>
 #include <csignal>
+#include <fcntl.h>
 
 // ========================
 // 		Macros and struct

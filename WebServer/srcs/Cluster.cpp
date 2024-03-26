@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 15:13:07 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 11:26:22 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,16 @@ Cluster::createServers(void) {
 	for (size_t i = 0; i < m_configs.size(); i++) {
 		TcpServer *server = new TcpServer(m_configs[i]);
 		m_servers.push_back(server);
-		m_sockets.push_back(server->getSocket());
+		m_serverSockets.push_back(server->getSocket());
 		m_fdToServer[server->getSocket()] = server;
 	}
 }
+
+/*
+	IMPORTANT NOTE: 
+	It is normal that after connecting to the server when restarting it takes a while for the
+	socket to be able to bind again, this is due to TIME_WAIT, a standard TCP behaviour
+*/
 
 void
 Cluster::serversLoop() {
@@ -44,11 +50,11 @@ Cluster::serversLoop() {
 	if (epoll_fd < 0)
 		throw std::runtime_error("Error: Creating epoll instance");
 	
-	for (size_t i = 0; i < m_sockets.size(); i++) {
+	for (size_t i = 0; i < m_serverSockets.size(); i++) {
 		event.events = EPOLLIN;
-		event.data.fd = m_sockets[i];
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, m_sockets[i], &event) < 0)
-			throw std::runtime_error("Error: epoll_ctl failed");
+		event.data.fd = m_serverSockets[i];
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, m_serverSockets[i], &event) < 0)
+			throw std::runtime_error("Error: epoll_ctl_add failed");
 	}
 	
 	while (!gEndLoop) {
@@ -60,8 +66,8 @@ Cluster::serversLoop() {
 		for (int i = 0; i < num_ready_events; i++) {
 			client_sock = event_buffer[i].data.fd;
 			
-			if (std::find(m_sockets.begin(), m_sockets.end(), client_sock) != m_sockets.end()) {
-				// client_sock is in m_sockets
+			if (std::find(m_serverSockets.begin(), m_serverSockets.end(), client_sock) != m_serverSockets.end()) {
+				// client_sock is in m_serverSockets, so its a new connection
 				client_sock = m_fdToServer[event_buffer[i].data.fd]->acceptConnection();
 				m_fdToServer[client_sock] = m_fdToServer[event_buffer[i].data.fd];
 				event_buffer[i].events = EPOLLIN;
@@ -71,6 +77,9 @@ Cluster::serversLoop() {
 			}
 			else {
 				m_fdToServer[client_sock]->handleConnection(client_sock);
+/* 				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+				close(client_sock);
+				m_fdToServer.erase(client_sock); */
 			}
 		}
 	}
@@ -82,19 +91,11 @@ void
 Cluster::deleteServers(void) {
 	GPS;
 
-	for (std::map<int, TcpServer*>::iterator it = m_fdToServer.begin(); it != m_fdToServer.end(); it++) {
-		MLOG(it->first);
-		if (close(it->first) < 0) {
+	for (size_t i = 0; i < m_serverSockets.size(); i++) {
+		if (close(m_serverSockets[i]) < 0) {
 			MERROR("couldn't close socket.");
 		}
 	}
-	
-
-/* 	for (size_t i = 0; i < m_sockets.size(); i++) {
-		if (close(m_sockets[i]) < 0) {
-			MERROR("couldn't close socket.");
-		}
-	} */
 
 	for (size_t i = 0; i < m_servers.size(); i++) {
 		delete m_servers[i];

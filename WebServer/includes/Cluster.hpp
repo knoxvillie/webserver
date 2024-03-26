@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:35:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 14:18:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 10:17:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Cluster {
 	
 	private:
 		std::vector<TcpServer*> m_servers;
-		std::vector<int> m_sockets;
+		std::vector<int> m_serverSockets;
 		std::map<int, TcpServer*> m_fdToServer;
 		std::vector<Config> m_configs;
 

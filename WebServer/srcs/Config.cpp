@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 14:44:22 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/26 10:41:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ Config::checkListen(std::vector<std::string>& vec) {
 		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->s_host);
 	}
 	if (port < 1024 || port > 65535)
-		throw std::runtime_error("Error: invalid server port");
+		throw std::runtime_error("Error: Server port out of range [1024, 65535]");
 	this->s_port = (uint16_t)port;
 	this->server_address.sin_family = AF_INET;
 	this->server_address.sin_port = htons(this->s_port);
@@ -111,7 +111,7 @@ Config::checkServerName(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples server names");
 
-	this->server_name = vec[0];
+	this->server_name = vec[0].substr(0, vec[0].find(';'));
 }
 
 void
@@ -139,7 +139,7 @@ Config::checkIndex(std::vector<std::string>& vec) {
 	struct stat	buf;
 
 	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples indes values");
+		throw std::runtime_error("Error: Multiples index values");
 	std::string path(vec[0].substr(0, vec[0].find(';')));
 	this->index = path;
 	if (!this->root.empty()) {
@@ -162,7 +162,7 @@ Config::checkAutoIndex(std::vector<std::string>& vec) {
 void
 Config::checkAllowMethods(std::vector<std::string>& vec) {
 	if (vec.empty())
-		throw std::runtime_error("DEBUG: Allow methods values is empty. MUST FIX");
+		throw std::runtime_error("Error: Allow methods values is empty");
 	for (size_t i = 0; i < vec.size(); i++) {
 		std::string method = (i == vec.size() - 1) ? vec[i].substr(0, vec[i].find(';')) : vec[i];
 

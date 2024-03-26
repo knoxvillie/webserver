@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 15:12:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 11:12:59 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,15 @@ TcpServer::TcpServer(const Config& object) : data(object) {
 
 	if (this->server_sock < 0)
 		throw std::runtime_error("Error: Couldn't create socket");
+	
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 	if (bind(this->server_sock, (sockaddr *)(&this->data.server_address), sizeof(this->data.server_address)) < 0) {
 		std::cerr << "Bind failed: " << strerror(errno) << std::endl;
 		throw std::runtime_error("Error: Couldn't bind socket");
 	}
+	
 	if (listen(this->server_sock, BACKLOG) < 0) //SOMAXCONN
 		throw std::runtime_error("Error: Couldn't listen");
-	//this->serverLoop();
 }
 
 TcpServer::~TcpServer() {
@@ -44,46 +45,9 @@ TcpServer::~TcpServer() {
 	//closeServer();
 }
 
-/* void
-TcpServer::serverLoop(void) {
-	GPS;
-	int epoll_fd, num_ready_events, client_sock;
-	struct epoll_event event, event_buffer[MAX_EVENTS];
-	
-	epoll_fd = epoll_create(1);
-	
-	if (epoll_fd < 0)
-		throw std::runtime_error("Error: Creating epoll instance");
-	event.events = EPOLLIN;
-	event.data.fd = this->server_sock;
-	
-	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, this->server_sock, &event) < 0)
-		throw std::runtime_error("Error: epoll_ctl failed");
-	
-	while (true) {
-		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
-		
-		if (num_ready_events < 0) 
-			break; // ????
-		
-		for (int i = 0; i < num_ready_events; i++) {
-			if (event_buffer[i].data.fd == this->server_sock) {
-				client_sock = this->acceptConnection();
-				event_buffer[i].events = EPOLLIN;
-				event_buffer[i].data.fd = client_sock;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
-					throw std::runtime_error("Error: epoll_ctl failed");
-			} else {
-				this->handleConnection(event_buffer[i].data.fd);
-			}
-		}
-	}
-	close (epoll_fd);
-} */
-
 int
 TcpServer::acceptConnection(void) {
-	int client_sock;
+	int client_sock, flags;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
 
@@ -100,34 +64,23 @@ TcpServer::closeServer(void) {
 
 /*
 	Example of the first request firefox does to a server:
-
-	- ChatGPT:
-		GET / HTTP/1.1
-		Host: www.example.com
-		User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0
-		Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,* / *;q=0.8
-		Accept-Language: en-US,en;q=0.5
-		Accept-Encoding: gzip, deflate, br
-		Connection: keep-alive
-
-	- Printing the buffer:
-		GET / HTTP/1.1
-		Host: 127.0.0.1:8080
-		User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0
-		Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,* / *;q=0.8
-		Accept-Language: en-US,en;q=0.5
-		Accept-Encoding: gzip, deflate, br
-		Connection: keep-alive
-		Upgrade-Insecure-Requests: 1
-		Sec-Fetch-Dest: document
-		Sec-Fetch-Mode: navigate
-		Sec-Fetch-Site: none
-		Sec-Fetch-User: ?1
-		DNT: 1
-		Sec-GPC: 1
-		
-		 d*��
-
+	
+	GET / HTTP/1.1
+	Host: 127.0.0.1:8080
+	User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0
+	Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,* / *;q=0.8
+	Accept-Language: en-US,en;q=0.5
+	Accept-Encoding: gzip, deflate, br
+	Connection: keep-alive
+	Upgrade-Insecure-Requests: 1
+	Sec-Fetch-Dest: document
+	Sec-Fetch-Mode: navigate
+	Sec-Fetch-Site: none
+	Sec-Fetch-User: ?1
+	DNT: 1
+	Sec-GPC: 1
+	
+	 d*��
 */
 
 void
@@ -143,7 +96,7 @@ TcpServer::handleConnection(int connection_socket) {
 	*/
 	char content[BUFFER_SIZE] = {0};
 
-	if (recv(connection_socket, content, BUFFER_SIZE, 0) < 0)
+	if (recv(connection_socket, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
 	sendResponse(connection_socket);
 }
@@ -196,7 +149,7 @@ TcpServer::sendResponse(int connection_socket) {
 	std::string output = oss.str();
 	int size = output.size() + 1;
 
-	send(connection_socket, output.c_str(), size, 0);
+	send(connection_socket, output.c_str(), size, MSG_DONTWAIT);
 }
 
 int
