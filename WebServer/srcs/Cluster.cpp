@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 11:26:22 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/26 11:43:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,22 +14,17 @@
 
 volatile sig_atomic_t gEndLoop = 0;
 
-Cluster::Cluster(const std::vector<Config>& configs) : m_configs(configs) {
-	createServers();
-	serversLoop();
-}
-
-Cluster::~Cluster() {}
-
 void
-Cluster::createServers(void) {
+Cluster::startServers(const std::vector<Config>& configs) {
 	GPS;
+	m_configs = configs;
 	for (size_t i = 0; i < m_configs.size(); i++) {
 		TcpServer *server = new TcpServer(m_configs[i]);
 		m_servers.push_back(server);
 		m_serverSockets.push_back(server->getSocket());
 		m_fdToServer[server->getSocket()] = server;
 	}
+	Cluster::serversLoop();
 }
 
 /*

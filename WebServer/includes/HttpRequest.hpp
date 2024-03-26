@@ -1,37 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cluster.hpp                                        :+:      :+:    :+:   */
+/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/25 11:35:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 11:43:05 by diogmart         ###   ########.fr       */
+/*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
+/*   Updated: 2024/03/26 11:56:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "webserv.hpp"
-#include "Parser.hpp"
-#include "TcpServer.hpp"
-#include "Config.hpp"
 
-class Cluster {
+class HttpRequest {
 	
 	private:
-		Cluster();
-		~Cluster();
+		std::string m_request;
 		
-		static std::vector<TcpServer*> m_servers;
-		static std::vector<int> m_serverSockets;
-		static std::map<int, TcpServer*> m_fdToServer;
-		static std::vector<Config> m_configs;
-		
-		static void serversLoop(void);
+		std::string m_method;
+		std::string m_file;
 
 	public:
-		static void startServers(const std::vector<Config>& configs);
-		static void deleteServers(void);
-
+		HttpRequest();
+		HttpRequest(const std::string& request);
+		HttpRequest(const char *request);
+		~HttpRequest();
 };
