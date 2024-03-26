@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 14:42:40 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/26 13:26:23 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
-	if (token != "}")
+	if (line != "}")
 		throw std::runtime_error("all blocks must be closed");
 	inputFile.close();
 	printServer(_servers);
