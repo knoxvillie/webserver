@@ -6,37 +6,25 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:27:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 13:36:33 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/27 16:05:21 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "TcpServer.hpp"
+#include "HttpRequest.hpp"
 
 TcpServer::TcpServer(const Config& object) : data(object) {
 	GPS;
-	 /*
-	 * domain	: Specifies the communication domain. Protocol family that the socket will belong to.
-	 * 			For a TCP/IP socket using the IPv4 Internet protocols defined by the AF_INET domain.
-	 * type 	: Type of communication structure the socket will allow for this protocol family.
-	 *			SOCK_STREAM - to allow for reliable, full-duplex byte streams.
-	 * protocol	: Particular protocol the socket will use from the given family of protocols that
-	 * 			support the chosen type of communication. For the AF_INET family, there is only
-	 * 			one protocol that supports SOCK_STREAM. We will be setting this parameter to 0.
-	 * backlog	: argument is the maximum number of connection threads we want to be able to hold at once.
-	 * 			If a client tries to connect when the queue is full, they will get rejected by the server.
-	 * */
 	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (this->server_sock < 0)
 		throw std::runtime_error("Error: Couldn't create socket");
-	
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 	if (bind(this->server_sock, (sockaddr *)(&this->data.server_address), sizeof(this->data.server_address)) < 0) {
 		std::cerr << "Bind failed: " << strerror(errno) << std::endl;
 		throw std::runtime_error("Error: Couldn't bind socket");
 	}
-	
-	if (listen(this->server_sock, BACKLOG) < 0) //SOMAXCONN
+	if (listen(this->server_sock, SOMAXCONN) < 0)
 		throw std::runtime_error("Error: Couldn't listen");
 }
 
@@ -60,76 +48,6 @@ TcpServer::closeServer(void) {
 	GPS;
 	std::cout << "The server was closed" << std::endl;
 	close(this->server_sock);
-}
-
-/*
-	Example of the first request firefox does to a server:
-	
-	GET / HTTP/1.1
-	Host: 127.0.0.1:8080
-	User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0
-	Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,* / *;q=0.8
-	Accept-Language: en-US,en;q=0.5
-	Accept-Encoding: gzip, deflate, br
-	Connection: keep-alive
-	Upgrade-Insecure-Requests: 1
-	Sec-Fetch-Dest: document
-	Sec-Fetch-Mode: navigate
-	Sec-Fetch-Site: none
-	Sec-Fetch-User: ?1
-	DNT: 1
-	Sec-GPC: 1
-	
-	 d*��
-*/
-
-void
-TcpServer::handleConnection(int connection_socket) {
-	GPS;
-
-	// GET index.html HTTP/1.1
-	// <command> <filename> HTTP/1.1
-	/*
-		- Parse the document
-		- Open the file in the local system
-		- Write the document back to the client
-	*/
-	char content[BUFFER_SIZE] = {0};
-
-	if (recv(connection_socket, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
-		throw std::runtime_error("Error: Read from client socket");
-	MLOG(content);
-	sendResponse(connection_socket);
-}
-
-void
-TcpServer::parseRequest(int connection_socket, std::string& request) {
-    // Check the command thats being used
-    (void)connection_socket;
-    (void)request;
-}
-
-std::string
-TcpServer::buildResponse(void) {
-	// The response should start with "HTTP/1.1 200 OK" if the resquest is successful.
-	// Then there should be some more stuff, it could be a html file or something else
-
-/*
-	Basically, responses consist of the following elements:
-
-	-The version of the HTTP protocol they follow.
-	-A status code, indicating if the request was successful or not, and why.
-	-A status message, a non-authoritative short description of the status code.
-	-HTTP headers, like those for requests.
-	-Optionally, a body containing the fetched resource.
-
-	- List possible response codes and status messages;
-	- Define an index.html;
-	- Define function to handle the different types of requests that can be received = GET/POST/DELETE
-	- List possible response types (cgi goes here, how to handle it?);
-	- 
-*/
-	return (NULL); // temp
 }
 
 void

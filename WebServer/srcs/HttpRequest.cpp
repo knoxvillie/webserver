@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:56:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 15:31:20 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/27 17:15:00 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,27 +41,43 @@
     Upgrade-Insecure-Requests: Indicates that the client would like the server to upgrade the request to a secure HTTPS connection if possible.*/
 
 
-HttpRequest::HttpRequest(char* request) : request(std::string(request)) {
-	
+HttpRequest::HttpRequest(int connection) {
+	this->readRequest(connection);
+	this->parser();
+}
+
+void HttpRequest::readRequest(int connection) {
+	GPS;
+	char content[BUFFER_SIZE] = {0};
+
+	if (recv(connection, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
+		throw std::runtime_error("Error: Read from client socket");
+	this->request = std::string(content);
+	MLOG(content);
 }
 
 void HttpRequest::parser(void) {
 	size_t pos;
-	std::string line;
 	std::string token;
 	std::stringstream ss(this->request);
 
-	ss >> token; this->method = token;
-	ss >> token; this->uri = token;
-	ss >> token; this->http_version = token;
-
-	for (;std::getline(ss, line);) {
-		std::string value;
-		pos = line.find(':');
-
-		for (;std::getline();)
-		this->header_fields[line.substr(0, pos)] = line.substr();
+	if (ss >> token) {
+		if (token != "GET" && token != "POST" && token != "DELETE")
+			throw std::runtime_error("Error: Invalid HTTP request method");
+		this->method = token;
+		if (ss >> token) {
+			// Verify if the uri exists inside the root
+			this->uri = token;
+		}
+		if (ss >> token) {
+			// if wanna check the http version.
+		}
+	} else {
+		throw std::runtime_error("Error: Invalid HTTP request line");
 	}
+
+
+
 }
 
 HttpRequest::~HttpRequest() {}

@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 12:19:14 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/27 16:39:50 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
+#include "HttpRequest.hpp"
 
 volatile sig_atomic_t gEndLoop = 0;
 
@@ -24,7 +25,7 @@ Cluster::startServers(const std::vector<Config>& configs) {
 	GPS;
 	Cluster::configs = configs;
 	for (size_t i = 0; i < Cluster::configs.size(); i++) {
-		TcpServer *server = new TcpServer(Cluster::configs[i]);
+		TcpServer* server = new TcpServer(Cluster::configs[i]);
 		Cluster::servers.push_back(server);
 		Cluster::serverSockets.push_back(server->getSocket());
 		Cluster::fdToServer[server->getSocket()] = server;
@@ -44,19 +45,17 @@ Cluster::serversLoop() {
 
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
-	
-	epoll_fd = epoll_create(1); // probably not 1
+
+	event.events = EPOLLIN;
+	epoll_fd = epoll_create(Cluster::serverSockets.size()); // Expected number of fd, 0 to set to standard
 	
 	if (epoll_fd < 0)
 		throw std::runtime_error("Error: Creating epoll instance");
-	
 	for (size_t i = 0; i < Cluster::serverSockets.size(); i++) {
-		event.events = EPOLLIN;
 		event.data.fd = Cluster::serverSockets[i];
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, Cluster::serverSockets[i], &event) < 0)
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event.data.fd, &event) < 0)
 			throw std::runtime_error("Error: epoll_ctl_add failed");
 	}
-	
 	while (!gEndLoop) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
@@ -76,10 +75,11 @@ Cluster::serversLoop() {
 					throw std::runtime_error("Error: epoll_ctl failed");
 			}
 			else {
-				Cluster::fdToServer[client_sock]->handleConnection(client_sock);
-/* 				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
-				close(client_sock);
-				Cluster::fdToServer.erase(client_sock); */
+				HttpRequest request(client_sock);
+				Cluster::fdToServer[client_sock]->sendResponse(client_sock);
+//				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+//				close(client_sock);
+//				Cluster::fdToServer.erase(client_sock);
 			}
 		}
 	}

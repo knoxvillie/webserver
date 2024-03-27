@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/07 12:24:39 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/25 13:55:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/27 15:56:17 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,7 @@ HTTP Server:
 //     TcpServer Class
 // ========================
 
-#define BACKLOG 42
 #define MAX_EVENTS 10
-#define BUFFER_SIZE 4096 // Change this ??
 
 class TcpServer {
 
@@ -52,7 +50,7 @@ class TcpServer {
 		int acceptConnection(void);
 
 		void serverLoop(void);
-		void handleConnection(int);
+		char* handleConnection(int);
 		void parseRequest(int connection_socket, std::string& request);
 
 		std::string buildResponse(void);
