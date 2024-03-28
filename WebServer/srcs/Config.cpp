@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/26 12:29:49 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/27 19:05:57 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,17 @@ static std::string defaultServerConfig(int);
 
 Config::Config(void) {}
 
+Config::~Config(void) {
+	close(this->server_address);
+}
+
 Config::Config(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
 			   std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
 	GPS;
 	this->applyServerDirectives();
 	this->validateServerDirectives();
+	this->startServerSocket();
 }
 
 // This method stands to check which "essentials directives" are not in the server block and initialize it.
@@ -76,7 +81,34 @@ Config::directiveSelector(const std::string& directive, std::vector<std::string>
 			throw std::runtime_error("Error: Directive is not valid ");
 }
 
-// Kind of a directives parser
+void
+Config::startServerSocket(void) {
+	GPS;
+	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (this->server_sock < 0)
+		throw std::runtime_error("Error: Couldn't create socket");
+	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
+	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
+		throw std::runtime_error("Error: Couldn't bind socket");
+	if (listen(this->server_sock, SOMAXCONN) < 0)
+		throw std::runtime_error("Error: Couldn't listen");
+}
+
+int
+Config::acceptConnection(void) {
+	int client_sock;
+	struct sockaddr_in client_address;
+	socklen_t client_address_len = sizeof(client_address);
+
+	std::memset(&client_address, 0, sizeof(client_address));
+	client_sock = accept(this->server_sock, (sockaddr*)&client_address, (socklen_t*)&client_address_len);
+	if (client_sock < 0)
+		throw std::runtime_error("Error: Client socket failed");
+	return (client_sock);
+}
+
+//	Directives parser
 void
 Config::checkListen(std::vector<std::string>& vec) {
 	int port;
@@ -205,13 +237,19 @@ Config::checkClientMaxBodySize(std::vector<std::string>& vec) {
 void
 Config::checkErrorPage(std::vector<std::string>& vec) {
 	struct stat buf;
+	long number;
 
 	if (vec.size() != 2)
 		throw std::runtime_error("Error: Invalid Error Page arguments");
-	if (!isStringNum(vec[0]))
+	if (!isStringUnsignedInt(vec[0]))
 		throw std::runtime_error("Error: The error code must be numerical: " + vec[0]);
+	number = std::atoi(vec[0].c_str());
+
+	if (number <= 200 || number > 600)
+		throw std::runtime_error("Error: Error page code out of bounds");
 	if (stat(vec[1].substr(0, vec[1].find(';')).c_str(), &buf) != 0)
 		throw std::runtime_error("Invalid Error Page Path");
+	this->error_page[(int)number] = vec[1];
 }
 
 

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/27 16:29:30 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/27 18:24:21 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #define BUFFER_SIZE 4096
 
 #include "webserv.hpp"
+#include "TcpServer.hpp"
+#include "Config.hpp"
 
 class HttpRequest {
 	
@@ -29,13 +31,12 @@ class HttpRequest {
 		std::string method;
 		std::string uri;
 		std::string http_version;
-		std::map<std::string, std::string> header_fields;
 
 	public:
-		HttpRequest(int);
+		HttpRequest(int, TcpServer&);
 		~HttpRequest();
 
-		void parser(void);
+		void parser(Config&);
 		void readRequest(int);
 };
 

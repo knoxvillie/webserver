@@ -40,9 +40,6 @@ class TcpServer {
 		Config data;
 		int server_sock;
 
-		int fd_epoll;
-		int nfds;
-		struct epoll_event ev, events[MAX_EVENTS];
 
 		void startServer(void);
 		void startListen(unsigned short);

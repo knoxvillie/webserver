@@ -103,7 +103,7 @@ std::vector<std::string> splitStringToVector(const std::string&);
 std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Config>&);
-bool isStringNum(const std::string&);
+bool isStringUnsignedInt(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
 void signal_handler(int signum);
 

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 12:58:36 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/03/27 18:52:41 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,6 @@
 #include "Parser.hpp"
 
 
-/*
-	This class should contain all basic configuration needed to start a server,
-	the point is that a TcpServer object can be created by passing an instance of
-	this class.
-*/
 class Config {
 	
 	friend class TcpServer; // so TcpServer class can access private members
@@ -34,29 +29,27 @@ class Config {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
+		int server_sock;
 		struct sockaddr_in server_address;
-		// Listen
 		std::string s_host;
 		uint16_t s_port;
-		// Server_name
 		std::string server_name;
-		// Root
 		std::string root;
-		// Index
 		std::string index;
-		// Auto Index
 		bool auto_index;
-		// Allow Methods
 		std::vector<std::string> allow_methods;
-		// Client Max Body Size
 		uint16_t cMaxBodySize;
+		std::map<int, std::vector<std::string> > error_page;
 
 	public:
+		~Config(void);
 		Config(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
+		void startServerSocket(void);
+		int acceptConnection(void);
 
 		//Directives parser
 		void directiveSelector(const std::string&, std::vector<std::string>&);

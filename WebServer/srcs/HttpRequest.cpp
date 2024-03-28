@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:56:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/27 17:15:00 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/27 18:24:31 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,9 @@
     Upgrade-Insecure-Requests: Indicates that the client would like the server to upgrade the request to a secure HTTPS connection if possible.*/
 
 
-HttpRequest::HttpRequest(int connection) {
+HttpRequest::HttpRequest(int connection, Tcpserver& server_data) {
 	this->readRequest(connection);
-	this->parser();
+	this->parser(server_data);
 }
 
 void HttpRequest::readRequest(int connection) {
@@ -56,7 +56,7 @@ void HttpRequest::readRequest(int connection) {
 	MLOG(content);
 }
 
-void HttpRequest::parser(void) {
+void HttpRequest::parser(Tcpserver& server_data) {
 	size_t pos;
 	std::string token;
 	std::stringstream ss(this->request);
@@ -66,11 +66,15 @@ void HttpRequest::parser(void) {
 			throw std::runtime_error("Error: Invalid HTTP request method");
 		this->method = token;
 		if (ss >> token) {
-			// Verify if the uri exists inside the root
+			struct stat buf;
+
+			if (stat(std::string(server_data->root + token).c_str(), &buf) != 0)
+				MLOG("Placeholder return 404 error page");
 			this->uri = token;
 		}
 		if (ss >> token) {
-			// if wanna check the http version.
+			if (token.substr(token.find('/')) != "1.1")
+				throw std::runtime_error("Error: Invalid HTTP version");
 		}
 	} else {
 		throw std::runtime_error("Error: Invalid HTTP request line");

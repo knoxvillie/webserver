@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/27 16:39:50 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/27 18:00:28 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,7 @@ Cluster::serversLoop() {
 	while (!gEndLoop) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
-		if (num_ready_events < 0) 
-			;//break; // ????
+		//if (num_ready_events < 0);//break; // ????
 		
 		for (int i = 0; i < num_ready_events; i++) {
 			client_sock = event_buffer[i].data.fd;
@@ -75,7 +74,7 @@ Cluster::serversLoop() {
 					throw std::runtime_error("Error: epoll_ctl failed");
 			}
 			else {
-				HttpRequest request(client_sock);
+				HttpRequest request(client_sock, Cluster::fdToServer[client_sock]);
 				Cluster::fdToServer[client_sock]->sendResponse(client_sock);
 //				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
 //				close(client_sock);

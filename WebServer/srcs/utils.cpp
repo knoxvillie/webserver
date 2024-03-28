@@ -61,7 +61,7 @@ printServer(std::vector<Config>& serverList) {
 }
 
 bool
-isStringNum(const std::string& string) {
+isStringUnsignedInt(const std::string& string) {
 	if (string.empty())
 		return false;
 	for (size_t i = 0; i < string.size(); i++) {
