@@ -11,13 +11,13 @@
 /* ************************************************************************** */
 
 #include "Parser.hpp"
-#include "Config.hpp"
+#include "Server.hpp"
 
 //Prototypes:
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
 //static members need to be defined outside the class.
-std::vector<Config> Parser::_servers;
+std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
 const char* Parser::server_directives[] = {"listen", "server_name", "root",
@@ -93,7 +93,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
-			_servers.push_back(Config(_directives, _locations));
+			_servers.push_back(Server(_directives, _locations));
 			_directives.clear(); _locations.clear();
 		}
 	} else
@@ -156,7 +156,7 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 
 // Getters
 
-std::vector<Config>&
+std::vector<Server>&
 Parser::getServers(void) {return (_servers);}
 
 // Related functions

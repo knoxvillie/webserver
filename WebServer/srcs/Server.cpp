@@ -1,28 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.cpp                                         :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/27 19:05:57 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/30 23:03:29 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Config.hpp"
-#include "webserv.hpp"
+#include "Server.hpp"
 
 //Prototypes:
 static std::string defaultServerConfig(int);
 
-Config::Config(void) {}
+Server::Server(void) {}
 
-Config::~Config(void) {
-	close(this->server_address);
+Server::~Server(void) {
+	close(this->server_sock);
 }
 
-Config::Config(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
+Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
 			   std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
 	GPS;
@@ -33,7 +32,7 @@ Config::Config(std::map<std::string, std::vector<std::string> >& server, std::ma
 
 // This method stands to check which "essentials directives" are not in the server block and initialize it.
 void
-Config::applyServerDirectives(void) {
+Server::applyServerDirectives(void) {
 	GPS;
 	std::map<std::string, std::vector<std::string> >::iterator it;
 
@@ -49,7 +48,7 @@ Config::applyServerDirectives(void) {
 }
 
 void
-Config::validateServerDirectives(void) {
+Server::validateServerDirectives(void) {
 	GPS;
 	std::map<std::string, std::vector<std::string> >& server = this->_serverDirectives;
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >& location = this->_locationDirectives;
@@ -60,7 +59,7 @@ Config::validateServerDirectives(void) {
 }
 
 void
-Config::directiveSelector(const std::string& directive, std::vector<std::string>& vec) {
+Server::directiveSelector(const std::string& directive, std::vector<std::string>& vec) {
 		if (directive == "listen")
 			this->checkListen(vec);
 		else if (directive == "server_name")
@@ -82,7 +81,7 @@ Config::directiveSelector(const std::string& directive, std::vector<std::string>
 }
 
 void
-Config::startServerSocket(void) {
+Server::startServerSocket(void) {
 	GPS;
 	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -96,7 +95,7 @@ Config::startServerSocket(void) {
 }
 
 int
-Config::acceptConnection(void) {
+Server::acceptConnection(void) const {
 	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
@@ -110,7 +109,7 @@ Config::acceptConnection(void) {
 
 //	Directives parser
 void
-Config::checkListen(std::vector<std::string>& vec) {
+Server::checkListen(std::vector<std::string>& vec) {
 	int port;
 
 	std::memset(&this->server_address, 0, sizeof(this->server_address));
@@ -136,7 +135,7 @@ Config::checkListen(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkServerName(std::vector<std::string>& vec) {
+Server::checkServerName(std::vector<std::string>& vec) {
 	/*
 	 * When you set server_name default; in an Nginx server block, it means that this block will respond
 	 * to requests that do not match any other server_name specified in the server configuration.
@@ -150,7 +149,7 @@ Config::checkServerName(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkRoot(std::vector<std::string>& vec) {
+Server::checkRoot(std::vector<std::string>& vec) {
 	struct stat buf;
 
 	// Assuming only onde path
@@ -170,7 +169,7 @@ Config::checkRoot(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkIndex(std::vector<std::string>& vec) {
+Server::checkIndex(std::vector<std::string>& vec) {
 	struct stat	buf;
 
 	if (vec.size() != 1)
@@ -184,7 +183,7 @@ Config::checkIndex(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkAutoIndex(std::vector<std::string>& vec) {
+Server::checkAutoIndex(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
 	if (vec[0] == "on;" || vec[0] == "off;") {
@@ -195,7 +194,7 @@ Config::checkAutoIndex(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkAllowMethods(std::vector<std::string>& vec) {
+Server::checkAllowMethods(std::vector<std::string>& vec) {
 	if (vec.empty())
 		throw std::runtime_error("Error: Allow methods values is empty");
 	for (size_t i = 0; i < vec.size(); i++) {
@@ -214,7 +213,7 @@ Config::checkAllowMethods(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkClientMaxBodySize(std::vector<std::string>& vec) {
+Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Invalid number of arguments Client Max Body Size");
 	if (vec[0][vec[0].size() - 2] != 'M')
@@ -235,7 +234,7 @@ Config::checkClientMaxBodySize(std::vector<std::string>& vec) {
 }
 
 void
-Config::checkErrorPage(std::vector<std::string>& vec) {
+Server::checkErrorPage(std::vector<std::string>& vec) {
 	struct stat buf;
 	long number;
 
@@ -245,7 +244,7 @@ Config::checkErrorPage(std::vector<std::string>& vec) {
 		throw std::runtime_error("Error: The error code must be numerical: " + vec[0]);
 	number = std::atoi(vec[0].c_str());
 
-	if (number <= 200 || number > 600)
+	if (number < 200 || number > 600)
 		throw std::runtime_error("Error: Error page code out of bounds");
 	if (stat(vec[1].substr(0, vec[1].find(';')).c_str(), &buf) != 0)
 		throw std::runtime_error("Invalid Error Page Path");
@@ -255,13 +254,23 @@ Config::checkErrorPage(std::vector<std::string>& vec) {
 
 //	Getters
 std::map<std::string, std::vector<std::string> >&
-Config::getServerDirectives(void) {
+Server::getServerDirectives(void) {
 	return (_serverDirectives);
 }
 
 std::map<std::string, std::map<std::string, std::vector<std::string> > >&
-Config::getLocationDirectives(void) {
+Server::getLocationDirectives(void) {
 	return (_locationDirectives);
+}
+
+int
+Server::getSocket(void) const {
+	return (this->server_sock);
+}
+
+std::string
+Server::getRoot(void) const {
+	return (this->root);
 }
 
 //	Static

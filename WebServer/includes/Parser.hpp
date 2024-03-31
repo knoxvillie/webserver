@@ -50,13 +50,13 @@
 */
 
 // Server prototype only
-class Config;
+class Server;
 
 class Parser {
 	private:
 	Parser(void);
 	~Parser(void);
-	static std::vector<Config> _servers;
+	static std::vector<Server> _servers;
 	static std::map<std::string, std::vector<std::string> >	_directives;
 	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
@@ -66,5 +66,5 @@ class Parser {
 		static void parsingConfigFile(const std::string&);
 		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
 		static void parsingLocationBlock(std::vector<std::string>&);
-		static std::vector<Config> &getServers(void);
+		static std::vector<Server> &getServers(void);
 };

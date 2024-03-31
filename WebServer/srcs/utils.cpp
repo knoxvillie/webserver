@@ -6,12 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/27 16:34:09 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/30 23:58:20 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
-#include "Config.hpp"
+#include "Server.hpp"
 
 extern volatile sig_atomic_t gEndLoop;
 
@@ -49,9 +49,9 @@ extractValues(const std::string& input) {
 }
 
 void
-printServer(std::vector<Config>& serverList) {
+printServer(std::vector<Server>& serverList) {
 	for (size_t i = 0; i < serverList.size(); i++) {
-		std::cout << "\nServer " << i << " :" << std::endl;
+		std::cout << "\nServer " << i << " : SERVER SOCKET: " << serverList[i].getSocket() << std::endl;
 		printMapVec(serverList[i].getServerDirectives());
 		if (serverList[i].getLocationDirectives().empty())
 			std::cout << "None Location block" << std::endl;

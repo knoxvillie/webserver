@@ -1,36 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/27 18:52:41 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/30 13:06:12 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
 #include "webserv.hpp"
 #include "Parser.hpp"
 
 
-class Config {
-	
-	friend class TcpServer; // so TcpServer class can access private members
-
+class Server {
 	private:
-		Config(void); // Preventing the compiler from creating a default constructor.
+		Server(void); // Preventing the compiler from creating a default constructor.
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
 		int server_sock;
 		struct sockaddr_in server_address;
+
 		std::string s_host;
 		uint16_t s_port;
 		std::string server_name;
@@ -39,17 +37,23 @@ class Config {
 		bool auto_index;
 		std::vector<std::string> allow_methods;
 		uint16_t cMaxBodySize;
-		std::map<int, std::vector<std::string> > error_page;
+		std::map<int, std::string> error_page;
 
 	public:
-		~Config(void);
-		Config(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
-		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
-		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		~Server(void);
+		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
+
+		//	Methods
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
 		void startServerSocket(void);
-		int acceptConnection(void);
+		int acceptConnection(void) const;
+
+		//	Getters
+		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		int getSocket(void) const;
+		std::string getRoot(void) const;
 
 		//Directives parser
 		void directiveSelector(const std::string&, std::vector<std::string>&);
@@ -63,4 +67,4 @@ class Config {
 		void checkErrorPage(std::vector<std::string>&);
 };
 
-#endif //CONFIG_HPP
+#endif //SERVER_HPP

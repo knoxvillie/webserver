@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 11:56:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/27 18:24:31 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/03/30 23:41:46 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@
     Upgrade-Insecure-Requests: Indicates that the client would like the server to upgrade the request to a secure HTTPS connection if possible.*/
 
 
-HttpRequest::HttpRequest(int connection, Tcpserver& server_data) {
+HttpRequest::HttpRequest(int connection, const Server* server_data) {
 	this->readRequest(connection);
 	this->parser(server_data);
 }
@@ -56,8 +56,8 @@ void HttpRequest::readRequest(int connection) {
 	MLOG(content);
 }
 
-void HttpRequest::parser(Tcpserver& server_data) {
-	size_t pos;
+void HttpRequest::parser(const Server* server_data) {
+	struct stat buf;
 	std::string token;
 	std::stringstream ss(this->request);
 
@@ -65,23 +65,39 @@ void HttpRequest::parser(Tcpserver& server_data) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
 		this->method = token;
-		if (ss >> token) {
-			struct stat buf;
+	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
-			if (stat(std::string(server_data->root + token).c_str(), &buf) != 0)
-				MLOG("Placeholder return 404 error page");
-			this->uri = token;
-		}
-		if (ss >> token) {
-			if (token.substr(token.find('/')) != "1.1")
-				throw std::runtime_error("Error: Invalid HTTP version");
-		}
-	} else {
-		throw std::runtime_error("Error: Invalid HTTP request line");
+	if (ss >> token) {
+		if (stat(std::string(server_data->getRoot() + token).c_str(), &buf) != 0)
+			MLOG("Placeholder return 404 error page");
+		this->uri = token;
+	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
+
+	if (ss >> token) {
+		if (token.substr(token.find('/')) != "1.1")
+			throw std::runtime_error("Error: Invalid HTTP version");
 	}
+}
 
+void
+HttpRequest::sendResponse(int connection) {
+	// We should use the send() function instead of write() as it gives us more
+	// option on how to handle the content we send as well as being particularly
+	// useful for working with network sockets, such as those used in HTTP server development.
 
+	// test sending something for now
+	std::ostringstream oss;
+	oss << "HTTP/1.1 200 OK\r\n";
+	oss << "Cache-Control: no-cache, private\r\n";
+	oss << "Content-Type: text/html\r\n";
+	oss << "Content-Length: 15\r\n";
+	oss << "\r\n";
+	oss << "<h1>Hello</h1>";
 
+	std::string output = oss.str();
+	size_t size = output.size() + 1;
+
+	send(connection, output.c_str(), size, MSG_DONTWAIT);
 }
 
 HttpRequest::~HttpRequest() {}

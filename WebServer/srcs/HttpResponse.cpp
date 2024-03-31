@@ -33,7 +33,7 @@ HttpResponse::~HttpResponse() {}
     The server failed to fulfill an apparently valid request.
 */
 
-std::string
+/*std::string
 HttpResponse::getFile(std::string file_name) {
 	
 	std::ifstream file(file_name);
@@ -46,4 +46,4 @@ HttpResponse::getFile(std::string file_name) {
 		content += line + '\n';
 	
 	return content;
-}
+}*/

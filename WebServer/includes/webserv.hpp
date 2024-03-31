@@ -96,13 +96,13 @@ class FuncLogger {
 // ======================
 
 //	Prototypes
-class Config;
+class Server;
 
 //	Utils.cpp
 std::vector<std::string> splitStringToVector(const std::string&);
 std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
-void printServer(std::vector<Config>&);
+void printServer(std::vector<Server>&);
 bool isStringUnsignedInt(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
 void signal_handler(int signum);
