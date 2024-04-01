@@ -27,13 +27,12 @@ class Cluster {
 		Cluster(void);
 		~Cluster();
 
-		//static std::vector<Server>& servers;
 		static std::vector<int> serverSockets;
-		static std::map<int, const Server*> sockToServer;
-		static void serversLoop(const std::vector<Server>&);
+		static std::map<int, Server*> sockToServer;
+		static void serversLoop(std::vector<Server>&);
 
 	public:
-		static void startServers(const std::vector<Server>&);
+		static void startServers(std::vector<Server>&);
 		static void deleteServers(void);
 
 };

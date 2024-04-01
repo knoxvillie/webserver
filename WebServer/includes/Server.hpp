@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/30 13:06:12 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 14:21:22 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,11 @@ class Server {
 		int acceptConnection(void) const;
 
 		//	Getters
-		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
-		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		std::map<std::string, std::vector<std::string> > &getServer(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocation(void);
 		int getSocket(void) const;
 		std::string getRoot(void) const;
+		std::string getIndex(void) const;
 
 		//Directives parser
 		void directiveSelector(const std::string&, std::vector<std::string>&);

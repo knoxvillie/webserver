@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/30 23:03:29 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 15:47:23 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@ static std::string defaultServerConfig(int);
 Server::Server(void) {}
 
 Server::~Server(void) {
-	close(this->server_sock);
+	std::cout << "CLOSING SERVER!" << std::endl;
+	//close(this->server_sock);
 }
 
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
@@ -90,7 +91,7 @@ Server::startServerSocket(void) {
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
 		throw std::runtime_error("Error: Couldn't bind socket");
-	if (listen(this->server_sock, SOMAXCONN) < 0)
+	if (listen(this->server_sock, 42) < 0) //SOMAXCONN
 		throw std::runtime_error("Error: Couldn't listen");
 }
 
@@ -254,12 +255,12 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 
 //	Getters
 std::map<std::string, std::vector<std::string> >&
-Server::getServerDirectives(void) {
+Server::getServer(void) {
 	return (_serverDirectives);
 }
 
 std::map<std::string, std::map<std::string, std::vector<std::string> > >&
-Server::getLocationDirectives(void) {
+Server::getLocation(void) {
 	return (_locationDirectives);
 }
 
@@ -271,6 +272,11 @@ Server::getSocket(void) const {
 std::string
 Server::getRoot(void) const {
 	return (this->root);
+}
+
+std::string
+Server::getIndex(void) const {
+	return (this->index);
 }
 
 //	Static

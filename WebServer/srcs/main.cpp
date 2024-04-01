@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/30 23:45:39 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 15:03:11 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,9 @@ int	main(int argc, char* argv[]) {
 		Cluster::startServers(Parser::getServers());
 	}
 	catch (const std::runtime_error& except) {
-		std::cerr << except.what() << std::endl;
+		std::cout << std::endl;
+		std::cerr << except.what();
+		std::cout << std::endl;
 	}
 	return (0);
 }

@@ -6,22 +6,21 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/31 00:05:38 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 16:26:23 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
-#include "HttpRequest.hpp"
+#include "Http.hpp"
 
 volatile sig_atomic_t gEndLoop = 0;
 
 std::vector<int> Cluster::serverSockets;
-std::map<int, const Server*> Cluster::sockToServer;
+std::map<int, Server*> Cluster::sockToServer;
 
 void
-Cluster::startServers(const std::vector<Server>& servers) {
+Cluster::startServers(std::vector<Server>& servers) {
 	GPS;
-	//Cluster::servers = servers;
 	for (size_t i = 0; i < servers.size(); i++) {
 		int server_sock = servers[i].getSocket();
 		Cluster::serverSockets.push_back(server_sock);
@@ -37,7 +36,7 @@ Cluster::startServers(const std::vector<Server>& servers) {
 */
 
 void
-Cluster::serversLoop(const std::vector<Server>& servers) {
+Cluster::serversLoop(std::vector<Server>& servers) {
 	GPS;
 
 	int epoll_fd, num_ready_events, client_sock;
@@ -49,16 +48,19 @@ Cluster::serversLoop(const std::vector<Server>& servers) {
 	if (epoll_fd < 0)
 		throw std::runtime_error("Error: Creating epoll instance");
 	for (size_t i = 0; i < servers.size(); i++) {
+		//Is this necessary?
 		event.data.fd = servers[i].getSocket();
-		std::cout << "aaaaaaaaaaaaaaaaaaaaaaa" << event.data.fd << std::endl;
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, servers[i].getSocket(), &event) < 0)
-			throw std::runtime_error("Error: AAAAAAA epoll_ctl_add failed");
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, servers[i].getSocket(), &event) < 0) {
+			std::cerr << "Error adding socket to epoll: " << strerror(errno) << std::endl;
+			throw std::runtime_error("Error: epoll_ctl_add failed");
+		}
 	}
 	while (!gEndLoop) {
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
-		//if (num_ready_events < 0);//break; // ????
-		
+		if (num_ready_events < 0)
+			std::cout << "EVENT < 0" << std::endl;
+
 		for (int i = 0; i < num_ready_events; i++) {
 			client_sock = event_buffer[i].data.fd;
 			
@@ -72,8 +74,7 @@ Cluster::serversLoop(const std::vector<Server>& servers) {
 					throw std::runtime_error("Error: epoll_ctl failed");
 			}
 			else {
-				HttpRequest request(client_sock, Cluster::sockToServer[client_sock]);
-				request.sendResponse(client_sock);
+				Http request(client_sock, Cluster::sockToServer[client_sock]);
 //				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
 //				close(client_sock);
 //				Cluster::fdToServer.erase(client_sock);

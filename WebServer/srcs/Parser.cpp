@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/26 13:26:23 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 12:32:56 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
+			// The object is created, then push back creates a copy, then the temporary server object is destructed
 			_servers.push_back(Server(_directives, _locations));
 			_directives.clear(); _locations.clear();
 		}

@@ -52,11 +52,11 @@ void
 printServer(std::vector<Server>& serverList) {
 	for (size_t i = 0; i < serverList.size(); i++) {
 		std::cout << "\nServer " << i << " : SERVER SOCKET: " << serverList[i].getSocket() << std::endl;
-		printMapVec(serverList[i].getServerDirectives());
-		if (serverList[i].getLocationDirectives().empty())
+		printMapVec(serverList[i].getServer());
+		if (serverList[i].getLocation().empty())
 			std::cout << "None Location block" << std::endl;
 		else
-			printMapMapVec(serverList[i].getLocationDirectives());
+			printMapMapVec(serverList[i].getLocation());
 	}
 }
 
