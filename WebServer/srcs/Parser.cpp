@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 12:32:56 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 18:19:31 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser:
 const char* Parser::server_directives[] = {"listen", "server_name", "root",
 										   "index", "auto_index", "allow_methods",
 										   "client_max_body_size" , "error_page", NULL};
-const char* Parser::location_directives[] = {"auto_index", "allow_methods", "cgi_pass", NULL};
+const char* Parser::location_directives[] = {"index", "root", "auto_index", "allow_methods", "cgi_pass", NULL};
 
 Parser::Parser(void) {}
 
@@ -76,8 +76,9 @@ Parser::parsingConfigFile(const std::string &config_file) {
 						std::stringstream ss(line);
 						if (!(ss >> token) || token[0] == '#') continue;
 						if (token == "}") {
-							if (Parser::_locations[uri].empty())
-								throw std::runtime_error("Error: Empty location: " + uri);
+							if (Parser::_locations.empty()) {
+								Parser::_locations[uri]["index"] = splitStringToVector("index.html");
+							}
 							break; //Closing location block
 						}
 

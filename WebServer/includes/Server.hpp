@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 14:21:22 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/01 17:44:14 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@ class Server {
 		int server_sock;
 		struct sockaddr_in server_address;
 
-		std::string s_host;
-		uint16_t s_port;
+		std::string host;
+		uint16_t port;
 		std::string server_name;
 		std::string root;
 		std::string index;
@@ -57,13 +57,13 @@ class Server {
 		std::string getIndex(void) const;
 
 		//Directives parser
-		void directiveSelector(const std::string&, std::vector<std::string>&);
+		void directiveSelector(const std::string&, std::vector<std::string>&, bool);
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
-		void checkRoot(std::vector<std::string>&);
-		void checkIndex(std::vector<std::string>&);
-		void checkAutoIndex(std::vector<std::string>&);
-		void checkAllowMethods(std::vector<std::string>&);
+		void checkRoot(std::vector<std::string>&, bool);
+		void checkIndex(std::vector<std::string>&, bool);
+		void checkAutoIndex(std::vector<std::string>&, bool);
+		void checkAllowMethods(std::vector<std::string>&, bool);
 		void checkClientMaxBodySize(std::vector<std::string>&);
 		void checkErrorPage(std::vector<std::string>&);
 };
