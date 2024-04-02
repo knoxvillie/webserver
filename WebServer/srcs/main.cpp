@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 15:03:11 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 15:59:35 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "Parser.hpp"
 #include "Cluster.hpp"
 
-int	main(int argc, char* argv[]) {
+int	main(int argc, char* argv[], char* env[]) {
 	GPS;
 	
 	if (argc > 2) {
@@ -24,6 +24,7 @@ int	main(int argc, char* argv[]) {
 	const std::string config_file(argc == 1 ? "./conf/default.conf" : argv[1]);
 
 	try {
+		Parser::setPWD(env);
 		Parser::parsingConfigFile(config_file);
 		Cluster::startServers(Parser::getServers());
 	}

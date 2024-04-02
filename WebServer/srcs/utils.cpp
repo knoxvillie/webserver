@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/30 23:58:20 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 15:58:32 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,23 @@ uint32_t ipParserHtonl(const std::string& ip_address) {
 		bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
 	}
 	return (bytes);
+}
+
+std::string
+intToString(int number) {
+	std::stringstream ss;
+	ss << number;
+	return (ss.str());
+}
+
+std::string
+getValueFromEnv(char** env, const std::string& var) {
+	for (int i = 0; env[i]; i++) {
+		std::string key(env[i]);
+		if(key.substr(0, key.find('=')) == var)
+			return (key.substr(key.find('=') + 1));
+	}
+	return ("");
 }
 
 void signal_handler(int signum) {

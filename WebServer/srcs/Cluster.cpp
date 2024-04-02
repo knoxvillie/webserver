@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/01 16:26:23 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 12:16:37 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ Cluster::startServers(std::vector<Server>& servers) {
 void
 Cluster::serversLoop(std::vector<Server>& servers) {
 	GPS;
-
+	bool new_connection = true;
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 
@@ -56,6 +56,8 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 		}
 	}
 	while (!gEndLoop) {
+		if (new_connection)
+			std::cout << "Waiting for connections..." << std::endl;
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
 		if (num_ready_events < 0)
@@ -63,18 +65,20 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 
 		for (int i = 0; i < num_ready_events; i++) {
 			client_sock = event_buffer[i].data.fd;
-			
+
+			// client_sock is in Cluster::serverSockets, so it's a new connection
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
-				// client_sock is in Cluster::serverSockets, so it's a new connection
 				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
 				event_buffer[i].events = EPOLLIN;
 				event_buffer[i].data.fd = client_sock;
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");
+				new_connection = false;
 			}
 			else {
 				Http request(client_sock, Cluster::sockToServer[client_sock]);
+				new_connection = true;
 //				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
 //				close(client_sock);
 //				Cluster::fdToServer.erase(client_sock);

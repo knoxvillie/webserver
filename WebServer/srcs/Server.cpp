@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 18:14:58 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 12:00:23 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,7 @@ static std::string defaultLocationConfig(int, const std::string&, const std::str
 
 Server::Server(void) {}
 
-Server::~Server(void) {
-	std::cout << "CLOSING SERVER!" << std::endl;
-	//close(this->server_sock);
-}
+Server::~Server(void) {}
 
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
 			   std::map<std::string, std::vector<std::string> > >& location)
@@ -90,6 +87,7 @@ Server::startServerSocket(void) {
 
 int
 Server::acceptConnection(void) const {
+	GPS;
 	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
@@ -101,10 +99,32 @@ Server::acceptConnection(void) const {
 	return (client_sock);
 }
 
+void
+Server::directiveSelector(const std::string& directive, std::vector<std::string>& vec, bool server_block) {
+	if (directive == "listen")
+		this->checkListen(vec);
+	else if (directive == "server_name")
+		this->checkServerName(vec);
+	else if(directive == "root")
+		this->checkRoot(vec, server_block);
+	else if (directive == "index")
+		this->checkIndex(vec, server_block);
+	else if (directive == "auto_index")
+		this->checkAutoIndex(vec, server_block);
+	else if (directive == "allow_methods")
+		this->checkAllowMethods(vec, server_block);
+	else if (directive == "client_max_body_size")
+		this->checkClientMaxBodySize(vec);
+	else if (directive == "error_page")
+		this->checkErrorPage(vec);
+	else
+		throw std::runtime_error("Error: Directive is not valid ");
+}
+
 //	Directives parser
 void
 Server::checkListen(std::vector<std::string>& vec) {
-	int port;
+	int s_port;
 
 	std::memset(&this->server_address, 0, sizeof(this->server_address));
 	if (vec.size() > 1)
@@ -112,20 +132,20 @@ Server::checkListen(std::vector<std::string>& vec) {
 	std::string token(vec[0]);
 	// ':' not in token
 	if (token.find(':') == std::string::npos) {
-		this->host = "0.0.0.0";
+		this->s_host = "0.0.0.0";
 		this->server_address.sin_addr.s_addr = INADDR_ANY;
-		port = std::atoi(token.substr(0, token.find(';')).c_str());
+		s_port = std::atoi(token.substr(0, token.find(';')).c_str());
 	} else {
 		size_t	pos = token.find(':');
-		this->host = token.substr(0, pos);
-		port = (std::atoi(token.substr(pos + 1).c_str()));
-		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->host);
+		this->s_host = token.substr(0, pos);
+		s_port = (std::atoi(token.substr(pos + 1).c_str()));
+		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->s_host);
 	}
-	if (port < 1024 || port > 65535)
-		throw std::runtime_error("Error: Server port out of range [1024, 65535]");
-	this->port = (uint16_t)port;
+	if (s_port < 1024 || s_port > 65535)
+		throw std::runtime_error("Error: Server s_port out of range [1024, 65535]");
+	this->s_port = (uint16_t)s_port;
 	this->server_address.sin_family = AF_INET;
-	this->server_address.sin_port = htons(this->port);
+	this->server_address.sin_port = htons(this->s_port);
 }
 
 void
@@ -234,7 +254,7 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
 	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
 	if (value < 1 || value > 1024)
 		throw std::runtime_error("Error: Client Max Body Size out of bound");
-	this->cMaxBodySize = (uint16_t)value;
+	this->lCMaxBodySize = (uint16_t)value;
 }
 
 void
@@ -251,7 +271,7 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 	if (number < 200 || number > 600)
 		throw std::runtime_error("Error: Error page code out of bounds");
 	if (stat(vec[1].substr(0, vec[1].find(';')).c_str(), &buf) != 0)
-		throw std::runtime_error("Invalid Error Page Path");
+		throw std::runtime_error("Error: Error_page file doesn't exist");
 	this->error_page[(int)number] = vec[1];
 }
 
@@ -282,19 +302,19 @@ Server::getIndex(void) const {
 	return (this->index);
 }
 
+std::map<int, std::string>
+Server::getErrorMap(void) const {
+	return (this->error_page);
+}
+
 //	Static
 std::string
 defaultServerConfig(int directive) {
 	switch (directive) {
 		case 0: return ("0.0.0.0:8080;"); //Listen
 		case 1: return ("default;"); //Server_name
-		case 2: return ("/home/kfaustin/webserver/;"); //Root
-		case 3: return ("index.html;"); //Index
-		case 4: return ("on;"); //Auto_index (MAYBE)
-		case 5: return ("GET POST DELETE;"); //Allow_methods
-		case 6: return ("1M;"); //Client_max_body_size
-		case 7: return ("/var/error_pages;"); //Error_page
-		default: throw std::runtime_error("Server.cpp defaultServerConfig Methods");
+		case 2: return ("/var/www/error_pages;"); //Error_page
+		default: throw std::runtime_error("Server.cpp defaultServerConfig invalid server directives");
 	}
 }
 
@@ -310,24 +330,3 @@ defaultLocationConfig(int directive, const std::string& location, const std::str
 	}
 }
 
-void
-Server::directiveSelector(const std::string& directive, std::vector<std::string>& vec, bool server_block) {
-	if (directive == "listen")
-		this->checkListen(vec);
-	else if (directive == "server_name")
-		this->checkServerName(vec);
-	else if(directive == "root")
-		this->checkRoot(vec, server_block);
-	else if (directive == "index")
-		this->checkIndex(vec, server_block);
-	else if (directive == "auto_index")
-		this->checkAutoIndex(vec, server_block);
-	else if (directive == "allow_methods")
-		this->checkAllowMethods(vec, server_block);
-	else if (directive == "client_max_body_size")
-		this->checkClientMaxBodySize(vec);
-	else if (directive == "error_page")
-		this->checkErrorPage(vec);
-	else
-		throw std::runtime_error("Error: Directive is not valid ");
-}

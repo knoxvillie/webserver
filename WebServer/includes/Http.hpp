@@ -37,9 +37,12 @@ class Http {
 		Http(int, Server*);
 		~Http();
 
+		//	Request
 		void requestFromClient(void);
 		void requestParser(void);
+		//	Response
 		void responseSend(void);
+		void generateErrorResponse(std::ostringstream&, int);
 };
 
 #endif

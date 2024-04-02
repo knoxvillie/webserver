@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 17:44:14 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 15:48:43 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,18 +26,23 @@ class Server {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
+		//	Server
 		int server_sock;
 		struct sockaddr_in server_address;
 
-		std::string host;
-		uint16_t port;
+		// Server config
+		uint16_t s_port;
+		std::string s_host;
 		std::string server_name;
+		std::map<int, std::string> error_page;
+
+		// Default location root
 		std::string root;
 		std::string index;
 		bool auto_index;
 		std::vector<std::string> allow_methods;
-		uint16_t cMaxBodySize;
-		std::map<int, std::string> error_page;
+		uint16_t lCMaxBodySize;
+
 
 	public:
 		~Server(void);
@@ -55,6 +60,7 @@ class Server {
 		int getSocket(void) const;
 		std::string getRoot(void) const;
 		std::string getIndex(void) const;
+		std::map<int, std::string> getErrorMap(void) const;
 
 		//Directives parser
 		void directiveSelector(const std::string&, std::vector<std::string>&, bool);

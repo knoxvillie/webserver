@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/01 18:19:31 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/02 15:46:03 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,17 +17,23 @@
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
 //static members need to be defined outside the class.
+std::string Parser::_pwd;
 std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
-const char* Parser::server_directives[] = {"listen", "server_name", "root",
-										   "index", "auto_index", "allow_methods",
-										   "client_max_body_size" , "error_page", NULL};
-const char* Parser::location_directives[] = {"index", "root", "auto_index", "allow_methods", "cgi_pass", NULL};
+const char* Parser::server_directives[] = {"listen", "server_name", "error_page", NULL};
+const char* Parser::location_directives[] = {"index", "root", "auto_index", "client_max_body_size", "allow_methods", "cgi_pass", NULL};
 
 Parser::Parser(void) {}
 
 Parser::~Parser(void) {}
+
+void
+Parser::setPWD(char **env) {
+	Parser::_pwd = getValueFromEnv(env, "PWD");
+	if (Parser::_pwd.empty())
+		throw std::runtime_error("Error: PWD is empty");
+}
 
 // Methods to parser the config file
 void
@@ -77,7 +83,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 						if (!(ss >> token) || token[0] == '#') continue;
 						if (token == "}") {
 							if (Parser::_locations.empty()) {
-								Parser::_locations[uri]["index"] = splitStringToVector("index.html");
+								Parser::_locations[uri]["index"] = splitStringToVector("index.html;");
 							}
 							break; //Closing location block
 						}
@@ -121,18 +127,6 @@ Parser::parsingDirectives(const std::string& directive, std::vector<std::string>
 		throw std::runtime_error("Parser Error: Server block has multiples directives: " + directive);
 }
 
-/*
-	location [ = | ~ | ~* | ^~ ] uri {
-	...
-	}
-     location: The keyword to start a location block.
-    [ = | ~ | ~* | ^~ ]: Optional modifiers that affect how Nginx interprets the URI. Common modifiers include:
-        =: Exact match.
-        ~: Case-sensitive regular expression match.
-        ~*: Case-insensitive regular expression match.
-        ^~: Non-regular expression match, takes precedence over regular expression matches.
-    uri: The string or regular expression representing the location to match.
- * */
 void
 Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// I don't know if the location block is allowed to have more than one URI.
@@ -150,11 +144,6 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 			throw std::runtime_error("URI must begin with /");
 	}
 }
-
-// Methods to parser Server objects
-
-
-
 
 // Getters
 

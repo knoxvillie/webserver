@@ -56,6 +56,7 @@ class Parser {
 	private:
 	Parser(void);
 	~Parser(void);
+	static std::string _pwd;
 	static std::vector<Server> _servers;
 	static std::map<std::string, std::vector<std::string> >	_directives;
 	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
@@ -63,6 +64,7 @@ class Parser {
 	public:
 		static const char* server_directives[];
 		static const char* location_directives[];
+		static void setPWD(char**);
 		static void parsingConfigFile(const std::string&);
 		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
 		static void parsingLocationBlock(std::vector<std::string>&);

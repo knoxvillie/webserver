@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/26 10:47:40 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/02 15:58:47 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,8 @@ std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
 bool isStringUnsignedInt(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
+std::string intToString(int number);
+std::string getValueFromEnv(char** env, const std::string&);
 void signal_handler(int signum);
 
 
