@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 12:00:23 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:17:28 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,10 @@ Server::validateServerDirectives(void) {
 		this->directiveSelector(it->second.begin()->first, it->second.begin()->second, false);
 }
 
+// ======================
+//      Connections       
+// ======================
+
 void
 Server::startServerSocket(void) {
 	GPS;
@@ -98,6 +102,10 @@ Server::acceptConnection(void) const {
 		throw std::runtime_error("Error: Client socket failed");
 	return (client_sock);
 }
+
+// ======================
+//       Parsing       
+// ======================
 
 void
 Server::directiveSelector(const std::string& directive, std::vector<std::string>& vec, bool server_block) {
@@ -275,8 +283,10 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 	this->error_page[(int)number] = vec[1];
 }
 
+// =====================
+//        Getters       
+// =====================
 
-//	Getters
 std::map<std::string, std::vector<std::string> >&
 Server::getServer(void) {
 	return (_serverDirectives);

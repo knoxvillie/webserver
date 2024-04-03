@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Http.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 12:16:55 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:12:46 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,9 @@ void Http::requestFromClient() {
 	GPS;
 	char content[BUFFER_SIZE] = {0};
 
-	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
+	// Multiple recv calls might be needed for a request bigger than BUFFER_SIZE no ?
+	// also BUFFER_SIZE value was just a placeholder, might need to be changed
+	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0) 
 		throw std::runtime_error("Error: Read from client socket");
 	this->request = std::string(content);
 	MLOG(content);
@@ -61,7 +63,7 @@ void Http::requestParser(void) {
 	std::stringstream ss(this->request);
 
 	if (ss >> token) {
-		if (token != "GET" && token != "POST" && token != "DELETE")
+		if (token != "GET" && token != "POST" && token != "DELETE") // Should just check allowed methods from the server no ?
 			throw std::runtime_error("Error: Invalid HTTP request method");
 		this->method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
@@ -189,3 +191,9 @@ void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 	}
 }
 
+/*
+	Things to change in the generateErrorResponse() function:
+		- Dont throw exceptions just because one server couldn't find an error page, probably just send a standard error
+		to the client and move on;
+		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
+*/

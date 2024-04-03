@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/02 15:58:47 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:15:44 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,9 @@ std::string getValueFromEnv(char** env, const std::string&);
 void signal_handler(int signum);
 
 
-//	Templates
+// ======================
+//       Templates       
+// ======================
 template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.

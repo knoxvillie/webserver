@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/02 12:16:37 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:11:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,8 +76,8 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					throw std::runtime_error("Error: epoll_ctl failed");
 				new_connection = false;
 			}
-			else {
-				Http request(client_sock, Cluster::sockToServer[client_sock]);
+			else { // Not closing these sockets, should probably depend if "Connection: keep-alive" or not
+				Http request(client_sock, Cluster::sockToServer[client_sock]); // Why not a static method ??
 				new_connection = true;
 //				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
 //				close(client_sock);
@@ -86,7 +86,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 		}
 	}
 	close (epoll_fd);
-	deleteServers();
+	Cluster::deleteServers();
 }
 
 void
