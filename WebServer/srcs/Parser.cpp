@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 15:46:03 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:28:34 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,28 +17,23 @@
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
 
 //static members need to be defined outside the class.
-std::string Parser::_pwd;
 std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
 const char* Parser::server_directives[] = {"listen", "server_name", "error_page", NULL};
-const char* Parser::location_directives[] = {"index", "root", "auto_index", "client_max_body_size", "allow_methods", "cgi_pass", NULL};
+const char* Parser::location_directives[] = {"root", "index", "auto_index", "client_max_body_size",
+											 "allow_methods", "redirect", "cgi_pass", NULL};
 
 Parser::Parser(void) {}
 
 Parser::~Parser(void) {}
 
-void
-Parser::setPWD(char **env) {
-	Parser::_pwd = getValueFromEnv(env, "PWD");
-	if (Parser::_pwd.empty())
-		throw std::runtime_error("Error: PWD is empty");
-}
-
 // Methods to parser the config file
 void
-Parser::parsingConfigFile(const std::string &config_file) {
+Parser::parsingConfigFile(const std::string &config_file, char** env) {
 	GPS;
+
+	std::string pwd = getValueFromEnv(env, "PWD");
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
@@ -101,7 +96,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 				}
 			}
 			// The object is created, then push back creates a copy, then the temporary server object is destructed
-			_servers.push_back(Server(_directives, _locations));
+			_servers.push_back(Server(_directives, _locations, pwd));
 			_directives.clear(); _locations.clear();
 		}
 	} else

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 12:00:23 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 15:03:28 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 //Prototypes:
 static std::string defaultServerConfig(int);
-static std::string defaultLocationConfig(int, const std::string&, const std::string&);
+static std::string defaultLocationConfig(int);
 
 
 Server::Server(void) {}
@@ -22,8 +22,8 @@ Server::Server(void) {}
 Server::~Server(void) {}
 
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
-			   std::map<std::string, std::vector<std::string> > >& location)
-			   : _serverDirectives(server), _locationDirectives(location) {
+			   std::map<std::string, std::vector<std::string> > >& location, std::string& pwd)
+			   : _serverDirectives(server), _locationDirectives(location), _pwd(pwd) {
 	GPS;
 	this->applyServerDirectives();
 	this->validateServerDirectives();
@@ -37,7 +37,6 @@ Server::applyServerDirectives(void) {
 	std::map<std::string, std::vector<std::string> >::const_iterator it_server;
 	std::map<std::string,  std::map<std::string, std::vector<std::string> > >::const_iterator it_location;
 
-	(void) it_location;
 	for (int i = 0; Parser::server_directives[i]; ++i) {
 		it_server = this->_serverDirectives.find(Parser::server_directives[i]);
 		// Directive[i] not in the server block
@@ -54,7 +53,7 @@ Server::applyServerDirectives(void) {
 		for (int i = 0; Parser::location_directives[i]; i++) {
 			if (it_location->second.find(Parser::location_directives[i]) == it_location->second.end()) {
 				this->_locationDirectives[it_location->first][Parser::location_directives[i]] = splitStringToVector(
-						defaultLocationConfig(i, it_location->first, this->root));
+						defaultLocationConfig(i));
 			}
 		}
 	}
@@ -65,10 +64,31 @@ Server::validateServerDirectives(void) {
 	GPS;
 	std::map<std::string, std::vector<std::string> >& server = this->_serverDirectives;
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >& location = this->_locationDirectives;
-	for (std::map<std::string, std::vector<std::string> >::iterator it = server.begin(); it != server.end(); it++)
-		this->directiveSelector(it->first, it->second, true);
-	for (std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator it = location.begin(); it != location.end(); it++)
-		this->directiveSelector(it->second.begin()->first, it->second.begin()->second, false);
+	std::map<std::string, std::vector<std::string> >::iterator it;
+	std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator ut;
+
+	for (it = server.begin(); it != server.end(); it++) {
+		if (it->first == "listen") this->checkListen(it->second);
+		else if (it->first == "server_name") this->checkServerName(it->second);
+		else if (it->first == "error_page") this->checkErrorPage(it->second);
+	}
+	for (ut = location.begin(); ut != location.end(); ut++) {
+		t_location temp;
+		temp.location_name = ut->first;
+		MLOG(temp.location_name);
+
+		for (int i = 0; Parser::location_directives[i]; i++) {
+			it = location[ut->first].find(Parser::location_directives[i]);
+
+			if (it->first == "root") this->checkRoot(it->second, temp);
+			else if (it->first == "index") this->checkIndex(it->second, temp);
+			else if (it->first == "auto_index") this->checkAutoIndex(it->second, temp);
+			else if (it->first == "client_max_body_size") this->checkClientMaxBodySize(it->second, temp);
+			else if (it->first == "allow_methods") this->checkAllowMethods(it->second, temp);
+			// Cgi and redirect checker missing.
+		}
+		this->locations.push_back(temp);
+	}
 }
 
 void
@@ -99,29 +119,7 @@ Server::acceptConnection(void) const {
 	return (client_sock);
 }
 
-void
-Server::directiveSelector(const std::string& directive, std::vector<std::string>& vec, bool server_block) {
-	if (directive == "listen")
-		this->checkListen(vec);
-	else if (directive == "server_name")
-		this->checkServerName(vec);
-	else if(directive == "root")
-		this->checkRoot(vec, server_block);
-	else if (directive == "index")
-		this->checkIndex(vec, server_block);
-	else if (directive == "auto_index")
-		this->checkAutoIndex(vec, server_block);
-	else if (directive == "allow_methods")
-		this->checkAllowMethods(vec, server_block);
-	else if (directive == "client_max_body_size")
-		this->checkClientMaxBodySize(vec);
-	else if (directive == "error_page")
-		this->checkErrorPage(vec);
-	else
-		throw std::runtime_error("Error: Directive is not valid ");
-}
-
-//	Directives parser
+//	Server Directives Parser
 void
 Server::checkListen(std::vector<std::string>& vec) {
 	int s_port;
@@ -150,111 +148,12 @@ Server::checkListen(std::vector<std::string>& vec) {
 
 void
 Server::checkServerName(std::vector<std::string>& vec) {
-	/*
-	 * When you set server_name default; in an Nginx server block, it means that this block will respond
-	 * to requests that do not match any other server_name specified in the server configuration.
-	 * */
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples server names");
 
 	this->server_name = vec[0].substr(0, vec[0].find(';'));
 	if (this->server_name.empty())
 		throw std::runtime_error("Error: Server Name is empty");
-}
-
-void
-Server::checkRoot(std::vector<std::string>& vec, bool server_block) {
-	struct stat buf;
-
-	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples Root paths");
-	std::string path(vec[0].substr(0, vec[0].find(';')));
-
-	if (stat(path.c_str(), &buf) != 0)
-		throw std::runtime_error("Error: Root path doesn't exist");
-
-	if (server_block) {
-		this->root = path;
-
-		// Handling Index directive here because it depends on the root.
-		if (!this->index.empty()) {
-			if (stat(std::string(this->root + "/" + this->index).c_str(), &buf) != 0)
-				throw std::runtime_error("Error: " + this->index + " doesn't exist");
-		}
-	}
-}
-
-void
-Server::checkIndex(std::vector<std::string>& vec, bool server_block) {
-	struct stat	buf;
-
-	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples index values");
-	std::string path(vec[0].substr(0, vec[0].find(';')));
-
-	if (server_block) {
-		this->index = path;
-
-		if (!this->root.empty()) {
-			if (stat(std::string(this->root + "/" + this->index).c_str(), &buf) != 0)
-				throw std::runtime_error("Error: " + this->index + " doesn't exist");
-		}
-	}
-}
-
-void
-Server::checkAutoIndex(std::vector<std::string>& vec,  bool server_block) {
-	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples Auto index options");
-	if (vec[0] == "on;" || vec[0] == "off;") {
-		if (server_block)
-			this->auto_index = (vec[0] == "on;");
-		return ;
-	}
-	throw std::runtime_error("Error: Invalid auto index option. Lower case only");
-}
-
-void
-Server::checkAllowMethods(std::vector<std::string>& vec,  bool server_block) {
-	if (vec.empty())
-		throw std::runtime_error("Error: Allow methods values is empty");
-	std::vector<std::string> temp;
-
-	for (size_t i = 0; i < vec.size(); i++) {
-		std::string method = (i == vec.size() - 1) ? vec[i].substr(0, vec[i].find(';')) : vec[i];
-
-		if (method == "GET" || method == "POST" || method == "DELETE")
-			temp.push_back(method);
-		else
-			throw std::runtime_error("Error: Invalid allow method: " + method);
-	}
-	// Verify if there is any repeated method
-	std::sort(temp.begin(), temp.end());
-	if (std::adjacent_find(temp.begin(), temp.end()) != temp.end())
-		throw std::runtime_error("Error: Allow methods directive has duplicated values");
-	if (server_block)
-		this->allow_methods = temp;
-}
-
-void
-Server::checkClientMaxBodySize(std::vector<std::string>& vec) {
-	if (vec.size() != 1)
-		throw std::runtime_error("Error: Invalid number of arguments Client Max Body Size");
-	if (vec[0][vec[0].size() - 2] != 'M')
-		throw std::runtime_error("Error: Missing type value");
-	for (size_t i = 0; i < vec[0].size(); i++) {
-		if (vec[0][i] == 'M' && (i != (vec[0].size() - 2)))
-			throw std::runtime_error("Error: invalid argument " + vec[0]);
-		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M') {
-			if (vec[0][i] == ';' && (i == vec[0].size() - 1))
-				break;
-			throw std::runtime_error("Error: Invalid argument " + vec[0]);
-		}
-	}
-	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
-	if (value < 1 || value > 1024)
-		throw std::runtime_error("Error: Client Max Body Size out of bound");
-	this->lCMaxBodySize = (uint16_t)value;
 }
 
 void
@@ -270,11 +169,95 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 
 	if (number < 200 || number > 600)
 		throw std::runtime_error("Error: Error page code out of bounds");
-	if (stat(vec[1].substr(0, vec[1].find(';')).c_str(), &buf) != 0)
+	std::string error_path_path = vec[1].substr(0, vec[1].find(';'));
+	std::string path(this->_pwd + error_path_path);
+
+	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Error_page file doesn't exist");
 	this->error_page[(int)number] = vec[1];
 }
 
+// Location Directives Parser
+void
+Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
+	struct stat buf;
+
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Root paths");
+	std::string root((vec[0].substr(0, vec[0].find(';'))));
+	std::string path(this->_pwd + root);
+
+	if (stat(path.c_str(), &buf) != 0)
+		throw std::runtime_error("Error: Location root path doesn't exist");
+	location.root = path;
+}
+
+void
+Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
+	struct stat	buf;
+
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Location has multiples index values");
+	std::string index(vec[0].substr(0, vec[0].find(';')));
+	std::string path(location.root + "/" + index);
+
+	if (stat(path.c_str(), &buf) != 0)
+		throw std::runtime_error("Error: Location index path doesn't exist");
+	location.index = path;
+}
+
+void
+Server::checkAutoIndex(std::vector<std::string>& vec,  t_location& location) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Multiples Auto index options");
+	if (vec[0] == "on;" || vec[0] == "off;") {
+		location.auto_index = (vec[0] == "on;");
+		return ;
+	}
+	throw std::runtime_error("Error: Location auto_index is invalid");
+}
+
+void
+Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& location) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Invalid number of arguments location client_max_body_size");
+	if (vec[0][vec[0].size() - 2] != 'M')
+		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
+	for (size_t i = 0; i < vec[0].size(); i++) {
+		if (vec[0][i] == 'M' && (i != (vec[0].size() - 2)))
+			throw std::runtime_error("Error: invalid argument " + vec[0]);
+		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M') {
+			if (vec[0][i] == ';' && (i == vec[0].size() - 1))
+				break;
+			throw std::runtime_error("Error: Invalid argument " + vec[0]);
+		}
+	}
+	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
+	if (value < 1 || value > 1024)
+		throw std::runtime_error("Error: Client Max Body Size out of bound");
+	location.CMaxBodySize = (short)value;
+}
+
+void
+Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
+	if (vec.empty())
+		throw std::runtime_error("Error: Location allow_methods is empty");
+	std::vector<std::string> temp;
+
+	for (size_t i = 0; i < vec.size(); i++) {
+		std::string method = (i == vec.size() - 1) ? vec[i].substr(0, vec[i].find(';')) : vec[i];
+
+		if (method == "GET" || method == "POST" || method == "DELETE")
+			temp.push_back(method);
+		else
+			throw std::runtime_error("Error: Location invalid allow_method: " + method);
+	}
+	// Verify if there is any repeated method
+	std::sort(temp.begin(), temp.end());
+	if (std::adjacent_find(temp.begin(), temp.end()) != temp.end())
+		throw std::runtime_error("Error: Location allow_methods has duplicated methods");
+	location.allow_methods = temp;
+}
 
 //	Getters
 std::map<std::string, std::vector<std::string> >&
@@ -283,7 +266,7 @@ Server::getServer(void) {
 }
 
 std::map<std::string, std::map<std::string, std::vector<std::string> > >&
-Server::getLocation(void) {
+Server::getLocationMap(void) {
 	return (_locationDirectives);
 }
 
@@ -293,18 +276,38 @@ Server::getSocket(void) const {
 }
 
 std::string
-Server::getRoot(void) const {
-	return (this->root);
-}
-
-std::string
-Server::getIndex(void) const {
-	return (this->index);
+Server::getPWD(void) const {
+	return (this->_pwd);
 }
 
 std::map<int, std::string>
 Server::getErrorMap(void) const {
 	return (this->error_page);
+}
+
+t_location*
+Server::getLocation(const std::string& name) {
+	for (size_t i = 0; i < this->locations.size(); i++) {
+		if (this->locations[i].location_name == name)
+			return (&this->locations[i]);
+	}
+	return (NULL);
+}
+
+void *
+Server::getDirectiveFromLocation(std::vector<t_location> &locations, const std::string& location_name, const std::string& directive) {
+	for (size_t i = 0; i < locations.size(); i++) {
+		if (locations[i].location_name == location_name) {
+			if (directive == "root") return ((void*)&locations[i].root);
+			if (directive == "index") return ((void*)&locations[i].index);
+			if (directive == "auto_index") return ((void*)&locations[i].auto_index);
+			if (directive == "client_max_body_size") return ((void*)&locations[i].CMaxBodySize);
+			if (directive == "allow_methods") return ((void*)&locations[i].allow_methods);
+			if (directive == "cgi_pass") return ((void*)&locations[i].cgi_pass);
+			if (directive == "redirect") return ((void*)&locations[i].redirect);
+		}
+	}
+	throw std::runtime_error("Error: getDirectiveFromLocation() directive not found");
 }
 
 //	Static
@@ -319,13 +322,15 @@ defaultServerConfig(int directive) {
 }
 
 std::string
-defaultLocationConfig(int directive, const std::string& location, const std::string& server_root) {
+defaultLocationConfig(int directive) {
 	switch (directive) {
-		case 0: return ("index.html;"); //Index
-		case 1: return (std::string(server_root + location + ";")); //Root
-		case 2: return ("on;"); //Auto_index
-		case 3: return ("GET POST DELETE;"); // Allow_methods
-		case 4: return ("no clue;"); //Cgi_pass
+		case 0: return ("/var/www;"); //Root
+		case 1: return ("index.html;"); //Index
+		case 2: return ("off;"); //Auto_index
+		case 3: return ("1M"); //Client_max_body_size
+		case 4: return ("GET;"); // Allow_methods
+		case 5: return ("PLACEHOLDER;"); //Cgi_pass
+		case 6: return ("PLACEHOLDER"); //Redirect
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}
 }
