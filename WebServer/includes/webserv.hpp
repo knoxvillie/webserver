@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/03 11:15:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 11:02:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,17 +64,6 @@ class FuncLogger;
 # define MERROR(message) std::cerr << "Error: " << message << std::endl; exit(1);
 #endif
 
-enum enum_server {
-	LISTEN, 		//0
-	SERVER_NAME, 	//1
-	ROOT, 			//2
-	INDEX,			//3
-	AUTOINDEX,		//4
-	ALLOW_METHODS,	//5
-	CLIENT_MAX_SIZE,//6
-	ERROR_PAGE		//7
-};
-
 class FuncLogger {
 	private:
 		const char* file;
@@ -89,6 +78,17 @@ class FuncLogger {
 			(void)line;
 			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " - " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
 		};
+};
+
+struct t_location {
+	std::string location_name;
+	std::string root;
+	std::string index;
+	bool auto_index;
+	short CMaxBodySize;
+	std::vector<std::string> allow_methods;
+	std::string cgi_pass;
+	std::string redirect;
 };
 
 // ======================

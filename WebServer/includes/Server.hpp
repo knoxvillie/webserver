@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 15:48:43 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/03 15:02:42 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,16 @@
 #include "Parser.hpp"
 
 
+
 class Server {
 	private:
 		Server(void); // Preventing the compiler from creating a default constructor.
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
+
+		// Global config
+		std::string _pwd;
 
 		//	Server
 		int server_sock;
@@ -36,17 +40,12 @@ class Server {
 		std::string server_name;
 		std::map<int, std::string> error_page;
 
-		// Default location root
-		std::string root;
-		std::string index;
-		bool auto_index;
-		std::vector<std::string> allow_methods;
-		uint16_t lCMaxBodySize;
-
+		// Locations
+		std::vector<t_location> locations;
 
 	public:
 		~Server(void);
-		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
+		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&, std::string&);
 
 		//	Methods
 		void applyServerDirectives(void);
@@ -56,22 +55,25 @@ class Server {
 
 		//	Getters
 		std::map<std::string, std::vector<std::string> > &getServer(void);
-		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocation(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationMap(void);
 		int getSocket(void) const;
-		std::string getRoot(void) const;
-		std::string getIndex(void) const;
+		std::string getPWD(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
+		t_location* getLocation(const std::string&);
+		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
-		//Directives parser
-		void directiveSelector(const std::string&, std::vector<std::string>&, bool);
+		//Server Directives Parser
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
-		void checkRoot(std::vector<std::string>&, bool);
-		void checkIndex(std::vector<std::string>&, bool);
-		void checkAutoIndex(std::vector<std::string>&, bool);
-		void checkAllowMethods(std::vector<std::string>&, bool);
-		void checkClientMaxBodySize(std::vector<std::string>&);
 		void checkErrorPage(std::vector<std::string>&);
+
+		//Location Directives Parser
+		void checkRoot(std::vector<std::string>&, t_location&);
+		void checkIndex(std::vector<std::string>&, t_location&);
+		void checkAutoIndex(std::vector<std::string>&, t_location&);
+		void checkClientMaxBodySize(std::vector<std::string>&, t_location&);
+		void checkAllowMethods(std::vector<std::string>&, t_location&);
+
 };
 
 #endif //SERVER_HPP

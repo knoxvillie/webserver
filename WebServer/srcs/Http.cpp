@@ -6,19 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/03 11:12:46 by diogmart         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Http.cpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/26 11:56:31 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/01 16:25:19 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/05 11:05:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,20 +102,15 @@ void Http::responseSend(void) {
 	std::string content;
 	std::ostringstream oss;
 	std::stringstream buffer;
-
+	t_location* actual_location;
 
 	// Find the location corresponding to the URL
-	std::map<std::string, std::map<std::string, std::vector<std::string> > >::
-	        const_iterator it = this->_server->getLocation().find(this->url);
+	actual_location = this->_server->getLocation(this->url);
 
 	// If the URL is found in the location
-	if (it != this->_server->getLocation().end()) {
-		// Extract the index from the location: map[url]->map[index]->vec[0]
-		std::string index = it->second.find("index")->second[0];
-		index = index.substr(0, index.find(';'));
-
+	if (actual_location != NULL) {
 		// Open the file corresponding to the index
-		std::ifstream file((this->_server->getRoot() + this->url + index).c_str());
+		std::ifstream file(actual_location->index.c_str());
 		if (file.is_open()) {
 			// Read the content of the file
 			buffer << file.rdbuf();
@@ -138,9 +121,11 @@ void Http::responseSend(void) {
 			generateResponse(oss, this->http_version, "200 OK", content);
 		} else {
 			// File not found, generate a 404 Not Found response
+			MLOG("NAO ACHEI O ARQUIVO");
 			generateErrorResponse(oss, 404);
 		}
 	} else {
+		MLOG("NAO ACHEI A LOCATION");
 		// Location not found, generate a 404 Not Found response
 		generateErrorResponse(oss, 404);
 	}
@@ -169,7 +154,8 @@ void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 	error_page_it = this->_server->getErrorMap().find(error_code);
 
 	if (error_page_it != this->_server->getErrorMap().end()) {
-		std::string path = this->_server->getErrorMap()[error_code];
+		std::string error_path = this->_server->getErrorMap()[error_code];
+		std::string path(this->_server->getPWD() + error_path);
 		path = path.substr(0, path.find(';'));
 
 		// Open the error page
