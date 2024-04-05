@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 11:04:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:08:35 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,13 @@ Server::startServerSocket(void) {
 
 	if (this->server_sock < 0)
 		throw std::runtime_error("Error: Couldn't create socket");
+
+	// ============= <DEBUG> ================
+	int optval = 1;
+	if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
+		throw std::runtime_error("Error: reuse addr error.");
+	// ============= </DEBUG> ===============
+
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
 		throw std::runtime_error("Error: Couldn't bind socket");

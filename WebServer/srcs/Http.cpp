@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 11:05:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 11:12:57 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ void Http::responseSend(void) {
 	t_location* actual_location;
 
 	// Find the location corresponding to the URL
-	actual_location = this->_server->getLocation(this->url);
+	actual_location = (this->_server)->getLocation(this->url);
 
 	// If the URL is found in the location
 	if (actual_location != NULL) {

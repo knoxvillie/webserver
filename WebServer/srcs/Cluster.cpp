@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/03 11:11:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:05:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,15 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				new_connection = false;
 			}
 			else { // Not closing these sockets, should probably depend if "Connection: keep-alive" or not
-				Http request(client_sock, Cluster::sockToServer[client_sock]); // Why not a static method ??
-				new_connection = true;
+				try {
+					Http request(client_sock, Cluster::sockToServer[client_sock]); // Why not a static method ??
+					new_connection = true;
+				} catch (std::exception& e) {
+					std::cerr << e.what() << std::endl;
+					Cluster::sockToServer.erase(client_sock);
+					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+					close(client_sock);
+				}
 //				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
 //				close(client_sock);
 //				Cluster::fdToServer.erase(client_sock);
