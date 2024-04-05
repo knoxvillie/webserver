@@ -43,6 +43,8 @@ class Http {
 		//	Response
 		void responseSend(void);
 		void generateErrorResponse(std::ostringstream&, int);
+		
+		int getMethod(const t_location* location, std::string& content);
 };
 
 #endif

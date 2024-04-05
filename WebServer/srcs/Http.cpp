@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 13:06:30 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 15:48:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ void Http::requestParser(void) {
 	std::stringstream ss(this->request);
 
 	if (ss >> token) {
-		if (token != "GET" && token != "POST" && token != "DELETE") // Should just check allowed methods from the server no ?
+		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
 		this->method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
@@ -99,9 +99,8 @@ void Http::requestParser(void) {
 //		Accept-Encoding: identity
 
 void Http::responseSend(void) {
-	std::string content;
 	std::ostringstream oss;
-	std::stringstream buffer;
+	std::string content;
 	t_location* actual_location;
 
 	// Find the location corresponding to the URL
@@ -109,26 +108,19 @@ void Http::responseSend(void) {
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
-		// Open the file corresponding to the request
-		std::string file_path = (this->url == "/") ? actual_location->index : (actual_location->root + this->url);
-		MLOG("FILE PATH: " + file_path);
-		
-		std::ifstream file(file_path.c_str());
-		if (file.is_open()) {
-			// Read the content of the file
-			buffer << file.rdbuf();
-			content = buffer.str();
-			file.close();
+		int statusCode = getMethod(actual_location, content);
 
-			// Generate the HTTP 200 OK response with the content of the file
-			generateResponse(oss, this->http_version, "200 OK", content);
-		} else {
-			// File not found, generate a 404 Not Found response
-			MLOG("NAO ACHEI O ARQUIVO");
-			generateErrorResponse(oss, 404);
+		switch (statusCode) {
+			case 200:
+				generateResponse(oss, this->http_version, "200 OK", content);
+				break;
+		
+			default:
+				generateErrorResponse(oss, 404);
+				break;
 		}
 	} else {
-		MLOG("NAO ACHEI A LOCATION");
+		MLOG("LOCATION NOT FOUND");
 		// Location not found, generate a 404 Not Found response
 		generateErrorResponse(oss, 404);
 	}
@@ -186,3 +178,27 @@ void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 		to the client and move on;
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
+
+int
+Http::getMethod(const t_location* location, std::string& content) {
+		std::stringstream buffer;
+		
+		// Open the file corresponding to the request
+		std::string file_path = (this->url == location->location_name) ? location->index : (location->root + this->url);
+		MLOG("FILE PATH: " + file_path);
+		
+		std::ifstream file(file_path.c_str());
+		if (file.is_open()) {
+			// Read the content of the file
+			buffer << file.rdbuf();
+			content = buffer.str();
+			file.close();
+
+			// Generate the HTTP 200 OK response with the content of the file
+			return 200;
+		} else {
+			// File not found, generate a 404 Not Found response
+			MLOG("FILE NOT FOUND");
+			return 404;
+		}
+}

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 12:57:08 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 15:45:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
 	std::string index(vec[0].substr(0, vec[0].find(';')));
-	std::string path(location.root + "/" + index);
+	std::string path(location.root + location.location_name + index);
 
 	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Location index path doesn't exist");
