@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/05 12:05:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:45:52 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,8 +56,11 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 		}
 	}
 	while (!gEndLoop) {
-		if (new_connection)
+		if (new_connection) {
+			std::cout << std::endl << "========================\n";
 			std::cout << "Waiting for connections..." << std::endl;
+			std::cout<< "========================\n\n\n";
+		}
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
 		
 		if (num_ready_events < 0)

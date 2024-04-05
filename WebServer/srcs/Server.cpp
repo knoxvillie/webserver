@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 12:08:35 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:57:08 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,11 +304,22 @@ Server::getErrorMap(void) const {
 
 t_location*
 Server::getLocation(const std::string& name) {
+	t_location *bestMatch = NULL;
+	size_t bestMatchLen = 0;
+
 	for (size_t i = 0; i < this->locations.size(); i++) {
-		if (this->locations[i].location_name == name)
-			return (&this->locations[i]);
+		const std::string &locationName = this->locations[i].location_name;
+		
+		if (name.find(locationName) == 0) { // Check if locationName is a prefix
+			if (bestMatchLen < locationName.length()) {
+				bestMatch = &this->locations[i];
+				bestMatchLen = locationName.length();
+			}
+		}
 	}
-	return (NULL);
+	MLOG("Url requested: " + name);
+	MLOG("location used: " + bestMatch->location_name);
+	return bestMatch;
 }
 
 void *
@@ -352,3 +363,7 @@ defaultLocationConfig(int directive) {
 	}
 }
 
+/* std::string
+Server::getRootPath() const {
+	return ()
+} */

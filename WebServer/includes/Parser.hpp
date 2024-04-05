@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/25 12:46:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:12:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,11 @@ class Server;
 
 class Parser {
 	private:
-	Parser(void);
-	~Parser(void);
-	static std::vector<Server> _servers;
-	static std::map<std::string, std::vector<std::string> >	_directives;
-	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
+	    Parser(void);
+	    ~Parser(void);
+	    static std::vector<Server> _servers;
+	    static std::map<std::string, std::vector<std::string> >	_directives;
+	    static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
 	public:
 		static const char* server_directives[];

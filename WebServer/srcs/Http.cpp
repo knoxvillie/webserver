@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 11:12:57 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 13:06:30 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,10 +107,13 @@ void Http::responseSend(void) {
 	// Find the location corresponding to the URL
 	actual_location = (this->_server)->getLocation(this->url);
 
-	// If the URL is found in the location
+	// If the location is found in the URL
 	if (actual_location != NULL) {
-		// Open the file corresponding to the index
-		std::ifstream file(actual_location->index.c_str());
+		// Open the file corresponding to the request
+		std::string file_path = (this->url == "/") ? actual_location->index : (actual_location->root + this->url);
+		MLOG("FILE PATH: " + file_path);
+		
+		std::ifstream file(file_path.c_str());
 		if (file.is_open()) {
 			// Read the content of the file
 			buffer << file.rdbuf();
