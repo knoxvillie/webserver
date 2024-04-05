@@ -44,7 +44,9 @@ class Http {
 		void responseSend(void);
 		void generateErrorResponse(std::ostringstream&, int);
 		
-		int getMethod(const t_location* location, std::string& content);
+		int getMethod(const t_location *location, std::string& content);
+		int postMethod(const t_location *location);
+		int deleteMethod(const t_location *location);
 };
 
 #endif

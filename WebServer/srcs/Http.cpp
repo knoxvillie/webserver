@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 15:48:45 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 16:40:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,15 +108,20 @@ void Http::responseSend(void) {
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
-		int statusCode = getMethod(actual_location, content);
+		int statusCode = 200;
+		if (this->method == "GET")
+			getMethod(actual_location, content);
+		else if (this->method == "POST")
+			postMethod(actual_location);
+
 
 		switch (statusCode) {
 			case 200:
 				generateResponse(oss, this->http_version, "200 OK", content);
 				break;
-		
+
 			default:
-				generateErrorResponse(oss, 404);
+				generateErrorResponse(oss, statusCode);
 				break;
 		}
 	} else {
@@ -183,6 +188,8 @@ int
 Http::getMethod(const t_location* location, std::string& content) {
 		std::stringstream buffer;
 		
+		MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
+
 		// Open the file corresponding to the request
 		std::string file_path = (this->url == location->location_name) ? location->index : (location->root + this->url);
 		MLOG("FILE PATH: " + file_path);
@@ -202,3 +209,38 @@ Http::getMethod(const t_location* location, std::string& content) {
 			return 404;
 		}
 }
+
+int
+Http::postMethod(const t_location *location) {
+	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
+	
+	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "POST") == location->allow_methods.end())
+		return 405; // Status code for method not allowed
+	
+	std::string file_path = (this->url == location->location_name) ? location->index : (location->root + this->url);
+	MLOG("FILE PATH: " + file_path);
+
+	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Append changes to the file
+	if (out_file.is_open()) {
+		MLOG("Request: " + this->request); // Should not be request, need to store the content from the request on a variable
+		out_file << this->request;
+		out_file.close();
+		
+		// Generate the HTTP 200 OK response
+		return 200;
+	} else {
+		// File not found, generate a 404 Not Found response
+		MLOG("FILE NOT FOUND");
+		return 404;
+	}
+
+	return 200;
+}
+
+int
+Http::deleteMethod(const t_location *location) {
+	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
+	(void)location;
+	return 200;
+}
+
