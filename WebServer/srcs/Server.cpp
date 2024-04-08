@@ -51,6 +51,7 @@ Server::applyServerDirectives(void) {
 
 	for (it_location = this->_locationDirectives.begin(); it_location != this->_locationDirectives.end(); it_location++) {
 		for (int i = 0; Parser::location_directives[i]; i++) {
+			// Directive[i] not in the server block
 			if (it_location->second.find(Parser::location_directives[i]) == it_location->second.end()) {
 				this->_locationDirectives[it_location->first][Parser::location_directives[i]] = splitStringToVector(
 						defaultLocationConfig(i));
@@ -77,10 +78,13 @@ Server::validateServerDirectives(void) {
 		temp.location_name = ut->first;
 		MLOG(temp.location_name);
 
+		// The initialization order matter
 		for (int i = 0; Parser::location_directives[i]; i++) {
 			it = location[ut->first].find(Parser::location_directives[i]);
 
+			// root = pwd + root
 			if (it->first == "root") this->checkRoot(it->second, temp);
+			// index = root + location + index
 			else if (it->first == "index") this->checkIndex(it->second, temp);
 			else if (it->first == "auto_index") this->checkAutoIndex(it->second, temp);
 			else if (it->first == "client_max_body_size") this->checkClientMaxBodySize(it->second, temp);
@@ -213,10 +217,11 @@ Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
 	std::string index(vec[0].substr(0, vec[0].find(';')));
-	std::string path(location.root + location.location_name + index);
+	std::string complement = ((location.location_name == "/") ? "" : "/");
+	std::string path(location.root + location.location_name + complement + index);
 
 	if (stat(path.c_str(), &buf) != 0)
-		throw std::runtime_error("Error: Location index path doesn't exist");
+		throw std::runtime_error(std::string("Error: Location index path doesn't exist " + location.location_name));
 	location.index = path;
 }
 
@@ -235,16 +240,15 @@ void
 Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Invalid number of arguments location client_max_body_size");
-	if (vec[0][vec[0].size() - 2] != 'M')
+	size_t size = vec[0].size();
+
+	//The last char was already check, and it must be ';'
+	//10M;
+	if (vec[0][size - 2] != 'M')
 		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
-	for (size_t i = 0; i < vec[0].size(); i++) {
-		if (vec[0][i] == 'M' && (i != (vec[0].size() - 2)))
-			throw std::runtime_error("Error: invalid argument " + vec[0]);
-		if ((vec[0][i] < '0' || vec[0][i] > '9') && vec[0][i] != 'M') {
-			if (vec[0][i] == ';' && (i == vec[0].size() - 1))
-				break;
-			throw std::runtime_error("Error: Invalid argument " + vec[0]);
-		}
+	for (size_t i = 0; i < size - 2; i++) {
+		if (!std::isdigit(vec[0][i]))
+			throw std::runtime_error("AAAAAAAAAA Error: invalid argument " + vec[0]);
 	}
 	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
 	if (value < 1 || value > 1024)
@@ -362,8 +366,3 @@ defaultLocationConfig(int directive) {
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}
 }
-
-/* std::string
-Server::getRootPath() const {
-	return ()
-} */

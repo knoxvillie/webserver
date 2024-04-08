@@ -67,50 +67,19 @@ void Http::requestParser(void) {
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
-/*
-1XX (informational)
-    The request was received, continuing process.
-2XX (successful)
-    The request was successfully received, understood, and accepted.
-3XX (redirection)
-    Further action needs to be taken in order to complete the request.
-4XX (client error)
-    The request contains bad syntax or cannot be fulfilled.
-5XX (server error)
-    The server failed to fulfill an apparently valid request.
- * */
-
-
-
-//GET /lacrimosa.mp3 HTTP/1.1
-//Host: 127.0.0.1:8080
-//User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0
-//Accept: audio/webm,audio/ogg,audio/wav,audio*/
-///*;q=0.9,application/ogg;q=0.7,video/*;q=0.6,*//*
-//*;q=0.5
-//Accept-Language: en-US,en;q=0.5
-//Range: bytes=0-
-//			 Connection: keep-alive
-//		Referer: http://127.0.0.1:8080/
-//Cookie: csrftoken=v2M9Xz9Js2eQqZyi6nzAWVDaoIYuHNOc; username-127-0-0-1-8888="2|1:0|10:1711492418|23:username-127-0-0-1-8888|44:ZDBjOGU0NWFhM2Q0NGM2OGFjOGQ0NTRhOGQwMzhjZjA=|701de7e960daea0b2eb837062378c34a3f11abb2c6b8042089ac3288d4d8fb63"
-//Sec-Fetch-Dest: audio
-//		Sec-Fetch-Mode: no-cors
-//		Sec-Fetch-Site: same-origin
-//		Accept-Encoding: identity
-
 void Http::responseSend(void) {
 	std::ostringstream oss;
 	std::string content;
 	t_location* actual_location;
 
 	// Find the location corresponding to the URL
-	actual_location = (this->_server)->getLocation(this->url);
+	actual_location = this->_server->getLocation(this->url);
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
 		int statusCode = 200;
 		if (this->method == "GET")
-			getMethod(actual_location, content);
+			this->getMethod(actual_location, content);
 		else if (this->method == "POST")
 			postMethod(actual_location);
 
