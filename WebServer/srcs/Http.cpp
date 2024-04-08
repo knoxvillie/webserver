@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 16:40:25 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/08 13:43:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,15 +110,17 @@ void Http::responseSend(void) {
 	if (actual_location != NULL) {
 		int statusCode = 200;
 		if (this->method == "GET")
-			getMethod(actual_location, content);
+			statusCode = getMethod(actual_location, content);
 		else if (this->method == "POST")
-			postMethod(actual_location);
+			statusCode = postMethod(actual_location);
 
 
 		switch (statusCode) {
 			case 200:
 				generateResponse(oss, this->http_version, "200 OK", content);
 				break;
+			case 201:
+				generateResponse(oss, this->http_version, "201 Created", content);
 
 			default:
 				generateErrorResponse(oss, statusCode);
@@ -140,12 +142,26 @@ void Http::responseSend(void) {
 }
 
 static void generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
-	oss << http_version << " " << status_code << "\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: text/html\r\n";
-	oss << "Content-Length: " << content.length() << "\r\n";
-	oss << "\r\n";
-	oss << content;
+	if (status_code == "201 Created") {
+		oss << "HTTP/1.1 201 Created\r\n";
+		oss << "Location: http://0.0.0.0:8080/FormInputs/followers.txt\r\n";
+		oss << "Cache-Control: no-cache, private\r\n";
+		oss << "Content-Type: application/json\r\n";
+		oss << "Content-Length: 75\r\n";
+		oss << "\r\n";
+		oss << "{";
+  		oss << "\"status\": \"success\",";
+  		oss << "\"message\": \"Your request was processed successfully.\"";
+		oss << "}";
+	}
+	else {
+		oss << http_version << " " << status_code << "\r\n";
+		oss << "Cache-Control: no-cache, private\r\n";
+		oss << "Content-Type: text/html\r\n";
+		oss << "Content-Length: " << content.length() << "\r\n";
+		oss << "\r\n";
+		oss << content;
+	}
 }
 
 void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
@@ -222,8 +238,12 @@ Http::postMethod(const t_location *location) {
 
 	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Append changes to the file
 	if (out_file.is_open()) {
-		MLOG("Request: " + this->request); // Should not be request, need to store the content from the request on a variable
-		out_file << this->request;
+		
+		std::string output = this->request.substr(this->request.find("\r\n\r\n") + 4, std::string::npos);
+		MLOG("Output: " + output); 
+		out_file << "\n==================\n\n";
+		out_file << output;
+		out_file << std::endl;
 		out_file.close();
 		
 		// Generate the HTTP 200 OK response
