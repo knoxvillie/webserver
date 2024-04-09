@@ -132,12 +132,10 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// The last element os the location line has to be '{'
 	if ((*end) != "{") // check if \n is included in >> extract
 		throw std::runtime_error("Location block must has a opening {");
-	// for used if location block can receive more than one URI
-	for (std::vector<std::string>::const_iterator it = vec.begin(); it != end; ++it) {
-		//URI has to start with '/' or '.' if CGI
-		if ((*it)[0] != '/' && (*it)[0] != '.')
-			throw std::runtime_error("URI must begin with /");
-	}
+	--end;
+	// Location has only 1 URI, the URI must starts and ends with '/'
+	if ((*end)[0] != '/' && (*end)[(*end).size() - 1] != '/')
+		throw std::runtime_error("URI must begin and start with /");
 }
 
 // Getters

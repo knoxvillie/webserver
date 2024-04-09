@@ -78,6 +78,8 @@ void Http::responseSend(void) {
 	// If the location is found in the URL
 	if (actual_location != NULL) {
 		int statusCode = 200;
+
+		//Check the HTTP request method
 		if (this->method == "GET")
 			statusCode = getMethod(actual_location, content);
 		else if (this->method == "POST")
@@ -216,7 +218,7 @@ Http::postMethod(const t_location *location) {
 		out_file.close();
 		
 		// Generate the HTTP 200 OK response
-		return 200;
+		return 201;
 	} else {
 		// File not found, generate a 404 Not Found response
 		MLOG("FILE NOT FOUND");

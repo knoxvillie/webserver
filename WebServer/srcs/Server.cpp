@@ -76,7 +76,6 @@ Server::validateServerDirectives(void) {
 	for (ut = location.begin(); ut != location.end(); ut++) {
 		t_location temp;
 		temp.location_name = ut->first;
-		MLOG(temp.location_name);
 
 		// The initialization order matter
 		for (int i = 0; Parser::location_directives[i]; i++) {
@@ -212,7 +211,7 @@ Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
 
 void
 Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
-	struct stat	buf;
+	//struct stat	buf;
 
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
@@ -220,8 +219,9 @@ Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
 	std::string complement = ((location.location_name == "/") ? "" : "/");
 	std::string path(location.root + location.location_name + complement + index);
 
-	if (stat(path.c_str(), &buf) != 0)
-		throw std::runtime_error(std::string("Error: Location index path doesn't exist " + location.location_name));
+	// If auto_index and index not exists in path then listing
+	//if (stat(path.c_str(), &buf) != 0)
+		//throw std::runtime_error(std::string("Error: Location index path doesn't exist " + location.location_name));
 	location.index = path;
 }
 
@@ -312,8 +312,8 @@ Server::getLocation(const std::string& name) {
 	size_t bestMatchLen = 0;
 
 	for (size_t i = 0; i < this->locations.size(); i++) {
-		const std::string &locationName = this->locations[i].location_name;
-		
+		std::string locationName = this->locations[i].location_name;
+
 		if (name.find(locationName) == 0) { // Check if locationName is a prefix
 			if (bestMatchLen < locationName.length()) {
 				bestMatch = &this->locations[i];
