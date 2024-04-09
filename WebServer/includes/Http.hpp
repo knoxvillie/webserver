@@ -32,6 +32,7 @@ class Http {
 		std::string method;
 		std::string url;
 		std::string http_version;
+		std::string file_path;
 
 	public:
 		Http(int, Server*);
@@ -47,6 +48,7 @@ class Http {
 		int getMethod(const t_location *location, std::string& content);
 		int postMethod(const t_location *location);
 		int deleteMethod(const t_location *location);
+		bool isCGI(const std::string& file);
 };
 
 #endif

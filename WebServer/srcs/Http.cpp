@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/08 13:43:25 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/09 14:40:53 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,80 +65,6 @@ void Http::requestParser(void) {
 			throw std::runtime_error("Error: Invalid HTTP version");
 		this->http_version = token;
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
-}
-
-/*
-1XX (informational)
-    The request was received, continuing process.
-2XX (successful)
-    The request was successfully received, understood, and accepted.
-3XX (redirection)
-    Further action needs to be taken in order to complete the request.
-4XX (client error)
-    The request contains bad syntax or cannot be fulfilled.
-5XX (server error)
-    The server failed to fulfill an apparently valid request.
- * */
-
-
-
-//GET /lacrimosa.mp3 HTTP/1.1
-//Host: 127.0.0.1:8080
-//User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0
-//Accept: audio/webm,audio/ogg,audio/wav,audio*/
-///*;q=0.9,application/ogg;q=0.7,video/*;q=0.6,*//*
-//*;q=0.5
-//Accept-Language: en-US,en;q=0.5
-//Range: bytes=0-
-//			 Connection: keep-alive
-//		Referer: http://127.0.0.1:8080/
-//Cookie: csrftoken=v2M9Xz9Js2eQqZyi6nzAWVDaoIYuHNOc; username-127-0-0-1-8888="2|1:0|10:1711492418|23:username-127-0-0-1-8888|44:ZDBjOGU0NWFhM2Q0NGM2OGFjOGQ0NTRhOGQwMzhjZjA=|701de7e960daea0b2eb837062378c34a3f11abb2c6b8042089ac3288d4d8fb63"
-//Sec-Fetch-Dest: audio
-//		Sec-Fetch-Mode: no-cors
-//		Sec-Fetch-Site: same-origin
-//		Accept-Encoding: identity
-
-void Http::responseSend(void) {
-	std::ostringstream oss;
-	std::string content;
-	t_location* actual_location;
-
-	// Find the location corresponding to the URL
-	actual_location = (this->_server)->getLocation(this->url);
-
-	// If the location is found in the URL
-	if (actual_location != NULL) {
-		int statusCode = 200;
-		if (this->method == "GET")
-			statusCode = getMethod(actual_location, content);
-		else if (this->method == "POST")
-			statusCode = postMethod(actual_location);
-
-
-		switch (statusCode) {
-			case 200:
-				generateResponse(oss, this->http_version, "200 OK", content);
-				break;
-			case 201:
-				generateResponse(oss, this->http_version, "201 Created", content);
-
-			default:
-				generateErrorResponse(oss, statusCode);
-				break;
-		}
-	} else {
-		MLOG("LOCATION NOT FOUND");
-		// Location not found, generate a 404 Not Found response
-		generateErrorResponse(oss, 404);
-	}
-
-	// Get the generated response
-	std::string response = oss.str();
-
-	// Send the response to the client
-	if (send(this->_client, response.c_str(), response.length(), 0) < 0) {
-		throw std::runtime_error("Error: send function failed");
-	}
 }
 
 static void generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
@@ -200,30 +126,76 @@ void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
 
+void Http::responseSend(void) {
+	std::ostringstream oss;
+	std::string content;
+	t_location* actual_location;
+
+	// Find the location corresponding to the URL
+	actual_location = (this->_server)->getLocation(this->url); // (this->url).substr(0, (this->url).find_last_of('/') + 1)
+
+	// If the location is found in the URL
+	if (actual_location != NULL) {
+		int statusCode = 200;
+		
+		// Open the file corresponding to the request
+		this->file_path = (this->url == actual_location->location_name) ? actual_location->index : (actual_location->root + this->url);
+		MLOG("FILE PATH: " + this->file_path);
+
+		if (this->method == "GET")
+			statusCode = getMethod(actual_location, content);
+		else if (this->method == "POST")
+			statusCode = postMethod(actual_location);
+
+
+		switch (statusCode) {
+			case 200:
+				generateResponse(oss, this->http_version, "200 OK", content);
+				break;
+			case 201:
+				generateResponse(oss, this->http_version, "201 Created", content);
+
+			default:
+				generateErrorResponse(oss, statusCode);
+				break;
+		}
+	} else {
+		MLOG("LOCATION NOT FOUND");
+		// Location not found, generate a 404 Not Found response
+		generateErrorResponse(oss, 404);
+	}
+
+	// Get the generated response
+	std::string response = oss.str();
+
+	// Send the response to the client
+	if (send(this->_client, response.c_str(), response.length(), 0) < 0) {
+		throw std::runtime_error("Error: send function failed");
+	}
+}
+
 int
 Http::getMethod(const t_location* location, std::string& content) {
-		std::stringstream buffer;
+	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
 		
-		MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
+	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "GET") == location->allow_methods.end())
+		return 405; // Status code for method not allowed
+	
+	std::stringstream buffer;
+	std::ifstream file(file_path.c_str());
 
-		// Open the file corresponding to the request
-		std::string file_path = (this->url == location->location_name) ? location->index : (location->root + this->url);
-		MLOG("FILE PATH: " + file_path);
-		
-		std::ifstream file(file_path.c_str());
-		if (file.is_open()) {
-			// Read the content of the file
-			buffer << file.rdbuf();
-			content = buffer.str();
-			file.close();
-
-			// Generate the HTTP 200 OK response with the content of the file
-			return 200;
-		} else {
-			// File not found, generate a 404 Not Found response
-			MLOG("FILE NOT FOUND");
-			return 404;
-		}
+	if (file.is_open()) {
+		// Read the content of the file
+		buffer << file.rdbuf();
+		content = buffer.str();
+		file.close();
+		// Generate the HTTP 200 OK response with the content of the file
+		return 200;
+	} else {
+		// File not found, generate a 404 Not Found response
+		MLOG("FILE NOT FOUND");
+		return 404;
+	}
 }
 
 int
@@ -232,10 +204,7 @@ Http::postMethod(const t_location *location) {
 	
 	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "POST") == location->allow_methods.end())
 		return 405; // Status code for method not allowed
-	
-	std::string file_path = (this->url == location->location_name) ? location->index : (location->root + this->url);
-	MLOG("FILE PATH: " + file_path);
-
+		
 	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Append changes to the file
 	if (out_file.is_open()) {
 		
@@ -260,7 +229,19 @@ Http::postMethod(const t_location *location) {
 int
 Http::deleteMethod(const t_location *location) {
 	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
+	
+	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "DELETE") == location->allow_methods.end())
+		return 405; // Status code for method not allowed
+	
 	(void)location;
 	return 200;
 }
 
+bool Http::isCGI(const std::string& file) {
+	
+	std::string extension = file.substr(file.find_last_of('.'), std::string::npos);
+
+	// Check if the extension matches any of our allowed CGIs, then send the request to that
+	
+	return false;
+}

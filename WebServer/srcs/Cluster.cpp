@@ -6,12 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/05 13:11:10 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/09 14:38:46 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
 #include "Http.hpp"
+//#include "CgiHandler.hpp"
 
 volatile sig_atomic_t gEndLoop = 0;
 
@@ -26,6 +27,7 @@ Cluster::startServers(std::vector<Server>& servers) {
 		Cluster::serverSockets.push_back(server_sock);
 		Cluster::sockToServer[server_sock] = &(servers[i]);
 	}
+	//CgiHandler::initMap();
 	Cluster::serversLoop(servers);
 }
 
@@ -81,7 +83,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			}
 			else { // Not closing these sockets, should probably depend if "Connection: keep-alive" or not
 				try {
-					Http request(client_sock, Cluster::sockToServer[client_sock]); // Why not a static method ??
+					Http request(client_sock, Cluster::sockToServer[client_sock]);
 					new_connection = true;
 				} catch (std::exception& e) {
 					std::cerr << e.what() << std::endl;
