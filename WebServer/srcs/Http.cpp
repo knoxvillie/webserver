@@ -129,34 +129,81 @@ Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
 
-std::string
-Http::directoryListing(void) {
+#include <sys/stat.h>
+#include <ctime>
+
+std::string dirTypes(unsigned char type) {
+	switch (type) {
+		case DT_BLK: return ("block device");
+		case DT_CHR: return ("character device");
+		case DT_DIR: return ("directory");
+		case DT_FIFO: return ("named pipe (FIFO");
+		case DT_LNK: return ("symbolic link");
+		case DT_REG: return ("regular file");
+		case DT_SOCK: return ("UNIX domain socket");
+		default: return ("unknown");
+	}
+}
+
+std::string formatSize(size_t size) {
+	std::stringstream sstream;
+	if (size < 1024) sstream << size << " B";
+	else if (size < 1024 * 1024) sstream << size / 1024 << " KB";
+	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
+	else sstream << size / (1024 * 1024 * 1024) << " GB";
+	return (sstream.str());
+}
+
+std::string Http::directoryListing(void) {
 	DIR* dir;
 	struct dirent* entry;
+	struct stat file_stat;
 	std::stringstream html;
-	std::vector<std::string> file_content;
 
 	MLOG("PATH-> " + this->file_path);
 	dir = opendir(this->file_path.c_str());
-	if (dir) {
-		entry = readdir(dir);
-		while (entry) {
-			// Directory content different from the file itself
-			if (std::strcmp(entry->d_name, ".") != 0)
-				file_content.push_back(entry->d_name);
-			entry = readdir(dir);
-		}
-		closedir(dir);
-	} else
+	if (!dir) {
 		MLOG("ERROR: Unable to open directory");
-	html << "<html><head><title>Directory listing</title></head><body>"
-		 << "<h1>Index of " << this->file_path << "</h1><ul>";
-	for (size_t i = 0; i < file_content.size(); i++)
-		html << "<li><a href=\"" << file_content[i] << "\">" << file_content[i] << "</a></li>";
-	html << "</ul></body></html>";
-	return (html.str());
-}
+		return "<html><head><title>Error</title></head><body><h1>Error opening directory.</h1></body></html>";
+	}
 
+	html << "<html><head><title>Directory Listing</title>"
+		<< "<style>"
+		<< "body { font-family: Arial, sans-serif; margin: 20px; }"
+		<< "table { width: 100%; border-collapse: collapse; }"
+		<< "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }"
+		<< "th { background-color: #f2f2f2; }"
+		<< "h2 {"
+		<< "  color: #333;"
+		<< "  text-align: center;"
+		<< "  font-size: 24px;"
+		<< "  font-weight: normal;"
+		<< "  text-shadow: 1px 1px 1px #aaa;"
+		<< "  margin-bottom: 20px;"
+		<< "  padding: 10px 0;"
+		<< "  border-bottom: 2px solid #eee;"
+		<< "}"
+		<< "</style>"
+		<< "</head><body>"
+		<< "<h2>Listing of " << this->file_path << "</h2>"
+		<< "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
+
+	while ((entry = readdir(dir))) {
+		if (std::strcmp(entry->d_name, ".") == 0 ) continue; // Skip hidden current directory markers.
+		std::string filePath = this->file_path + "/" + entry->d_name;
+		if(stat(filePath.c_str(), &file_stat) == 0) {
+			char time_buf[100];
+			std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", localtime(&file_stat.st_ctime));
+			html << "<tr><td><a href='" << ((entry->d_type == DT_DIR) ? (std::string(entry->d_name) + "/") : entry->d_name) << "'>" << entry->d_name << "</a></td>"
+				 << "<td>" << dirTypes(entry->d_type) << "</td>"
+				 << "<td>" << time_buf << "</td>"
+				 << "<td>" << formatSize(file_stat.st_size) << "</td></tr>";
+		}
+	}
+	closedir(dir);
+	html << "</table></body></html>";
+	return html.str();
+}
 
 void
 Http::responseSend(void) {
