@@ -67,7 +67,8 @@ void Http::requestParser(void) {
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
-static void generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
+static void
+generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
 	if (status_code == "201 Created") {
 		oss << "HTTP/1.1 201 Created\r\n";
 		oss << "Location: http://0.0.0.0:8080/FormInputs/followers.txt\r\n";
@@ -90,11 +91,13 @@ static void generateResponse(std::ostringstream& oss, const std::string& http_ve
 	}
 }
 
-void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
+void
+Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 	// Find the error page corresponding to the error code
 	std::map<int, std::string>::const_iterator error_page_it;
 	error_page_it = this->_server->getErrorMap().find(error_code);
 
+	// There is an error page defined for the specif error
 	if (error_page_it != this->_server->getErrorMap().end()) {
 		std::string error_path = this->_server->getErrorMap()[error_code];
 		std::string path(this->_server->getPWD() + error_path);
@@ -126,26 +129,78 @@ void Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
 
-void Http::responseSend(void) {
-	std::ostringstream oss;
+std::string
+Http::directoryListing(void) {
+	DIR* dir;
+	struct dirent* entry;
+	std::stringstream html;
+	std::vector<std::string> file_content;
+
+	MLOG("PATH-> " + this->file_path);
+	dir = opendir(this->file_path.c_str());
+	if (dir) {
+		entry = readdir(dir);
+		while (entry) {
+			// Directory content different from the file itself
+			if (std::strcmp(entry->d_name, ".") != 0)
+				file_content.push_back(entry->d_name);
+			entry = readdir(dir);
+		}
+		closedir(dir);
+	} else
+		MLOG("ERROR: Unable to open directory");
+	html << "<html><head><title>Directory listing</title></head><body>"
+		 << "<h1>Index of " << this->file_path << "</h1><ul>";
+	for (size_t i = 0; i < file_content.size(); i++)
+		html << "<li><a href=\"" << file_content[i] << "\">" << file_content[i] << "</a></li>";
+	html << "</ul></body></html>";
+	return (html.str());
+}
+
+
+void
+Http::responseSend(void) {
+	int statusCode;
+	struct stat buf;
 	std::string content;
+	std::ostringstream oss;
 	t_location* actual_location;
 
 	// Find the location corresponding to the URL
-	actual_location = (this->_server)->getLocation(this->url); // (this->url).substr(0, (this->url).find_last_of('/') + 1)
+	statusCode = 200;
+	actual_location = (this->_server)->getLocation(this->url);
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
-		int statusCode = 200;
-		
-		// Open the file corresponding to the request
-		this->file_path = (this->url == actual_location->location_name) ? actual_location->index : (actual_location->root + this->url);
-		MLOG("FILE PATH: " + this->file_path);
+		this->file_path = actual_location->root + this->url;
+
+		// It is a location or a directory
+		if (this->file_path[this->file_path.size() - 1] == '/') {
+			// Check if the location index exists
+			if (stat(actual_location->index.c_str(), &buf) == 0)
+				this->file_path = actual_location->index;
+			// If auto_index off or the directory doesn't exist and the index file cannot be opened
+			else if (!actual_location->auto_index || (stat(this->file_path.c_str(), &buf) != 0)) {
+				MLOG("Autoindex off or the path doesn't exist");
+				this->generateErrorResponse(oss, 403); // Forbidden request
+				return;
+			}
+			else {
+				generateResponse(oss, this->http_version, "200", this->directoryListing());
+				std::string response = oss.str();
+
+				// Send the response to the client
+				if (send(this->_client, response.c_str(), response.length(), 0) < 0) {
+					throw std::runtime_error("Error: send function failed");
+				}
+				return;
+			}
+		} // file_path must be a file, and it will be checked on the response.
 
 		if (this->method == "GET")
-			statusCode = getMethod(actual_location, content);
+			statusCode = getMethod(actual_location->allow_methods, content);
 		else if (this->method == "POST")
-			statusCode = postMethod(actual_location);
+			statusCode = postMethod(actual_location->allow_methods);
 
 
 		switch (statusCode) {
@@ -154,7 +209,7 @@ void Http::responseSend(void) {
 				break;
 			case 201:
 				generateResponse(oss, this->http_version, "201 Created", content);
-
+				break;
 			default:
 				generateErrorResponse(oss, statusCode);
 				break;
@@ -175,55 +230,64 @@ void Http::responseSend(void) {
 }
 
 int
-Http::getMethod(const t_location* location, std::string& content) {
-	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
-		
-	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "GET") == location->allow_methods.end())
-		return 405; // Status code for method not allowed
-	
+Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
+	// Method not allowed on location
+	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
+		return 405;
 	std::stringstream buffer;
 	std::ifstream file(file_path.c_str());
 
-	if (file.is_open()) {
-		// Read the content of the file
-		buffer << file.rdbuf();
-		content = buffer.str();
-		file.close();
-		// Generate the HTTP 200 OK response with the content of the file
-		return 200;
-	} else {
-		// File not found, generate a 404 Not Found response
-		MLOG("FILE NOT FOUND");
-		return 404;
+	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
+	if (!file) {
+		// No such file or directory
+		if (errno == ENOENT)
+			return (404);
+		// Permission denied
+		else if (errno == EACCES)
+			return (403);
+		// Internal Server Error
+		else
+			return (500);
 	}
+	buffer << file.rdbuf();
+	content = buffer.str();
+	file.close();
+	// Success
+	return (200);
 }
 
 int
-Http::postMethod(const t_location *location) {
-	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
-	
-	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "POST") == location->allow_methods.end())
-		return 405; // Status code for method not allowed
-		
-	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Append changes to the file
-	if (out_file.is_open()) {
-		
-		std::string output = this->request.substr(this->request.find("\r\n\r\n") + 4, std::string::npos);
-		MLOG("Output: " + output); 
-		out_file << "\n==================\n\n";
-		out_file << output;
-		out_file << std::endl;
-		out_file.close();
-		
-		// Generate the HTTP 200 OK response
-		return 201;
-	} else {
-		// File not found, generate a 404 Not Found response
-		MLOG("FILE NOT FOUND");
-		return 404;
-	}
+Http::postMethod(const std::vector<std::string>& methods) {
+	std::ofstream out_file(file_path.c_str(), std::ofstream::app);
 
-	return 200;
+	// Status code for method not allowed
+	if (std::find(methods.begin(), methods.end(), "POST") == methods.end())
+		return (405);
+
+	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
+
+
+	if (!out_file) {
+		// No such file or directory
+		if (errno == ENOENT)
+			return (404);
+			// Permission denied
+		else if (errno == EACCES)
+			return (403);
+			// Internal Server Error
+		else
+			return (500);
+	}
+	std::string output = this->request.substr(this->request.find("\r\n\r\n") + 4, std::string::npos);
+
+	MLOG("Output: " + output);
+	out_file << "\n**************\n\n";
+	out_file << output;
+	out_file << std::endl;
+	out_file.close();
+
+	// Generate the HTTP 200 OK response
+	return (201);
 }
 
 int

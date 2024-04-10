@@ -38,6 +38,7 @@
 #include <sys/epoll.h>
 #include <csignal>
 #include <fcntl.h>
+#include <dirent.h>
 
 // ========================
 // 		Macros and struct
