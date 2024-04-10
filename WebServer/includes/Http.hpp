@@ -42,11 +42,12 @@ class Http {
 		void requestFromClient(void);
 		void requestParser(void);
 		//	Response
+		std::string directoryListing(void);
 		void responseSend(void);
 		void generateErrorResponse(std::ostringstream&, int);
 		
-		int getMethod(const t_location *location, std::string& content);
-		int postMethod(const t_location *location);
+		int getMethod(const std::vector<std::string>&, std::string& content);
+		int postMethod(const std::vector<std::string>&);
 		int deleteMethod(const t_location *location);
 		bool isCGI(const std::string& file);
 };
