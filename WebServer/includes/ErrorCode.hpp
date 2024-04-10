@@ -1,33 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   StatusCode.hpp                                     :+:      :+:    :+:   */
+/*   ErrorCode.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/10 12:28:33 by pealexan          #+#    #+#             */
-/*   Updated: 2024/04/10 12:33:25 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/04/10 14:10:31 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#ifndef STATUSCODE_HPP
-#define STATUSCODE_HPP
+#ifndef ERRORCODE_HPP
+#define ERRORCODE_HPP
 
 #include <string>
 
-class StatusCode {
+class ErrorCode {
 	public:
-		StatusCode();
-		~StatusCode();
-		int	getStatusCode();
-		void setStatusCode(int code);
-		std::string getStatusMessage(int code);
-		std::string generateErrorPage(int code);
+		ErrorCode();
+		~ErrorCode();
+		int	getErrorCode();
+		void setErrorCode(int errorCode);
+		std::string getErrorMessage(int errorCode);
+		std::string generateErrorPage(int errorCode);
 	
 	private:
-		int	_statusCode;
+		int	_errorCode;
 };
 
 #endif

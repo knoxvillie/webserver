@@ -1,51 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   StatusCode.cpp                                     :+:      :+:    :+:   */
+/*   ErrorCode.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/10 12:32:39 by pealexan          #+#    #+#             */
-/*   Updated: 2024/04/10 12:42:23 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/04/10 14:10:14 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "StatusCode.hpp"
+#include "ErrorCode.hpp"
 
-StatusCode::StatusCode() : _statusCode(200) {}
+ErrorCode::ErrorCode() : _errorCode(200) {}
 
-StatusCode::~StatusCode() {}
+ErrorCode::~ErrorCode() {}
 
-int	StatusCode::getStatusCode() {
-	return this->_statusCode;
+int	ErrorCode::getErrorCode() {
+	return this->_errorCode;
 }
 
-void StatusCode::setStatusCode(int statusCode) {
-	this->_statusCode = statusCode;
+void ErrorCode::setErrorCode(int errorCode) {
+	this->_errorCode = errorCode;
 }
 
-std::string getStatusMessage(int statusCode)
+std::string getErrorMessage(int errorCode)
 {
-	switch (statusCode)
+	switch (errorCode)
 	{
-		case 100:
-			return ("Continue");
-		case 101:
-			return ("Switching Protocols");
-		case 200:
-			return ("OK");
-		case 201:
-			return ("Created");
-		case 202:
-			return ("Accepted");
-		case 203:
-			return ("Non-Authoritative Information");
-		case 204:
-			return ("No Content");
-		case 205:
-			return ("Reset Content");
-		case 206:
-			return ("Partial Content");
 		case 300:
 			return ("Multiple Choices");
 		case 301:
@@ -113,12 +95,12 @@ std::string getStatusMessage(int statusCode)
 	}
 }
 
-std::string StatusCode::generateErrorPage(int statusCode)
+std::string ErrorCode::generateErrorPage(int errorCode)
 {
 	std::string res;
-	std::string message = getStatusMessage(this->_statusCode);
+	std::string message = getErrorMessage(errorCode);
+	std::string code = std::to_string(errorCode);
 	
-	res = "<html>\n<head>\n<title>" + std::to_string(statusCode) + " " + message + "</title>\n</head>\n<body>\n<center><h1>" + std::to_string(statusCode) + " " + message + "</h1></center>\n<hr><center>42_WebServer</center>\n</body>\n</html>";
+	res = "<html>\n<head>\n<title>" + code + " " + message + "</title>\n</head>\n<body>\n<center><h1>" + code + " " + message + "</h1></center>\n<hr><center>42_WebServer</center>\n</body>\n</html>";
 	return (res);
 }
-
