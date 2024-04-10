@@ -6,7 +6,7 @@
 /*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/10 12:32:39 by pealexan          #+#    #+#             */
-/*   Updated: 2024/04/10 14:10:14 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/04/10 14:23:07 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,15 @@ std::string ErrorCode::generateErrorPage(int errorCode)
 	std::string message = getErrorMessage(errorCode);
 	std::string code = std::to_string(errorCode);
 	
-	res = "<html>\n<head>\n<title>" + code + " " + message + "</title>\n</head>\n<body>\n<center><h1>" + code + " " + message + "</h1></center>\n<hr><center>42_WebServer</center>\n</body>\n</html>";
+	res = "<html><head><title>";
+	res += code;
+	res += " ";
+	res += message;
+	res += "</title></head><body><center><h1>";
+	res += code;
+	res += " ";
+	res += message;
+	res += "</h1></center><hr><center>42_WebServer</center></body></html>";
+
 	return (res);
 }
