@@ -46,7 +46,8 @@ class Http {
 		int getMethod(const std::vector<std::string>&, std::string& content);
 		int postMethod(const std::vector<std::string>&);
 		int deleteMethod(const t_location *location);
-		void setHeaderAndBody();
+		void setHeaderAndBody(void);
+		void fillHeaderMap(void);
 		bool isCGI(const std::string& file);
 };
 

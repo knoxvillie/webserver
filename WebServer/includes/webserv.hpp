@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/12 12:28:57 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/12 15:10:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ struct t_location {
 
 // HTTP Request
 struct t_request {
+	std::string first_line;
 	std::string full;
 	std::string header;
 	std::string body;
