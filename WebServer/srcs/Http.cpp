@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/12 12:28:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/12 15:16:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,24 +41,24 @@ void Http::requestFromClient() {
 	// also BUFFER_SIZE value was just a placeholder, might need to be changed
 	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0) 
 		throw std::runtime_error("Error: Read from client socket");
-	this->request.full = std::string(content);
-	setHeaderAndBody(); // not sure if it should be called here
+	(this->request).full = std::string(content);
 	MLOG(content);
+	setHeaderAndBody(); // not sure if it should be called here
 }
 
 void Http::requestParser(void) {
 	GPS;
 	std::string token;
-	std::stringstream ss(this->request.full);
+	std::stringstream ss((this->request).full);
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
-		this->request.method = token;
+		(this->request).method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
-		this->request.url = token;
+		(this->request).url = token;
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
 	if (ss >> token) {
@@ -137,7 +137,7 @@ Http::directoryListing(void) {
 	std::stringstream html;
 	std::vector<std::string> file_content;
 
-	MLOG("PATH-> " + this->file_path);
+	MLOG("PATH-> " + request.file_path);
 	dir = opendir(this->request.file_path.c_str());
 	if (dir) {
 		entry = readdir(dir);
@@ -182,9 +182,12 @@ Http::responseSend(void) {
 
 		// It is a location or a directory
 		if (request.file_path[request.file_path.size() - 1] == '/') {
+			MLOG("DIR REQUESTED");
 			// Check if the location index exists
-			if (stat(actual_location->index.c_str(), &buf) == 0)
+			if (stat(actual_location->index.c_str(), &buf) == 0) {
 				request.file_path = actual_location->index;
+				statusCode = getMethod(actual_location->allow_methods, content);
+			}
 			// If auto_index off or the directory doesn't exist and the index file cannot be opened
 			else if (!actual_location->auto_index || (stat(request.file_path.c_str(), &buf) != 0)) {
 				MLOG("Autoindex off or the path doesn't exist");
@@ -232,7 +235,7 @@ Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
 	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
 		return 405;
 	std::stringstream buffer;
-	std::ifstream file(request.file_path.c_str());
+	std::ifstream file((request.file_path).c_str());
 
 	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
 	if (!file) {
@@ -299,11 +302,51 @@ Http::deleteMethod(const t_location *location) {
 }
 
 void
-Http::setHeaderAndBody() {
+Http::setHeaderAndBody(void) {
+	GPS;
 	std::string content = request.full;
 
-	request.header = content.substr(0, content.find_first_of("\r\n\r\n"));
-	request.body = content.substr(content.find_first_of("\r\n\r\n") + 1, std::string::npos);
+	request.first_line = content.substr(0, content.find("\r\n"));
+	MLOG("\n\n\n\nFIRST LINE: " + request.first_line);
+
+	request.header = content.substr((request.first_line).length(), content.find("\r\n\r\n"));
+	MLOG("\n\n\n\nHEADER: " + request.header);
+	
+	request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
+	MLOG("\n\n\n\nBODY: " + request.body);
+	fillHeaderMap();
+	MLOG("\n\n\n\n")
+}
+
+void
+Http::fillHeaderMap(void) {
+	GPS;
+	std::string line, header = request.header;
+	size_t i = 0, pos = 0;
+	
+	MLOG("\n\n\n\nHEADER222: " + request.header);
+
+	do {
+		pos = header.find("\r\n", pos);
+		MLOG(pos);
+		
+		line = header.substr(i, pos);
+		i = pos + 2; // "\r\n" is 2 characters
+		if (line.empty())
+			break;
+
+		std::string key = line.substr(0, line.find(":"));
+		std::string value = line.substr(line.find(":") + 2, std::string::npos); // +2 because of whitespace after ":"
+		request.headerMap[key] = value;
+	
+	} while (pos != std::string::npos);
+	
+
+	// printing map for debug
+	std::map<std::string, std::string>::const_iterator it;
+    for (it = request.headerMap.begin(); it != request.headerMap.end(); ++it) {
+        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+    }
 }
 
 
