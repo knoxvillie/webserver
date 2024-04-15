@@ -73,7 +73,8 @@ class Server {
 		void checkAutoIndex(std::vector<std::string>&, t_location&);
 		void checkClientMaxBodySize(std::vector<std::string>&, t_location&);
 		void checkAllowMethods(std::vector<std::string>&, t_location&);
-
+		void checkCgi(std::vector<std::string>&, t_location&);
+		void checkRedirect(std::vector<std::string>&, t_location&);
 };
 
 #endif //SERVER_HPP

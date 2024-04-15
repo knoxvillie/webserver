@@ -89,6 +89,7 @@ struct t_location {
 	short CMaxBodySize;
 	std::vector<std::string> allow_methods;
 	std::string cgi_pass;
+	bool redirect_is_extern;
 	std::string redirect;
 };
 
