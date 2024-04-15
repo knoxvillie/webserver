@@ -28,11 +28,8 @@ class Http {
 		int _client;
 		Server* _server;
 
-		std::string request;
-		std::string method;
-		std::string url;
 		std::string http_version;
-		std::string file_path;
+		t_request request;
 
 	public:
 		Http(int, Server*);
@@ -49,6 +46,8 @@ class Http {
 		int getMethod(const std::vector<std::string>&, std::string& content);
 		int postMethod(const std::vector<std::string>&);
 		int deleteMethod(const t_location *location);
+		void setHeaderAndBody(void);
+		void fillHeaderMap(void);
 		bool isCGI(const std::string& file);
 };
 

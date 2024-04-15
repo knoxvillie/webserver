@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/05 11:02:10 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/12 15:10:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,19 @@ struct t_location {
 	std::string cgi_pass;
 	bool redirect_is_extern;
 	std::string redirect;
+};
+
+// HTTP Request
+struct t_request {
+	std::string first_line;
+	std::string full;
+	std::string header;
+	std::string body;
+	std::string url;
+	
+	std::string method;
+	std::string file_path;
+	std::map<std::string, std::string> headerMap;
 };
 
 // ======================

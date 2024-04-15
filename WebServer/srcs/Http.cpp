@@ -6,20 +6,11 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/09 14:40:53 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/15 14:19:21 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Http.hpp"
-
-/*
-    Host: Specifies the host and s_port to which the request is being sent. In this case, it's "0.0.0.0:8080".
-    User-Agent: Provides information about the client making the request. In this case, it indicates that the user agent is Mozilla Firefox running on Ubuntu Linux.
-    Accept: Indicates what media types the client can understand. It prefers HTML but also accepts other formats like XML and images.
-    Accept-Language: Specifies the preferred language for the response. In this case, it prefers English.
-    Accept-Encoding: Indicates the types of content encodings that the client supports. Here, it supports gzip and deflate compression methods.
-    Connection: Specifies whether the connection should be kept alive after the current request/response cycle.
-    Upgrade-Insecure-Requests: Indicates that the client would like the server to upgrade the request to a secure HTTPS connection if possible.*/
 
 // Prototypes
 static void generateResponse(std::ostringstream&, const std::string&, const std::string&, const std::string&);
@@ -27,6 +18,7 @@ static void generateResponse(std::ostringstream&, const std::string&, const std:
 
 Http::Http(int connection, Server* server) : _client(connection), _server(server) {
 	this->requestFromClient();
+	this->setHeaderAndBody();
 	this->requestParser();
 	this->responseSend();
 }
@@ -39,25 +31,25 @@ void Http::requestFromClient() {
 
 	// Multiple recv calls might be needed for a request bigger than BUFFER_SIZE no ?
 	// also BUFFER_SIZE value was just a placeholder, might need to be changed
-	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0) 
+	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
-	this->request = std::string(content);
+	(this->request).full = std::string(content);
 	MLOG(content);
 }
 
 void Http::requestParser(void) {
 	GPS;
 	std::string token;
-	std::stringstream ss(this->request);
+	std::stringstream ss((this->request).full);
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
-		this->method = token;
+		(this->request).method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
-		this->url = token;
+		(this->request).url = token;
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
 	if (ss >> token) {
@@ -77,8 +69,8 @@ generateResponse(std::ostringstream& oss, const std::string& http_version, const
 		oss << "Content-Length: 75\r\n";
 		oss << "\r\n";
 		oss << "{";
-  		oss << "\"status\": \"success\",";
-  		oss << "\"message\": \"Your request was processed successfully.\"";
+		oss << "\"status\": \"success\",";
+		oss << "\"message\": \"Your request was processed successfully.\"";
 		oss << "}";
 	}
 	else {
@@ -160,13 +152,12 @@ std::string Http::directoryListing(void) {
 	struct stat file_stat;
 	std::stringstream html;
 
-	MLOG("PATH-> " + this->file_path);
-	dir = opendir(this->file_path.c_str());
+	MLOG("PATH-> " + this->request.file_path);
+	dir = opendir(this->request.file_path.c_str());
 	if (!dir) {
 		MLOG("ERROR: Unable to open directory");
 		return "<html><head><title>Error</title></head><body><h1>Error opening directory.</h1></body></html>";
 	}
-
 	html << "<html><head><title>Directory Listing</title>"
 		<< "<style>"
 		<< "body { font-family: Arial, sans-serif; margin: 20px; }"
@@ -185,12 +176,12 @@ std::string Http::directoryListing(void) {
 		<< "}"
 		<< "</style>"
 		<< "</head><body>"
-		<< "<h2>Listing of " << this->file_path << "</h2>"
+		<< "<h2>Listing of " << this->request.file_path << "</h2>"
 		<< "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
 
 	while ((entry = readdir(dir))) {
 		if (std::strcmp(entry->d_name, ".") == 0 ) continue; // Skip hidden current directory markers.
-		std::string filePath = this->file_path + "/" + entry->d_name;
+		std::string filePath = this->request.file_path + "/" + entry->d_name;
 		if(stat(filePath.c_str(), &file_stat) == 0) {
 			char time_buf[100];
 			std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", localtime(&file_stat.st_ctime));
@@ -214,48 +205,41 @@ Http::responseSend(void) {
 	t_location* actual_location;
 
 	// Find the location corresponding to the URL
-	statusCode = 200;
-	actual_location = (this->_server)->getLocation(this->url);
+	statusCode = 404;
+	actual_location = this->_server->getBestLocation(request.url);
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
-		this->file_path = actual_location->root + this->url;
+		request.file_path = actual_location->root + request.url;
 
 		// It is a location or a directory
-		if (this->file_path[this->file_path.size() - 1] == '/') {
+		if (request.file_path[request.file_path.size() - 1] == '/') {
 			// Check if the location index exists
-			if (stat(actual_location->index.c_str(), &buf) == 0)
-				this->file_path = actual_location->index;
+			if (stat(actual_location->index.c_str(), &buf) == 0) {
+				request.file_path = actual_location->index;
+				statusCode = getMethod(actual_location->allow_methods, content);
+			}
 			// If auto_index off or the directory doesn't exist and the index file cannot be opened
-			else if (!actual_location->auto_index || (stat(this->file_path.c_str(), &buf) != 0)) {
-				MLOG("Autoindex off or the path doesn't exist");
-				this->generateErrorResponse(oss, 403); // Forbidden request
+			else if (!actual_location->auto_index || (stat(request.file_path.c_str(), &buf) != 0)) {
+				generateErrorResponse(oss, 403); // Forbidden request
 				return;
 			}
-			else {
-				generateResponse(oss, this->http_version, "200", this->directoryListing());
-				std::string response = oss.str();
-
-				// Send the response to the client
-				if (send(this->_client, response.c_str(), response.length(), 0) < 0) {
-					throw std::runtime_error("Error: send function failed");
-				}
-				return;
-			}
+			else
+				generateResponse(oss, http_version, "200", directoryListing());
 		} // file_path must be a file, and it will be checked on the response.
 
-		if (this->method == "GET")
+		else if (request.method == "GET")
 			statusCode = getMethod(actual_location->allow_methods, content);
-		else if (this->method == "POST")
+		else if (request.method == "POST")
 			statusCode = postMethod(actual_location->allow_methods);
 
 
 		switch (statusCode) {
 			case 200:
-				generateResponse(oss, this->http_version, "200 OK", content);
+				generateResponse(oss, http_version, "200 OK", content);
 				break;
 			case 201:
-				generateResponse(oss, this->http_version, "201 Created", content);
+				generateResponse(oss, http_version, "201 Created", content);
 				break;
 			default:
 				generateErrorResponse(oss, statusCode);
@@ -282,7 +266,7 @@ Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
 	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
 		return 405;
 	std::stringstream buffer;
-	std::ifstream file(file_path.c_str());
+	std::ifstream file((request.file_path).c_str());
 
 	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
 	if (!file) {
@@ -305,7 +289,7 @@ Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
 
 int
 Http::postMethod(const std::vector<std::string>& methods) {
-	std::ofstream out_file(file_path.c_str(), std::ofstream::app);
+	std::ofstream out_file(request.file_path.c_str(), std::ofstream::app);
 
 	// Status code for method not allowed
 	if (std::find(methods.begin(), methods.end(), "POST") == methods.end())
@@ -325,7 +309,7 @@ Http::postMethod(const std::vector<std::string>& methods) {
 		else
 			return (500);
 	}
-	std::string output = this->request.substr(this->request.find("\r\n\r\n") + 4, std::string::npos);
+	std::string output = this->request.full.substr(this->request.full.find("\r\n\r\n") + 4, std::string::npos);
 
 	MLOG("Output: " + output);
 	out_file << "\n**************\n\n";
@@ -340,19 +324,68 @@ Http::postMethod(const std::vector<std::string>& methods) {
 int
 Http::deleteMethod(const t_location *location) {
 	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
-	
+
 	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "DELETE") == location->allow_methods.end())
 		return 405; // Status code for method not allowed
-	
+
 	(void)location;
 	return 200;
 }
 
-bool Http::isCGI(const std::string& file) {
-	
+void
+Http::setHeaderAndBody(void) {
+	GPS;
+	t_location *actual_location;
+	std::string content = request.full;
+
+	this->request.first_line = content.substr(0, content.find("\r\n"));
+	this->request.header = content.substr((request.first_line).length() + 2, content.find("\r\n\r\n"));
+	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
+	actual_location = this->_server->getBestLocation(this->request.url);
+
+	if (actual_location->CMaxBodySize * 1024 * 1000 < this->request.body.size())
+
+
+	fillHeaderMap();
+}
+
+void
+Http::fillHeaderMap(void) {
+	GPS;
+	std::string line, header = request.header;
+	size_t pos = 0;
+
+	MLOG("\n\n\n\nHEADER: " + header);
+
+	while ((pos = header.find("\r\n")) != std::string::npos) {
+
+		line = header.substr(0, pos);
+		header.erase(0, pos + 2);
+		if (line.empty())
+			break;
+
+		size_t colPos = line.find(":");
+		if (colPos != std::string::npos) {
+			std::string key = line.substr(0, colPos);
+			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
+			request.headerMap[key] = value;
+		}
+	}
+
+	// printing map for debug
+	std::map<std::string, std::string>::const_iterator it;
+	for (it = request.headerMap.begin(); it != request.headerMap.end(); it++) {
+		std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+	}
+}
+
+
+bool
+Http::isCGI(const std::string& file) {
+
 	std::string extension = file.substr(file.find_last_of('.'), std::string::npos);
 
 	// Check if the extension matches any of our allowed CGIs, then send the request to that
-	
+
 	return false;
 }

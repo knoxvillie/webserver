@@ -88,7 +88,8 @@ Server::validateServerDirectives(void) {
 			else if (it->first == "auto_index") this->checkAutoIndex(it->second, temp);
 			else if (it->first == "client_max_body_size") this->checkClientMaxBodySize(it->second, temp);
 			else if (it->first == "allow_methods") this->checkAllowMethods(it->second, temp);
-			// Cgi and redirect checker missing.
+			else if (it->first == "cgi_pass") this->checkCgi(it->second, temp);
+			else this->checkRedirect(it->second, temp);
 		}
 		this->locations.push_back(temp);
 	}
@@ -253,7 +254,7 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& locati
 			throw std::runtime_error("Error: invalid argument " + vec[0]);
 	}
 	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
-	if (value < 1 || value > 1024)
+	if (value < 1 || value > 10)
 		throw std::runtime_error("Error: Client Max Body Size out of bound");
 	location.CMaxBodySize = (short)value;
 }
@@ -281,10 +282,15 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 
 void
 Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
-	if (vec[0].size() != 1)
+	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location cgi_pass syntax");
 	struct stat buf;
-	const std::string cgi_path(this->_pwd + "/var/");
+	const std::string cgi_bin(vec[0].substr(0, vec[0].find(';')));
+	const std::string cgi_path(this->_pwd + "/var/www/cgi-bin/" + cgi_bin);
+
+	if (stat(cgi_path.c_str(), &buf) != 0)
+		throw std::runtime_error("Error: cgi_pass file doesn't exist");
+	location.cgi_pass = cgi_path;
 }
 
 void
@@ -333,7 +339,7 @@ Server::getErrorMap(void) const {
 }
 
 t_location*
-Server::getLocation(const std::string& name) {
+Server::getBestLocation(const std::string& name) {
 	t_location *bestMatch = NULL;
 	size_t bestMatchLen = 0;
 

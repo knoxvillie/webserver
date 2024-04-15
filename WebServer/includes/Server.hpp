@@ -59,7 +59,7 @@ class Server {
 		int getSocket(void) const;
 		std::string getPWD(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
-		t_location* getLocation(const std::string&);
+		t_location* getBestLocation(const std::string&);
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
 		//Server Directives Parser
