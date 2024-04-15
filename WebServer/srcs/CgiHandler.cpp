@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/12 14:39:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/15 10:41:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,10 @@ CgiHandler::CgiHandler(const t_request& request) : _request(request) {
 CgiHandler::~CgiHandler() {}
  
 void
-CgiHandler::setEnvVariables(const std::string& name, const std::string& value) {
-	*_envp = (name + "=" + value).c_str();
+CgiHandler::setEnvVariables(const std::map<std::string, std::string>& header) {
+	std::map<std::string, std::string>::const_iterator it;
+    for (it = header.begin(); it != header.end(); it++)
+		*_envp = (it->first + "=" + it->second).c_str();
 }
 
 void

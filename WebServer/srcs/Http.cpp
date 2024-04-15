@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/12 15:16:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/15 10:39:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -307,44 +307,37 @@ Http::setHeaderAndBody(void) {
 	std::string content = request.full;
 
 	request.first_line = content.substr(0, content.find("\r\n"));
-	MLOG("\n\n\n\nFIRST LINE: " + request.first_line);
-
-	request.header = content.substr((request.first_line).length(), content.find("\r\n\r\n"));
-	MLOG("\n\n\n\nHEADER: " + request.header);
-	
+	request.header = content.substr((request.first_line).length() + 2, content.find("\r\n\r\n"));
 	request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
-	MLOG("\n\n\n\nBODY: " + request.body);
 	fillHeaderMap();
-	MLOG("\n\n\n\n")
 }
 
 void
 Http::fillHeaderMap(void) {
 	GPS;
 	std::string line, header = request.header;
-	size_t i = 0, pos = 0;
+	size_t pos = 0;
 	
-	MLOG("\n\n\n\nHEADER222: " + request.header);
+	MLOG("\n\n\n\nHEADER222: " + header);
 
-	do {
-		pos = header.find("\r\n", pos);
-		MLOG(pos);
+	while ((pos = header.find("\r\n")) != std::string::npos) {
 		
-		line = header.substr(i, pos);
-		i = pos + 2; // "\r\n" is 2 characters
+		line = header.substr(0, pos);
+		header.erase(0, pos + 2);
 		if (line.empty())
 			break;
 
-		std::string key = line.substr(0, line.find(":"));
-		std::string value = line.substr(line.find(":") + 2, std::string::npos); // +2 because of whitespace after ":"
-		request.headerMap[key] = value;
-	
-	} while (pos != std::string::npos);
-	
+		size_t colPos = line.find(":");
+		if (colPos != std::string::npos) {
+			std::string key = line.substr(0, colPos);
+			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
+			request.headerMap[key] = value;
+		}
+	}
 
 	// printing map for debug
 	std::map<std::string, std::string>::const_iterator it;
-    for (it = request.headerMap.begin(); it != request.headerMap.end(); ++it) {
+    for (it = request.headerMap.begin(); it != request.headerMap.end(); it++) {
         std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
     }
 }
