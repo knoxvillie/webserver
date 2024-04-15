@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:12 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/15 10:34:32 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/15 11:52:30 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,17 @@ class CgiHandler {
 
 		t_request _request;
 
+		std::string PATH_INFO;
+		std::string QUERY_STRING;
+
 		std::string _extention;
 		const char *_interpreter; // Pass the interpreter string into this pointer
 		const char *_envp[]; // where to store the env variables
 		
 		void setEnvVariables(const std::map<std::string, std::string>& header);
-		void executeCgi();
+		void executeCgi(void);
+		void getQueryString(void);
+		void getPathInfo(void);
 		
 
 	public:

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/15 10:39:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/15 14:19:21 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,7 +318,7 @@ Http::fillHeaderMap(void) {
 	std::string line, header = request.header;
 	size_t pos = 0;
 	
-	MLOG("\n\n\n\nHEADER222: " + header);
+	MLOG("\n\n\n\nHEADER: " + header);
 
 	while ((pos = header.find("\r\n")) != std::string::npos) {
 		
