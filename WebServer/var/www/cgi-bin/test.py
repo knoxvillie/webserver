@@ -2,3 +2,5 @@
 
 import cgi
 
+print("Hello world!")
+
