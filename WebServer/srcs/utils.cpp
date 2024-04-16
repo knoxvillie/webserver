@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/02 15:58:32 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/16 10:52:02 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,4 +121,15 @@ void signal_handler(int signum) {
 	if (signum == SIGINT) {
 		gEndLoop = 1;
 	}
+}
+
+bool isDirectory(const std::string& path) {
+	struct stat fileInfo;
+
+	if (stat(path.c_str(), &fileInfo) != 0) {
+		MLOG("Error on isDir().");
+		return false;
+	}
+
+	return (S_ISDIR(fileInfo.st_mode));
 }

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/09 13:22:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 10:23:11 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,9 @@ class Response {
 	
 	private:
 		int status_code;
-		int content_length;
+		int body_length;
 		std::string header;
-		std::string content;
+		std::string body;
 		//...
 	
 	public:

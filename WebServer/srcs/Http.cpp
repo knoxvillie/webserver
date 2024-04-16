@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/15 14:19:21 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:34:36 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ void Http::requestParser(void) {
 
 	if (ss >> token) {
 		(this->request).url = token;
+		this->ParseURL();
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
 	if (ss >> token) {
@@ -379,13 +380,53 @@ Http::fillHeaderMap(void) {
 	}
 }
 
+// Needs testing
+void
+Http::ParseURL(void)
+{
+	std::string extension, url = request.unparsed_url;
+	size_t pos, i = 0;
 
-bool
-Http::isCGI(const std::string& file) {
+	i = 0;
+	do {
+		extension = url.substr(url.find(".", i), url.find("/", i));
+		pos = url.find(extension, i);
+		i = pos;
+		std::string current_file = url.substr(url.find("/", pos)); 
 
-	std::string extension = file.substr(file.find_last_of('.'), std::string::npos);
+		if (isDirectory(current_file))
+			continue;
+		else {
+			request.url = current_file;
+			break;
+		}
+	} while (pos != std::string::npos);
+  
+	if (extension != "py" && extension != "php" && extension != "pl") request.isCGI = false;
+	else if (access((request.url).c_str(), F_OK | X_OK) == -1) request.isCGI = false;
+	else request.isCGI = true;
+}
 
-	// Check if the extension matches any of our allowed CGIs, then send the request to that
+void 
+Http::decodeURI() {
+  
+	std::string	newUri;
 
-	return false;
+	for (std::string::iterator iter = this->_decodedURI.begin(); iter != this->_decodedURI.end(); ++iter) 
+	{
+		if (*iter == '%' && iter + 1 != this->_decodedURI.end() && iter + 2 != this->_decodedURI.end())
+		{
+			char numberChar[3] = {*(iter + 1), *(iter + 2), 0};
+			char *endptr = NULL;
+			u_int64_t numberInt = std::strtoul(numberChar, &endptr, 16);
+			if (endptr && *endptr == 0)
+			{
+				newUri += static_cast<char>(numberInt);
+				iter += 2;
+			}
+		} else {
+			newUri += *iter;
+		}
+	}
+	this->request.url = newUri;
 }

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/12 15:10:29 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:43:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,15 +95,20 @@ struct t_location {
 
 // HTTP Request
 struct t_request {
-	std::string first_line;
-	std::string full;
-	std::string header;
-	std::string body;
-	std::string url;
+	std::string full; 				// The full request
+	std::string first_line; 		// <method> <status code> <http version>
+	std::string header; 			// Header of the request
+	std::string body; 				// body of the request
+	std::string unparsed_url;		// URL before checking for QUERY_STRING and PATH_INFO
+	std::string url;				// URL without QUERY_STRING and PATH_INFO
 	
-	std::string method;
-	std::string file_path;
-	std::map<std::string, std::string> headerMap;
+	std::string method;				// Http method
+	std::string file_path;			// Path to the file (for cases when its the index)
+	std::map<std::string, std::string> headerMap; // Map of header directives to attributes
+	
+	std::string path_info;			// PATH_INFO env varible for CGI
+	std::string query_string;		// QUERY_STRING env variable for CGI
+	bool isCGI;						// Whether or not the file requested is a CGI
 };
 
 // ======================
@@ -123,6 +128,7 @@ uint32_t ipParserHtonl(const std::string&);
 std::string intToString(int number);
 std::string getValueFromEnv(char** env, const std::string&);
 void signal_handler(int signum);
+bool isDirectory(const std::string& path);
 
 
 // ======================

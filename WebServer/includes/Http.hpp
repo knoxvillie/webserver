@@ -27,6 +27,7 @@ class Http {
 
 		int _client;
 		Server* _server;
+		std::string _decodedURI;
 
 		std::string http_version;
 		t_request request;
@@ -48,7 +49,14 @@ class Http {
 		int deleteMethod(const t_location *location);
 		void setHeaderAndBody(void);
 		void fillHeaderMap(void);
-		bool isCGI(const std::string& file);
+		void ParseURL(void);
+		void decodeURI(void);
+
+		// Getters
+		std::string getMethodType();
+		std::string getHeader();
+		std::string getBody();
+		std::string getURI();
 };
 
 #endif
