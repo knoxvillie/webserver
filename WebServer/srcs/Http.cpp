@@ -12,21 +12,13 @@
 
 #include "Http.hpp"
 
-/*
-    Host: Specifies the host and s_port to which the request is being sent. In this case, it's "0.0.0.0:8080".
-    User-Agent: Provides information about the client making the request. In this case, it indicates that the user agent is Mozilla Firefox running on Ubuntu Linux.
-    Accept: Indicates what media types the client can understand. It prefers HTML but also accepts other formats like XML and images.
-    Accept-Language: Specifies the preferred language for the response. In this case, it prefers English.
-    Accept-Encoding: Indicates the types of content encodings that the client supports. Here, it supports gzip and deflate compression methods.
-    Connection: Specifies whether the connection should be kept alive after the current request/response cycle.
-    Upgrade-Insecure-Requests: Indicates that the client would like the server to upgrade the request to a secure HTTPS connection if possible.*/
-
 // Prototypes
 static void generateResponse(std::ostringstream&, const std::string&, const std::string&, const std::string&);
 
 
 Http::Http(int connection, Server* server) : _client(connection), _server(server) {
 	this->requestFromClient();
+	this->setHeaderAndBody();
 	this->requestParser();
 	this->responseSend();
 }
@@ -39,11 +31,10 @@ void Http::requestFromClient() {
 
 	// Multiple recv calls might be needed for a request bigger than BUFFER_SIZE no ?
 	// also BUFFER_SIZE value was just a placeholder, might need to be changed
-	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0) 
+	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
 	(this->request).full = std::string(content);
 	MLOG(content);
-	setHeaderAndBody(); // not sure if it should be called here
 }
 
 void Http::requestParser(void) {
@@ -78,8 +69,8 @@ generateResponse(std::ostringstream& oss, const std::string& http_version, const
 		oss << "Content-Length: 75\r\n";
 		oss << "\r\n";
 		oss << "{";
-  		oss << "\"status\": \"success\",";
-  		oss << "\"message\": \"Your request was processed successfully.\"";
+		oss << "\"status\": \"success\",";
+		oss << "\"message\": \"Your request was processed successfully.\"";
 		oss << "}";
 	}
 	else {
@@ -130,39 +121,80 @@ Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
 
-std::string
-Http::directoryListing(void) {
-	DIR* dir;
-	struct dirent* entry;
-	std::stringstream html;
-	std::vector<std::string> file_content;
+#include <sys/stat.h>
+#include <ctime>
 
-	MLOG("PATH-> " + request.file_path);
-	dir = opendir(this->request.file_path.c_str());
-	if (dir) {
-		entry = readdir(dir);
-		while (entry) {
-			// Directory content different from the file itself
-			if (std::strcmp(entry->d_name, ".") != 0) {	
-				std::string result = entry->d_name;
-				
-				if (entry->d_type == DT_DIR)
-					result += "/"; 
-				file_content.push_back(result);
-			}
-			entry = readdir(dir);
-		}
-		closedir(dir);
-	} else
-		MLOG("ERROR: Unable to open directory");
-	html << "<html><head><title>Directory listing</title></head><body>"
-		 << "<h1>Index of " << this->request.file_path << "</h1><ul>";
-	for (size_t i = 0; i < file_content.size(); i++)
-		html << "<li><a href=\"" << file_content[i] << "\">" << file_content[i] << "</a></li>";
-	html << "</ul></body></html>";
-	return (html.str());
+std::string dirTypes(unsigned char type) {
+	switch (type) {
+		case DT_BLK: return ("block device");
+		case DT_CHR: return ("character device");
+		case DT_DIR: return ("directory");
+		case DT_FIFO: return ("named pipe (FIFO");
+		case DT_LNK: return ("symbolic link");
+		case DT_REG: return ("regular file");
+		case DT_SOCK: return ("UNIX domain socket");
+		default: return ("unknown");
+	}
 }
 
+std::string formatSize(size_t size) {
+	std::stringstream sstream;
+	if (size < 1024) sstream << size << " B";
+	else if (size < 1024 * 1024) sstream << size / 1024 << " KB";
+	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
+	else sstream << size / (1024 * 1024 * 1024) << " GB";
+	return (sstream.str());
+}
+
+std::string Http::directoryListing(void) {
+	DIR* dir;
+	struct dirent* entry;
+	struct stat file_stat;
+	std::stringstream html;
+
+	MLOG("PATH-> " + this->request.file_path);
+	dir = opendir(this->request.file_path.c_str());
+	if (!dir) {
+		MLOG("ERROR: Unable to open directory");
+		return "<html><head><title>Error</title></head><body><h1>Error opening directory.</h1></body></html>";
+	}
+	html << "<html><head><title>Directory Listing</title>"
+		<< "<style>"
+		<< "body { font-family: Arial, sans-serif; margin: 20px; }"
+		<< "table { width: 100%; border-collapse: collapse; }"
+		<< "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }"
+		<< "th { background-color: #f2f2f2; }"
+		<< "h2 {"
+		<< "  color: #333;"
+		<< "  text-align: center;"
+		<< "  font-size: 24px;"
+		<< "  font-weight: normal;"
+		<< "  text-shadow: 1px 1px 1px #aaa;"
+		<< "  margin-bottom: 20px;"
+		<< "  padding: 10px 0;"
+		<< "  border-bottom: 2px solid #eee;"
+		<< "}"
+		<< "</style>"
+		<< "</head><body>"
+		<< "<h2>Listing of " << this->request.file_path << "</h2>"
+		<< "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
+
+	while ((entry = readdir(dir))) {
+		if (std::strcmp(entry->d_name, ".") == 0 ) continue; // Skip hidden current directory markers.
+		std::string filePath = this->request.file_path + "/" + entry->d_name;
+		if(stat(filePath.c_str(), &file_stat) == 0) {
+			char time_buf[100];
+			std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", localtime(&file_stat.st_ctime));
+			html << "<tr><td><a href='" << ((entry->d_type == DT_DIR) ? (std::string(entry->d_name) + "/") : entry->d_name) << "'>" << entry->d_name << "</a></td>"
+				 << "<td>" << dirTypes(entry->d_type) << "</td>"
+				 << "<td>" << time_buf << "</td>"
+				 << "<td>" << formatSize(file_stat.st_size) << "</td></tr>";
+		}
+	}
+	closedir(dir);
+	html << "</table></body></html>";
+	return html.str();
+}
 
 void
 Http::responseSend(void) {
@@ -174,7 +206,7 @@ Http::responseSend(void) {
 
 	// Find the location corresponding to the URL
 	statusCode = 404;
-	actual_location = (_server)->getLocation(request.url);
+	actual_location = this->_server->getBestLocation(request.url);
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
@@ -182,7 +214,6 @@ Http::responseSend(void) {
 
 		// It is a location or a directory
 		if (request.file_path[request.file_path.size() - 1] == '/') {
-			MLOG("DIR REQUESTED");
 			// Check if the location index exists
 			if (stat(actual_location->index.c_str(), &buf) == 0) {
 				request.file_path = actual_location->index;
@@ -190,13 +221,13 @@ Http::responseSend(void) {
 			}
 			// If auto_index off or the directory doesn't exist and the index file cannot be opened
 			else if (!actual_location->auto_index || (stat(request.file_path.c_str(), &buf) != 0)) {
-				MLOG("Autoindex off or the path doesn't exist");
 				generateErrorResponse(oss, 403); // Forbidden request
 				return;
 			}
 			else
 				generateResponse(oss, http_version, "200", directoryListing());
 		} // file_path must be a file, and it will be checked on the response.
+
 		else if (request.method == "GET")
 			statusCode = getMethod(actual_location->allow_methods, content);
 		else if (request.method == "POST")
@@ -293,10 +324,10 @@ Http::postMethod(const std::vector<std::string>& methods) {
 int
 Http::deleteMethod(const t_location *location) {
 	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
-	
+
 	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "DELETE") == location->allow_methods.end())
 		return 405; // Status code for method not allowed
-	
+
 	(void)location;
 	return 200;
 }
@@ -304,11 +335,17 @@ Http::deleteMethod(const t_location *location) {
 void
 Http::setHeaderAndBody(void) {
 	GPS;
+	t_location *actual_location;
 	std::string content = request.full;
 
-	request.first_line = content.substr(0, content.find("\r\n"));
-	request.header = content.substr((request.first_line).length() + 2, content.find("\r\n\r\n"));
-	request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
+	this->request.first_line = content.substr(0, content.find("\r\n"));
+	this->request.header = content.substr((request.first_line).length() + 2, content.find("\r\n\r\n"));
+	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
+	actual_location = this->_server->getBestLocation(this->request.url);
+
+	if (actual_location->CMaxBodySize * 1024 * 1000 < this->request.body.size())
+
+
 	fillHeaderMap();
 }
 
@@ -317,11 +354,11 @@ Http::fillHeaderMap(void) {
 	GPS;
 	std::string line, header = request.header;
 	size_t pos = 0;
-	
+
 	MLOG("\n\n\n\nHEADER: " + header);
 
 	while ((pos = header.find("\r\n")) != std::string::npos) {
-		
+
 		line = header.substr(0, pos);
 		header.erase(0, pos + 2);
 		if (line.empty())
@@ -337,18 +374,18 @@ Http::fillHeaderMap(void) {
 
 	// printing map for debug
 	std::map<std::string, std::string>::const_iterator it;
-    for (it = request.headerMap.begin(); it != request.headerMap.end(); it++) {
-        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
-    }
+	for (it = request.headerMap.begin(); it != request.headerMap.end(); it++) {
+		std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+	}
 }
 
 
 bool
 Http::isCGI(const std::string& file) {
-	
+
 	std::string extension = file.substr(file.find_last_of('.'), std::string::npos);
 
 	// Check if the extension matches any of our allowed CGIs, then send the request to that
-	
+
 	return false;
 }

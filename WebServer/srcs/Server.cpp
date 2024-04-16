@@ -88,7 +88,8 @@ Server::validateServerDirectives(void) {
 			else if (it->first == "auto_index") this->checkAutoIndex(it->second, temp);
 			else if (it->first == "client_max_body_size") this->checkClientMaxBodySize(it->second, temp);
 			else if (it->first == "allow_methods") this->checkAllowMethods(it->second, temp);
-			// Cgi and redirect checker missing.
+			else if (it->first == "cgi_pass") this->checkCgi(it->second, temp);
+			else this->checkRedirect(it->second, temp);
 		}
 		this->locations.push_back(temp);
 	}
@@ -114,8 +115,8 @@ Server::startServerSocket(void) {
 
 	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
-		throw std::runtime_error("Error: Couldn't bind socket");
-	if (listen(this->server_sock, 42) < 0) //SOMAXCONN
+		throw std::runtime_error(std::string("Error: Couldn't bind socket ") + std::strerror(errno));
+	if (listen(this->server_sock, SOMAXCONN) < 0)
 		throw std::runtime_error("Error: Couldn't listen");
 }
 
@@ -153,6 +154,8 @@ Server::checkListen(std::vector<std::string>& vec) {
 	} else {
 		size_t	pos = token.find(':');
 		this->s_host = token.substr(0, pos);
+		if (this->s_host == "127.0.0.1")
+			this->s_host = "0.0.0.0";
 		s_port = (std::atoi(token.substr(pos + 1).c_str()));
 		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->s_host);
 	}
@@ -248,10 +251,10 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& locati
 		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
 	for (size_t i = 0; i < size - 2; i++) {
 		if (!std::isdigit(vec[0][i]))
-			throw std::runtime_error("AAAAAAAAAA Error: invalid argument " + vec[0]);
+			throw std::runtime_error("Error: invalid argument " + vec[0]);
 	}
 	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
-	if (value < 1 || value > 1024)
+	if (value < 1 || value > 10)
 		throw std::runtime_error("Error: Client Max Body Size out of bound");
 	location.CMaxBodySize = (short)value;
 }
@@ -275,6 +278,35 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 	if (std::adjacent_find(temp.begin(), temp.end()) != temp.end())
 		throw std::runtime_error("Error: Location allow_methods has duplicated methods");
 	location.allow_methods = temp;
+}
+
+void
+Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Location cgi_pass syntax");
+	struct stat buf;
+	const std::string cgi_bin(vec[0].substr(0, vec[0].find(';')));
+	const std::string cgi_path(this->_pwd + "/var/www/cgi-bin/" + cgi_bin);
+
+	if (stat(cgi_path.c_str(), &buf) != 0)
+		throw std::runtime_error("Error: cgi_pass file doesn't exist");
+	location.cgi_pass = cgi_path;
+}
+
+void
+Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
+	if (vec.size() != 1)
+		throw std::runtime_error("Error: Location redirect syntax");
+	// Default value for redirect directive. Root location always exists
+	if (vec[0] == "/")
+		return ;
+	// Everything that doesn't start with http:// or https:// is treated as location.
+	// 404 is returned if url is not found in locations.
+	const std::string& url = vec[0];
+	location.redirect_is_extern = false;
+	if (url.find("https://") == 0 || url.find("http://") == 0)
+		location.redirect_is_extern = true;
+	location.redirect = url;
 }
 
 // =====================
@@ -307,7 +339,7 @@ Server::getErrorMap(void) const {
 }
 
 t_location*
-Server::getLocation(const std::string& name) {
+Server::getBestLocation(const std::string& name) {
 	t_location *bestMatch = NULL;
 	size_t bestMatchLen = 0;
 
@@ -321,8 +353,6 @@ Server::getLocation(const std::string& name) {
 			}
 		}
 	}
-	MLOG("Url requested: " + name);
-	MLOG("location used: " + bestMatch->location_name);
 	return bestMatch;
 }
 
@@ -362,7 +392,7 @@ defaultLocationConfig(int directive) {
 		case 3: return ("1M"); //Client_max_body_size
 		case 4: return ("GET;"); // Allow_methods
 		case 5: return ("PLACEHOLDER;"); //Cgi_pass
-		case 6: return ("PLACEHOLDER"); //Redirect
+		case 6: return ("/"); //Redirect
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}
 }
