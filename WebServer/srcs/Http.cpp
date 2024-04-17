@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:34:36 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/17 12:42:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -380,7 +380,11 @@ Http::fillHeaderMap(void) {
 	}
 }
 
-// Needs testing
+// We should probably just not allow dirs that contain . and / in their names for simplicity
+// If that happens we should give a 404 error
+
+// This function will not work because location will be missing from the url so we cant check if the file is a dir
+// or executable
 void
 Http::ParseURL(void)
 {
@@ -392,7 +396,7 @@ Http::ParseURL(void)
 		extension = url.substr(url.find(".", i), url.find("/", i));
 		pos = url.find(extension, i);
 		i = pos;
-		std::string current_file = url.substr(url.find("/", pos)); 
+		std::string current_file = url.substr(0, url.find("/", pos));
 
 		if (isDirectory(current_file))
 			continue;
