@@ -1,6 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
+/*   Http.hpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/04/16 15:35:42 by kfaustin         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
 /*   Http.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
@@ -25,10 +37,8 @@ class Http {
 	private:
 		Http(void);
 
-		int _client;
+		int _clientSock;
 		Server* _server;
-
-		std::string http_version;
 		t_request request;
 
 	public:
@@ -40,8 +50,9 @@ class Http {
 		void requestParser(void);
 		//	Response
 		std::string directoryListing(void);
-		void responseSend(void);
-		void generateErrorResponse(std::ostringstream&, int);
+		void sendResponse(void);
+		void doResponse(const std::string& content, int status_code, int& clientSock);
+		void findErrorPage(int);
 		
 		int getMethod(const std::vector<std::string>&, std::string& content);
 		int postMethod(const std::vector<std::string>&);

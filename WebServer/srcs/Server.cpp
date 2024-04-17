@@ -6,11 +6,12 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/09 14:09:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:27:12 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include "utils.hpp"
 
 //Prototypes:
 static std::string defaultServerConfig(int);
@@ -22,8 +23,8 @@ Server::Server(void) {}
 Server::~Server(void) {}
 
 Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
-			   std::map<std::string, std::vector<std::string> > >& location, std::string& pwd)
-			   : _serverDirectives(server), _locationDirectives(location), _pwd(pwd) {
+			   std::map<std::string, std::vector<std::string> > >& location)
+			   : _serverDirectives(server), _locationDirectives(location) {
 	GPS;
 	this->applyServerDirectives();
 	this->validateServerDirectives();
@@ -43,17 +44,17 @@ Server::applyServerDirectives(void) {
 		if (it_server == this->_serverDirectives.end()) {
 			// Add the key into the map, and initialize it with default values.
 			// splitStringToVector handles the case that the directive has more than 1 value. (Allow_methods)
-			this->_serverDirectives[Parser::server_directives[i]] = splitStringToVector(defaultServerConfig(i));
+			this->_serverDirectives[Parser::server_directives[i]] = Utils::splitStringToVector(defaultServerConfig(i));
 		}
 	}
 	if (this->_locationDirectives.empty() || this->_locationDirectives.find("/") == this->_locationDirectives.end())
-		this->_locationDirectives["/"]["index"] = splitStringToVector("index.html");
+		this->_locationDirectives["/"]["index"] = Utils::splitStringToVector("index.html");
 
 	for (it_location = this->_locationDirectives.begin(); it_location != this->_locationDirectives.end(); it_location++) {
 		for (int i = 0; Parser::location_directives[i]; i++) {
 			// Directive[i] not in the server block
 			if (it_location->second.find(Parser::location_directives[i]) == it_location->second.end()) {
-				this->_locationDirectives[it_location->first][Parser::location_directives[i]] = splitStringToVector(
+				this->_locationDirectives[it_location->first][Parser::location_directives[i]] = Utils::splitStringToVector(
 						defaultLocationConfig(i));
 			}
 		}
@@ -157,7 +158,7 @@ Server::checkListen(std::vector<std::string>& vec) {
 		if (this->s_host == "127.0.0.1")
 			this->s_host = "0.0.0.0";
 		s_port = (std::atoi(token.substr(pos + 1).c_str()));
-		this->server_address.sin_addr.s_addr = ::ipParserHtonl(this->s_host);
+		this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
 	}
 	if (s_port < 1024 || s_port > 65535)
 		throw std::runtime_error("Error: Server s_port out of range [1024, 65535]");
@@ -183,14 +184,14 @@ Server::checkErrorPage(std::vector<std::string>& vec) {
 
 	if (vec.size() != 2)
 		throw std::runtime_error("Error: Invalid Error Page arguments");
-	if (!isStringUnsignedInt(vec[0]))
+	if (!Utils::isStringUnsignedInt(vec[0]))
 		throw std::runtime_error("Error: The error code must be numerical: " + vec[0]);
 	number = std::atoi(vec[0].c_str());
 
 	if (number < 200 || number > 600)
 		throw std::runtime_error("Error: Error page code out of bounds");
 	std::string error_path_path = vec[1].substr(0, vec[1].find(';'));
-	std::string path(this->_pwd + error_path_path);
+	std::string path(Global::pwd + error_path_path);
 
 	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Error_page file doesn't exist");
@@ -205,7 +206,7 @@ Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Root paths");
 	std::string root((vec[0].substr(0, vec[0].find(';'))));
-	std::string path(this->_pwd + root);
+	std::string path(Global::pwd + root);
 
 	if (stat(path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: Location root path doesn't exist");
@@ -214,17 +215,11 @@ Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
 
 void
 Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
-	//struct stat	buf;
-
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
 	std::string index(vec[0].substr(0, vec[0].find(';')));
 	std::string complement = ((location.location_name == "/") ? "" : "/");
 	std::string path(location.root + location.location_name + complement + index);
-
-	// If auto_index and index not exists in path then listing
-	//if (stat(path.c_str(), &buf) != 0)
-		//throw std::runtime_error(std::string("Error: Location index path doesn't exist " + location.location_name));
 	location.index = path;
 }
 
@@ -286,7 +281,7 @@ Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 		throw std::runtime_error("Error: Location cgi_pass syntax");
 	struct stat buf;
 	const std::string cgi_bin(vec[0].substr(0, vec[0].find(';')));
-	const std::string cgi_path(this->_pwd + "/var/www/cgi-bin/" + cgi_bin);
+	const std::string cgi_path(Global::pwd + "/var/www/cgi-bin/" + cgi_bin);
 
 	if (stat(cgi_path.c_str(), &buf) != 0)
 		throw std::runtime_error("Error: cgi_pass file doesn't exist");
@@ -326,11 +321,6 @@ Server::getLocationMap(void) {
 int
 Server::getSocket(void) const {
 	return (this->server_sock);
-}
-
-std::string
-Server::getPWD(void) const {
-	return (this->_pwd);
 }
 
 std::map<int, std::string>

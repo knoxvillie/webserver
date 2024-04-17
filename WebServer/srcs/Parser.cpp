@@ -6,12 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/03 11:28:34 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:28:03 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Parser.hpp"
 #include "Server.hpp"
+#include "utils.hpp"
 
 //Prototypes:
 static bool isTokenInDirectives(const std::string& token, const std::string& block);
@@ -30,10 +31,9 @@ Parser::~Parser(void) {}
 
 // Methods to parser the config file
 void
-Parser::parsingConfigFile(const std::string &config_file, char** env) {
+Parser::parsingConfigFile(const std::string &config_file) {
 	GPS;
 
-	std::string pwd = getValueFromEnv(env, "PWD");
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
@@ -51,7 +51,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 			std::stringstream ss(line);
 
 			// Only empty lines and >isolated< comments are allowed outside the block
-			// Isolated commentaries means a full commented line.
+			// Isolated commentaries means a content commented line.
 			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
 				throw std::runtime_error("Invalid block");
@@ -65,7 +65,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 				if (token == "}") break; //Closing server block
 				if (!isTokenInDirectives(token, "server"))
 					throw std::runtime_error(token + " is an invalid server directive");
-				std::vector<std::string> vec(extractValues(line));
+				std::vector<std::string> vec(Utils::extractValues(line));
 
 				if (token == "location") {
 					Parser::parsingLocationBlock(vec);
@@ -78,7 +78,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 						if (!(ss >> token) || token[0] == '#') continue;
 						if (token == "}") {
 							if (Parser::_locations.empty()) {
-								Parser::_locations[uri]["index"] = splitStringToVector("index.html;");
+								Parser::_locations[uri]["index"] = Utils::splitStringToVector("index.html;");
 							}
 							break; //Closing location block
 						}
@@ -86,7 +86,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 						vec.clear();
 						if (!isTokenInDirectives(token, "location")) // missing location block
 							throw std::runtime_error(token + " is an invalid location directive");
-						vec = extractValues(line);
+						vec = Utils::extractValues(line);
 						Parser::parsingDirectives(token, vec, Parser::_locations[uri]);
 						Parser::_locations[uri][token] = vec;
 					}
@@ -96,7 +96,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 				}
 			}
 			// The object is created, then push back creates a copy, then the temporary server object is destructed
-			_servers.push_back(Server(_directives, _locations, pwd));
+			_servers.push_back(Server(_directives, _locations));
 			_directives.clear(); _locations.clear();
 		}
 	} else
@@ -104,7 +104,7 @@ Parser::parsingConfigFile(const std::string &config_file, char** env) {
 	if (line != "}")
 		throw std::runtime_error("all blocks must be closed");
 	inputFile.close();
-	printServer(_servers);
+	Utils::printServer(_servers);
 }
 
 void
@@ -157,3 +157,4 @@ isTokenInDirectives(const std::string& token, const std::string& block) {
 	}
 	return (false);
 }
+

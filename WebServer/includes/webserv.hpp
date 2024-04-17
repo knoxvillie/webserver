@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/12 15:10:29 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:08:40 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,11 @@
 
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
+
+// ========================
+//  My Namespaces
+// ========================
+//#include "Utils.hpp"
 
 // ========================
 //  C++ Standard Libraries
@@ -39,6 +44,8 @@
 #include <csignal>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <ctime>
 
 // ========================
 // 		Macros and struct
@@ -81,6 +88,11 @@ class FuncLogger {
 		};
 };
 
+class Global {
+	public:
+		static std::string pwd;
+};
+
 struct t_location {
 	std::string location_name;
 	std::string root;
@@ -95,11 +107,12 @@ struct t_location {
 
 // HTTP Request
 struct t_request {
-	std::string first_line;
-	std::string full;
+	std::string content;
+	std::string request_line;
 	std::string header;
 	std::string body;
 	std::string url;
+	std::string http_version;
 	
 	std::string method;
 	std::string file_path;
@@ -112,18 +125,6 @@ struct t_request {
 
 //	Prototypes
 class Server;
-
-//	Utils.cpp
-std::vector<std::string> splitStringToVector(const std::string&);
-std::vector<std::string> extractValues (const std::string&);
-std::vector<std::string> vectorInitializer(const char**);
-void printServer(std::vector<Server>&);
-bool isStringUnsignedInt(const std::string&);
-uint32_t ipParserHtonl(const std::string&);
-std::string intToString(int number);
-std::string getValueFromEnv(char** env, const std::string&);
-void signal_handler(int signum);
-
 
 // ======================
 //       Templates       
