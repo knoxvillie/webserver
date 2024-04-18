@@ -6,28 +6,31 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 15:39:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:28:09 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "Parser.hpp"
-#include "TcpServer.hpp"
-#include "Server.hpp"
+#include "Cluster.hpp"
 
-int	main(int argc, char* argv[]) {
+int	main(int argc, char* argv[], char* env[]) {
 	GPS;
+	
 	if (argc > 2) {
 		MERROR("wrong number of arguments.\nTry: \"./webserv [configuration file]\"");
 	}
+	signal(SIGINT, signal_handler);
 	const std::string config_file(argc == 1 ? "./conf/default.conf" : argv[1]);
 
 	try {
-		Parser::parsingConfigFile(config_file);
-		TcpServer server(Parser::getServers()[0]);
+		Parser::parsingConfigFile(config_file, env);
+		Cluster::startServers(Parser::getServers());
 	}
 	catch (const std::runtime_error& except) {
-		std::cerr << except.what() << std::endl;
+		std::cout << std::endl;
+		std::cerr << except.what();
+		std::cout << std::endl;
 	}
 	return (0);
 }

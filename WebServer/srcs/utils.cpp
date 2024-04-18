@@ -6,12 +6,14 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 17:15:12 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/16 10:52:02 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "Server.hpp"
+
+extern volatile sig_atomic_t gEndLoop;
 
 std::vector<std::string>
 vectorInitializer(const char** list) {
@@ -49,14 +51,85 @@ extractValues(const std::string& input) {
 void
 printServer(std::vector<Server>& serverList) {
 	for (size_t i = 0; i < serverList.size(); i++) {
-		std::cout << "\nServer " << i << " :" << std::endl;
-		printMapVec(serverList[i].getServerDirectives());
-		if (serverList[i].getLocationDirectives().empty())
+		std::cout << "\nServer " << i << " : SERVER SOCKET: " << serverList[i].getSocket() << std::endl;
+		printMapVec(serverList[i].getServer());
+		if (serverList[i].getLocationMap().empty())
 			std::cout << "None Location block" << std::endl;
 		else
-			printMapMapVec(serverList[i].getLocationDirectives());
+			printMapMapVec(serverList[i].getLocationMap());
 	}
 }
 
+bool
+isStringUnsignedInt(const std::string& string) {
+	if (string.empty())
+		return false;
+	for (size_t i = 0; i < string.size(); i++) {
+		if (string[i] < '0' || string[i] > '9')
+			return false;
+	}
+	return (true);
+}
 
+uint32_t ipParserHtonl(const std::string& ip_address) {
+	char* endptr;
+	short dot_count = 0;
+	uint32_t bytes = 0;
+	std::string token;
+	std::istringstream iss(ip_address);
 
+	for (size_t i = 0; i < ip_address.size(); i++) {
+		if (ip_address[i] == '.')
+			dot_count += 1;
+	}
+	if (dot_count != 3)
+		throw std::runtime_error("Error: Invalid IP address format: " + ip_address);
+	for (short i = 0; i < 4; i++) {
+		if (!std::getline(iss, token, '.'))
+			throw  std::runtime_error("Error: Invalid IP address format");
+		long octet = std::strtol(token.c_str(), &endptr, 10);
+
+		if (*endptr != '\0')
+			throw std::runtime_error("Error: IP address conversion failed octet: " + token);
+		if (octet < 0 || octet > 255)
+			throw std::runtime_error("Error: Invalid IP address, octet out of range");
+		bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
+	}
+	return (bytes);
+}
+
+std::string
+intToString(int number) {
+	std::stringstream ss;
+	ss << number;
+	return (ss.str());
+}
+
+std::string
+getValueFromEnv(char** env, const std::string& var) {
+	for (int i = 0; env[i]; i++) {
+		std::string key(env[i]);
+		if(key.substr(0, key.find('=')) == var)
+			return (key.substr(key.find('=') + 1));
+	}
+	return ("");
+}
+
+void signal_handler(int signum) {
+	GPS;
+	
+	if (signum == SIGINT) {
+		gEndLoop = 1;
+	}
+}
+
+bool isDirectory(const std::string& path) {
+	struct stat fileInfo;
+
+	if (stat(path.c_str(), &fileInfo) != 0) {
+		MLOG("Error on isDir().");
+		return false;
+	}
+
+	return (S_ISDIR(fileInfo.st_mode));
+}

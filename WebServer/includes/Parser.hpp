@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/02/12 16:57:48 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:12:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,16 +54,16 @@ class Server;
 
 class Parser {
 	private:
-	Parser(void);
-	~Parser(void);
-	static std::vector<Server> _servers;
-	static std::map<std::string, std::vector<std::string> >	_directives;
-	static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
+	    Parser(void);
+	    ~Parser(void);
+	    static std::vector<Server> _servers;
+	    static std::map<std::string, std::vector<std::string> >	_directives;
+	    static std::map<std::string, std::map<std::string, std::vector<std::string> > > _locations;
 
 	public:
 		static const char* server_directives[];
 		static const char* location_directives[];
-		static void parsingConfigFile(const std::string&);
+		static void parsingConfigFile(const std::string&, char**);
 		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
 		static void parsingLocationBlock(std::vector<std::string>&);
 		static std::vector<Server> &getServers(void);

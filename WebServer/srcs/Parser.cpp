@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/12 15:50:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/03 11:28:34 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,9 @@ static bool isTokenInDirectives(const std::string& token, const std::string& blo
 std::vector<Server> Parser::_servers;
 std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
-const char* Parser::server_directives[] = {"listen", "server_name", "root",
-										   "index", "autoindex", "allow_methods",
-										   "client_max_body_size" , "error_page", NULL};
-const char* Parser::location_directives[] = {"autoindex", "allow_methods", "cgi_pass", NULL};
+const char* Parser::server_directives[] = {"listen", "server_name", "error_page", NULL};
+const char* Parser::location_directives[] = {"root", "index", "auto_index", "client_max_body_size",
+											 "allow_methods", "redirect", "cgi_pass", NULL};
 
 Parser::Parser(void) {}
 
@@ -31,8 +30,10 @@ Parser::~Parser(void) {}
 
 // Methods to parser the config file
 void
-Parser::parsingConfigFile(const std::string &config_file) {
+Parser::parsingConfigFile(const std::string &config_file, char** env) {
 	GPS;
+
+	std::string pwd = getValueFromEnv(env, "PWD");
 	// Passing an empty string in ifstream parameter will result in undefined behaviour.
 	if (config_file.empty())
 		throw std::runtime_error("The config file cannot be empty");
@@ -75,7 +76,12 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					while (std::getline(inputFile, line)) {
 						std::stringstream ss(line);
 						if (!(ss >> token) || token[0] == '#') continue;
-						if (token == "}") break; //Closing location block
+						if (token == "}") {
+							if (Parser::_locations.empty()) {
+								Parser::_locations[uri]["index"] = splitStringToVector("index.html;");
+							}
+							break; //Closing location block
+						}
 
 						vec.clear();
 						if (!isTokenInDirectives(token, "location")) // missing location block
@@ -89,12 +95,13 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
-			_servers.push_back(Server(_directives, _locations));
+			// The object is created, then push back creates a copy, then the temporary server object is destructed
+			_servers.push_back(Server(_directives, _locations, pwd));
 			_directives.clear(); _locations.clear();
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
-	if (token != "}")
+	if (line != "}")
 		throw std::runtime_error("all blocks must be closed");
 	inputFile.close();
 	printServer(_servers);
@@ -102,7 +109,6 @@ Parser::parsingConfigFile(const std::string &config_file) {
 
 void
 Parser::parsingDirectives(const std::string& directive, std::vector<std::string>& vec, std::map<std::string, std::vector<std::string> >& map) {
-	GPS;
 	if (vec.empty())
 		throw std::runtime_error(directive + " doesn't have values");
 	//std::vector<std::string>::iterator it = vec.begin();
@@ -116,18 +122,6 @@ Parser::parsingDirectives(const std::string& directive, std::vector<std::string>
 		throw std::runtime_error("Parser Error: Server block has multiples directives: " + directive);
 }
 
-/*
-	location [ = | ~ | ~* | ^~ ] uri {
-	...
-	}
-     location: The keyword to start a location block.
-    [ = | ~ | ~* | ^~ ]: Optional modifiers that affect how Nginx interprets the URI. Common modifiers include:
-        =: Exact match.
-        ~: Case-sensitive regular expression match.
-        ~*: Case-insensitive regular expression match.
-        ^~: Non-regular expression match, takes precedence over regular expression matches.
-    uri: The string or regular expression representing the location to match.
- * */
 void
 Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// I don't know if the location block is allowed to have more than one URI.
@@ -138,18 +132,11 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 	// The last element os the location line has to be '{'
 	if ((*end) != "{") // check if \n is included in >> extract
 		throw std::runtime_error("Location block must has a opening {");
-	// for used if location block can receive more than one URI
-	for (std::vector<std::string>::const_iterator it = vec.begin(); it != end; ++it) {
-		//URI has to start with '/' or '.' if CGI
-		if ((*it)[0] != '/' && (*it)[0] != '.')
-			throw std::runtime_error("URI must begin with /");
-	}
+	--end;
+	// Location has only 1 URI, the URI must starts and ends with '/'
+	if ((*end)[0] != '/' && (*end)[(*end).size() - 1] != '/')
+		throw std::runtime_error("URI must begin and start with /");
 }
-
-// Methods to parser Server objects
-
-
-
 
 // Getters
 

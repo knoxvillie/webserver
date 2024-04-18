@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/03/18 15:28:01 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:43:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib> //stdlib deprecated
+#include <cstring>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -35,6 +36,9 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/epoll.h>
+#include <csignal>
+#include <fcntl.h>
+#include <dirent.h>
 
 // ========================
 // 		Macros and struct
@@ -61,17 +65,6 @@ class FuncLogger;
 # define MERROR(message) std::cerr << "Error: " << message << std::endl; exit(1);
 #endif
 
-enum enum_server {
-	LISTEN, 		//0
-	SERVER_NAME, 	//1
-	ROOT, 			//2
-	INDEX,			//3
-	AUTOINDEX,		//4
-	ALLOW_METHODS,	//5
-	CLIENT_MAX_SIZE,//6
-	ERROR_PAGE		//7
-};
-
 class FuncLogger {
 	private:
 		const char* file;
@@ -85,10 +78,38 @@ class FuncLogger {
 		~FuncLogger(void) {
 			(void)line;
 			std::cout << "[" << ANSI_COLOR_RED << "OUT" << ANSI_COLOR_RESET << "]" << " " << ANSI_COLOR_CYAN << "INFO: " << ANSI_COLOR_RESET << func << " - " << ANSI_COLOR_GREEN << file << ANSI_COLOR_RESET << std::endl;
-			(void)line;
 		};
 };
 
+struct t_location {
+	std::string location_name;
+	std::string root;
+	std::string index;
+	bool auto_index;
+	short CMaxBodySize;
+	std::vector<std::string> allow_methods;
+	std::string cgi_pass;
+	bool redirect_is_extern;
+	std::string redirect;
+};
+
+// HTTP Request
+struct t_request {
+	std::string full; 				// The full request
+	std::string first_line; 		// <method> <status code> <http version>
+	std::string header; 			// Header of the request
+	std::string body; 				// body of the request
+	std::string unparsed_url;		// URL before checking for QUERY_STRING and PATH_INFO
+	std::string url;				// URL without QUERY_STRING and PATH_INFO
+	
+	std::string method;				// Http method
+	std::string file_path;			// Path to the file (for cases when its the index)
+	std::map<std::string, std::string> headerMap; // Map of header directives to attributes
+	
+	std::string path_info;			// PATH_INFO env varible for CGI
+	std::string query_string;		// QUERY_STRING env variable for CGI
+	bool isCGI;						// Whether or not the file requested is a CGI
+};
 
 // ======================
 //       Functions       
@@ -96,13 +117,23 @@ class FuncLogger {
 
 //	Prototypes
 class Server;
+
+//	Utils.cpp
 std::vector<std::string> splitStringToVector(const std::string&);
 std::vector<std::string> extractValues (const std::string&);
 std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
+bool isStringUnsignedInt(const std::string&);
+uint32_t ipParserHtonl(const std::string&);
+std::string intToString(int number);
+std::string getValueFromEnv(char** env, const std::string&);
+void signal_handler(int signum);
+bool isDirectory(const std::string& path);
 
 
-//	Templates
+// ======================
+//       Templates       
+// ======================
 template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.

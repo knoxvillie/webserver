@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display</title>
+</head>
+<body>
+    <img src="image.jpg" alt="Image"><br>
+
+    <h2>Become a follower!</h2>
+    <form id="followerForm" method="post" action="../FormInputs/followers.txt">
+        <label for="data">Pledge your allegiance:</label><br>
+        <input type="text" id="data" name="data" placeholder="Write your name here"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+            document.getElementById("followerForm").addEventListener("submit", function(event) {
+            // Prevent the default form submission behavior
+            event.preventDefault();
+
+            // Get the value of the 'data' field
+            var dataValue = document.getElementById("data").value;
+
+            // Create the form data as a URL-encoded string
+            var formData = 'data=' + encodeURIComponent(dataValue);
+
+            // Send form data asynchronously using AJAX
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", this.action, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function () {
+                // Handle the response if needed
+                if (xhr.status === 200) {
+                    console.log("Form data sent successfully.");
+                    // You can do something here if needed, like displaying a success message
+                }
+            };
+            xhr.onerror = function () {
+                // Handle errors if needed
+                console.error("Error sending form data.");
+            };
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display</title>
+</head>
+<body>
+    <img src="image.jpg" alt="Image"><br>
+
+    <h2>Become a follower!</h2>
+    <form method="post" action="../FormInputs/followers.txt" target="#">
+        <label for="data">Pledge your allegiance:</label><br>
+        <input type="text" id="data" name="data" placeholder="Write your name here"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+</html>
+ -->

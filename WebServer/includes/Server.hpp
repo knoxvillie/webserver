@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/03/18 15:33:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/05 12:56:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,69 +19,62 @@
 #include "Parser.hpp"
 
 
-/*
-	This class should contain all basic configuration needed to start a server,
-	the point is that a TcpServer object can be created by passing an instance of
-	this class.
-*/
-class Server {
-	
-	friend class TcpServer; // so TcpServer class can access private members
 
+class Server {
 	private:
 		Server(void); // Preventing the compiler from creating a default constructor.
 
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
-		// Variables to store data from the config file
-		struct in_addr ipAddress;
+		// Global config
+		std::string _pwd;
 
-		// Listen
-		std::string s_host;
+		//	Server
+		int server_sock;
+		struct sockaddr_in server_address;
+
+		// Server config
 		uint16_t s_port;
-		// Server_name
+		std::string s_host;
 		std::string server_name;
-		// Root
-		std::string root;
-		// Index
-		std::string index;
-		// Auto Index
-		bool auto_index;
-		// Allow Methods
-		std::vector<std::string> allow_methods;
-		// Client Max Body Size
-		uint16_t cMaxBodySize;
+		std::map<int, std::string> error_page;
 
-
-
-
-		//        std::string m_server_name;          // Server domain name
-//        std::string m_host;                 // IP
-//        std::string m_root;                 // Root repository for the server files
-//        std::string m_index;                // Index page
-//        std::string m_charset;              // charset to be used, eg. uft-8
-//        std::string m_access_log;           // Where to log accesses
-//        std::string m_error_log;            // Where to log errors
-//        std::string m_error_page;           // Default error page
-//        std::string m_location;             // Where to look for requested files
-//        std::string m_clien_max_body_size; // Max allowed size of a client request body
+		// Locations
+		std::vector<t_location> locations;
 
 	public:
-		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
-		std::map<std::string, std::vector<std::string> > &getServerDirectives(void);
-		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationDirectives(void);
+		~Server(void);
+		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&, std::string&);
+
+		//	Methods
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
+		void startServerSocket(void);
+		int acceptConnection(void) const;
 
-		//Directives parser
+		//	Getters
+		std::map<std::string, std::vector<std::string> > &getServer(void);
+		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationMap(void);
+		int getSocket(void) const;
+		std::string getPWD(void) const;
+		std::map<int, std::string> getErrorMap(void) const;
+		t_location* getBestLocation(const std::string&);
+		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
+
+		//Server Directives Parser
 		void checkListen(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
-		void checkRoot(std::vector<std::string>&);
-		void checkIndex(std::vector<std::string>&);
-		void checkAutoIndex(std::vector<std::string>&);
-		void checkAllowMethods(std::vector<std::string>&);
-		void checkClientMaxBodySize(std::vector<std::string>&);
+		void checkErrorPage(std::vector<std::string>&);
+
+		//Location Directives Parser
+		void checkRoot(std::vector<std::string>&, t_location&);
+		void checkIndex(std::vector<std::string>&, t_location&);
+		void checkAutoIndex(std::vector<std::string>&, t_location&);
+		void checkClientMaxBodySize(std::vector<std::string>&, t_location&);
+		void checkAllowMethods(std::vector<std::string>&, t_location&);
+		void checkCgi(std::vector<std::string>&, t_location&);
+		void checkRedirect(std::vector<std::string>&, t_location&);
 };
 
 #endif //SERVER_HPP

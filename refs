@@ -21,3 +21,11 @@
 * Great epoll explanation: https://stackoverflow.com/questions/66916835/c-confused-by-epoll-and-socket-fd-on-linux-systems-and-async-threads
 
 * HTTP request video: https://www.youtube.com/watch?v=-Zea7GB2OwA
+
+* HTTP RFC: https://datatracker.ietf.org/doc/html/rfc2616
+
+* Nginx directives: https://nginx.org/en/docs/dirindex.html
+
+* CGI wikipedia: https://en.wikipedia.org/wiki/Common_Gateway_Interface
+
+* CGI RFC https://datatracker.ietf.org/doc/html/rfc3875
