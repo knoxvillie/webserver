@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/17 12:42:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/18 12:02:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ void Http::requestParser(void) {
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
-		(this->request).url = token;
+		(this->request).unparsed_url = token;
 		this->ParseURL();
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
@@ -380,35 +380,34 @@ Http::fillHeaderMap(void) {
 	}
 }
 
-// We should probably just not allow dirs that contain . and / in their names for simplicity
-// If that happens we should give a 404 error
-
-// This function will not work because location will be missing from the url so we cant check if the file is a dir
-// or executable
+// TODO: Test this function
 void
 Http::ParseURL(void)
 {
 	std::string extension, url = request.unparsed_url;
-	size_t pos, i = 0;
+	size_t pos;
 
-	i = 0;
-	do {
-		extension = url.substr(url.find(".", i), url.find("/", i));
-		pos = url.find(extension, i);
-		i = pos;
-		std::string current_file = url.substr(0, url.find("/", pos));
-
-		if (isDirectory(current_file))
-			continue;
-		else {
-			request.url = current_file;
-			break;
-		}
-	} while (pos != std::string::npos);
-  
+	pos = url.find(".");
+	if (pos == std::string::npos) {
+		request.url = url;
+		return;
+	} else
+		extension = url.substr(pos);
+	
+	pos = extension.find("?"); // There is a query_string
+	if (pos != std::string::npos) {
+		request.query_string = extension.substr(pos + 1);
+		extension = extension.substr(0, pos);
+	}
+	pos = extension.find("/");
+	if (pos != std::string::npos) { // There is path_info
+		request.path_info = extension.substr(pos); // no need for extension.find("?") because we already remove query string before
+		extension = extension.substr(0, pos);
+	}
+	
 	if (extension != "py" && extension != "php" && extension != "pl") request.isCGI = false;
-	else if (access((request.url).c_str(), F_OK | X_OK) == -1) request.isCGI = false;
 	else request.isCGI = true;
+	request.url = url.substr(0, (url.find(extension) + extension.length()));
 }
 
 void 

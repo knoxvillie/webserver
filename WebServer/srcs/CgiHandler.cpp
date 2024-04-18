@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/16 15:40:14 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/18 12:03:35 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,6 @@ CgiHandler::initMap(void) {
 	extensionToInterpreter[".php"] = "/usr/bin/php";		
 	extensionToInterpreter[".pl"] = "/usr/bin/perl";
 }
-
-/* CgiHandler::CgiHandler(const std::string& file_name, const std::string& extension)
-	: file(file_name), extension(extension) {} */
 
 CgiHandler::CgiHandler(const t_request& request) : _request(request) {
 	std::string file = this->_request.file_path;
@@ -46,6 +43,8 @@ CgiHandler::setEnvVariables(const std::map<std::string, std::string>& header) {
 		*_envp = (it->first + "=" + it->second).c_str();
 }
 
+
+// TODO: Check if this is still needed
 void
 CgiHandler::getQueryString(void) {
 	std::string url = _request.unparsed_url;
@@ -54,7 +53,8 @@ CgiHandler::getQueryString(void) {
 		QUERY_STRING = url.substr(url.find("?") + 1);
 }
 
-// Needs testing:
+// TODO: Check if this is still needed
+// Path info might need to be root + request.path_info
 void
 CgiHandler::getPathInfo(void) {
 	std::string url = _request.url;
@@ -95,7 +95,8 @@ std::map<std::string, std::string> CgiHandler::buildEnv()
 	env["SERVER_PROTOCOL"] = "";
 	env["CONTENT_TYPE"] = "";
 	env["CONTENT_LENGTH"] = ""; //in case of GET requests, no need to handle, get from POST requests
-	
+	// TODO: ADD PATH_TRANLATED
+
 	return (env);
 }
 

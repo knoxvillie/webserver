@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/15 15:08:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/18 12:14:19 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 
-	event.events = EPOLLIN;
+	event.events = EPOLLIN | EPOLLOUT;
 	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
 	
 	if (epoll_fd < 0)
@@ -75,25 +75,33 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
 				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
-				event_buffer[i].events = EPOLLIN;
+				event_buffer[i].events = EPOLLIN | EPOLLOUT;
 				event_buffer[i].data.fd = client_sock;
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");
 				new_connection = false;
 			}
 			else { // Not closing these sockets, should probably depend if "Connection: keep-alive" or not
-				try {
-					Http request(client_sock, Cluster::sockToServer[client_sock]);
-					new_connection = true;
-				} catch (std::exception& e) {
-					std::cerr << e.what() << std::endl;
-					Cluster::sockToServer.erase(client_sock);
-					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
-					close(client_sock);
+				if (event_buffer[i].events == EPOLLIN) {
+					try {
+						Http request(client_sock, Cluster::sockToServer[client_sock]);
+						new_connection = true; // TODO: Check if this is right
+					} catch (std::exception& e) {
+						std::cerr << e.what() << std::endl;
+						Cluster::sockToServer.erase(client_sock);
+						epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+						close(client_sock);
+					}
+				} 
+				else if (event_buffer[i].events == EPOLLOUT) { 
+					// EPOLLOUT event means that the socket is ready for writing
+					; // TODO: THIS	
 				}
-//				epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
-//				close(client_sock);
-//				Cluster::fdToServer.erase(client_sock);
+				/*
+				 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+				 close(client_sock);
+				 Cluster::fdToServer.erase(client_sock);
+				*/
 			}
 		}
 	}
