@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/17 10:41:53 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/19 11:33:54 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,7 +133,7 @@ template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
 	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Directive: " << std::left << std::setw(25) << it->first << "-> ";
+		std::cout << "Directive: " << std::left << std::setw(25) << it->first << ":: ";
 		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
 			std::cout << *ut << " ";
 		std::cout << std::endl;

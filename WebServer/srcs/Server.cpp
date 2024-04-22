@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/17 12:36:55 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/19 11:03:39 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -345,6 +345,11 @@ Server::getBestLocation(const std::string& name) {
 		}
 	}
 	return bestMatch;
+}
+
+std::string
+Server::getListen(void) const {
+	return (std::string(this->s_host + ":" + Utils::intToString(this->s_port)));
 }
 
 void *

@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 16:04:03 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/19 11:30:11 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,9 @@ namespace Utils {
 	void
 	printServer(std::vector<Server>& serverList) {
 		for (size_t i = 0; i < serverList.size(); i++) {
-			std::cout << "\nServer " << i << " : SERVER SOCKET: " << serverList[i].getSocket() << std::endl;
+			std::cout << "***************************************************************************";
+			std::cout << "\n******************* Server " << i + 1 << " - "<< serverList[i].getListen() << " - Socket: " << serverList[i].getSocket() << " *******************\n";
+			std::cout << "***************************************************************************\n";
 			printMapVec(serverList[i].getServer());
 			if (serverList[i].getLocationMap().empty())
 				std::cout << "None Location block" << std::endl;
