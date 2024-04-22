@@ -32,6 +32,8 @@ namespace Utils {
 	std::string intToString(int);
 	std::string getValueFromEnv(char**, const std::string&);
 	void signal_handler(int);
+	bool isDirectory(const std::string& str);
+	int isRegularFile(const std::string& path);
 	void createStyleIfNotExists(void);
 	void createGenericErrorPage(std::ostringstream&, int&);
 	void createListingPage(std::stringstream&, const std::string&);

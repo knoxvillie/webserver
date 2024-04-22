@@ -55,6 +55,8 @@ class Server {
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationMap(void);
 		int getSocket(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
+		std::string getHost(void) const;
+		uint16_t getPort(void) const;
 		t_location* getBestLocation(const std::string&);
 		std::string getListen(void) const;
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);

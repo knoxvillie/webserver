@@ -61,6 +61,108 @@ void Http::requestParser(void) {
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
+void
+Http::setHeaderAndBody(void) {
+	GPS;
+	std::string& content = this->request.content;
+
+	this->request.request_line = content.substr(0, content.find("\r\n"));
+	this->request.header = content.substr((request.request_line).length() + 2, content.find("\r\n\r\n"));
+	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
+}
+
+void
+Http::fillHeaderMap(void) {
+	GPS;
+	size_t pos = 0;
+	std::string line;
+	std::string header(request.header);
+
+	while ((pos = header.find("\r\n")) != std::string::npos) {
+		line = header.substr(0, pos);
+		header.erase(0, pos + 2);
+		if (line.empty())
+			break;
+		size_t colPos = line.find(":");
+
+		if (colPos != std::string::npos) {
+			std::string key = line.substr(0, colPos);
+			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
+			request.headerMap[key] = value;
+		}
+	}
+}
+
+void
+Http::sendResponse(void) {
+	int statusCode = 404;
+	std::string content;
+	t_location* best_location;
+
+	// Find the location corresponding to the URL
+	best_location = this->_server->getBestLocation(request.url);
+
+	//Location not found, generate a 404 Not Found response
+	if (best_location == NULL) {
+		this->findErrorPage(404);
+		return;
+	}
+	this->request.file_path = (best_location->root + this->request.url);
+	// Checking Location Client Max Body Size.
+	if (size_t(best_location->CMaxBodySize) < this->request.body.size())
+		this->findErrorPage(403);
+	else if (best_location->redirect != "off;") {
+		this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
+		return ;
+	}
+
+	if (Utils::isDirectory(this->request.file_path)) {
+		this->doDirectoryResponse(best_location);
+		return ;
+	}
+
+	// The url is requesting a file
+	if (request.method == "GET")
+		statusCode = getMethod(best_location->allow_methods, content);
+	else if (request.method == "POST")
+		statusCode = postMethod(best_location->allow_methods);
+
+	switch (statusCode) {
+		case 200:
+			if (this->request.file_path.find(".css") != std::string::npos)
+				this->doResponse(content, "text/css", statusCode, this->_clientSock);
+			else
+				this->doResponse(content, "text/html", statusCode, this->_clientSock);
+			break;
+		case 201:
+			this->doResponse(content, "text/html", 201, this->_clientSock);
+			break;
+		default:
+			this->findErrorPage(statusCode);
+			break;
+		}
+}
+
+void
+Http::doDirectoryResponse(t_location *location) {
+	int statusCode;
+	struct stat buf;
+	std::string content;
+
+	// Check if the location index exists
+	if (stat(location->index.c_str(), &buf) == 0) {
+		// Index exists so must be sent.
+		this->request.file_path = location->index;
+		statusCode = getMethod(location->allow_methods, content);
+		this->doResponse(content, "text/html", statusCode, this->_clientSock);
+	}
+	// If auto_index off and the index doesn't exist -> forbidden request
+	else if (!location->auto_index)
+		this->findErrorPage(403);
+	// then listing
+	else
+		this->doResponse(directoryListing(), "text/html", 200, this->_clientSock);
+}
 
 void
 Http::findErrorPage(int status_code) {
@@ -74,7 +176,7 @@ Http::findErrorPage(int status_code) {
 
 		Utils::createStyleIfNotExists();
 		Utils::createGenericErrorPage(content, status_code);
-		this->doResponse(content.str(), status_code, this->_clientSock);
+		this->doResponse(content.str(), "text/html", status_code, this->_clientSock);
 		return ;
 	}
 	std::string error_path(this->_server->getErrorMap()[status_code]);
@@ -90,7 +192,7 @@ Http::findErrorPage(int status_code) {
 		std::string content = buffer.str();
 		file.close();
 		// Generate the HTTP response with the content of the error page
-		this->doResponse(content, status_code, this->_clientSock);
+		this->doResponse(content, "text/html", status_code, this->_clientSock);
 	} else throw std::runtime_error("Error: Cannot open the error_page file");
 }
 
@@ -131,12 +233,17 @@ std::string Http::directoryListing(void) {
 }
 
 void
-Http::doResponse(const std::string& content, int status_code, int& clientSock) {
+Http::doResponse(const std::string& content, const std::string& type, int status_code, int& clientSock) {
 	std::ostringstream oss;
-
+	if (status_code == 302) {
+		oss << "HTTP/1.1" << " " << status_code << "\r\n";
+		oss << "Cache-Control: no-cache, private\r\n";
+		oss << "Location: " << content << "\r\n";
+		oss << "\r\n";
+	}
 	oss << "HTTP/1.1" << " " << status_code << "\r\n";
 	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: text/html\r\n";
+	oss << "Content-Type: " << type << "\r\n";
 	oss << "Content-Length: " << content.length() << "\r\n";
 	oss << "\r\n";
 	oss << content;
@@ -147,93 +254,28 @@ Http::doResponse(const std::string& content, int status_code, int& clientSock) {
 	}
 }
 
-void
-Http::sendResponse(void) {
-	int statusCode;
-	struct stat buf;
-	std::string content;
-	t_location* actual_location;
-
-	// Find the location corresponding to the URL
-	statusCode = 404;
-	actual_location = this->_server->getBestLocation(request.url);
-
-	// If the location is found in the URL
-	if (actual_location != NULL) {
-		this->request.file_path = (actual_location->root + request.url);
-
-		// Checking Location Client Max Body Size.
-		if (size_t(actual_location->CMaxBodySize) < this->request.body.size()) {
-			this->findErrorPage(403);
-			return ;
-		}
-		if (actual_location->redirect_is_extern) {
-			this->doResponse(actual_location->redirect, 402, this->_clientSock);
-			return ;
-		}
-		// It is a location or a directory
-		if (request.file_path[request.file_path.size() - 1] == '/') {
-			// Check if the location index exists
-			if (stat(actual_location->index.c_str(), &buf) == 0) {
-				request.file_path = actual_location->index;
-				statusCode = getMethod(actual_location->allow_methods, content);
-			}
-			// If auto_index off or the directory doesn't exist and the index file cannot be opened
-			else if (!actual_location->auto_index || (stat(request.file_path.c_str(), &buf) != 0)) {
-				this->findErrorPage(403); // Forbidden request
-				return;
-			}
-			else {
-				this->doResponse(directoryListing(), 200, this->_clientSock);
-				return ;
-			}
-		}
-		// The url is requesting a file
-		if (request.method == "GET")
-			statusCode = getMethod(actual_location->allow_methods, content);
-		else if (request.method == "POST")
-			statusCode = postMethod(actual_location->allow_methods);
-		switch (statusCode) {
-			case 200:
-				this->doResponse(content, 200, this->_clientSock);
-				break;
-			case 201:
-				this->doResponse(content, 201, this->_clientSock);
-				break;
-			default:
-				this->findErrorPage(statusCode);
-				break;
-		}
-	} else { //Location not found, generate a 404 Not Found response
-		this->findErrorPage(404);
-	}
-}
-
 int
 Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
-	// Method not allowed on location
-	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
-		return 405;
-	std::stringstream buffer;
-	std::ifstream file((request.file_path).c_str());
+	if (std::find(methods.begin(), methods.end(), "GET") != methods.end()) {
+		std::stringstream buffer;
+		int flag = Utils::isRegularFile(this->request.file_path);
+		if (flag == 1) {
+			std::ifstream file(this->request.file_path.c_str());
 
-	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
-	if (!file) {
-		// No such file or directory
-		if (errno == ENOENT)
-			return (404);
-		// Permission denied
-		else if (errno == EACCES)
-			return (403);
-		// Internal Server Error
-		else
-			return (500);
+			if(!file.is_open())
+				return (500);
+			buffer << file.rdbuf();
+			content = buffer.str();
+			file.close();
+			return (200);
+		}
+		// The file doesn't exist.
+		if (flag == 0) return (404);
+		// The request is a directory, special device or a symbolic link.
+		if (flag == -1) return (400);
 	}
-	buffer << file.rdbuf();
-	content = buffer.str();
-	file.close();
-	// Success
-	return (200);
+	// Method not allowed on location
+	return (405);
 }
 
 int
@@ -281,37 +323,8 @@ Http::deleteMethod(const t_location *location) {
 	return 200;
 }
 
-void
-Http::setHeaderAndBody(void) {
-	GPS;
-	std::string& content = this->request.content;
 
-	this->request.request_line = content.substr(0, content.find("\r\n"));
-	this->request.header = content.substr((request.request_line).length() + 2, content.find("\r\n\r\n"));
-	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
-}
 
-void
-Http::fillHeaderMap(void) {
-	GPS;
-	size_t pos = 0;
-	std::string line;
-	std::string header(request.header);
-
-	while ((pos = header.find("\r\n")) != std::string::npos) {
-		line = header.substr(0, pos);
-		header.erase(0, pos + 2);
-		if (line.empty())
-			break;
-		size_t colPos = line.find(":");
-
-		if (colPos != std::string::npos) {
-			std::string key = line.substr(0, colPos);
-			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
-			request.headerMap[key] = value;
-		}
-	}
-}
 
 // Static
 static std::string

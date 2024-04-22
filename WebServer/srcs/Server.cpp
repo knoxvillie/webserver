@@ -227,8 +227,8 @@ void
 Server::checkAutoIndex(std::vector<std::string>& vec,  t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Multiples Auto index options");
-	if (vec[0] == "on;" || vec[0] == "off;") {
-		location.auto_index = (vec[0] == "on;");
+	if (vec[0] == "true;" || vec[0] == "false;") {
+		location.auto_index = (vec[0] == "true;");
 		return ;
 	}
 	throw std::runtime_error("Error: Location auto_index is invalid");
@@ -289,20 +289,19 @@ Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 
 void
 Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
-	MLOG("AAAAAAAAAAAAAAAAAAAAAA" + vec[0]);
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location redirect syntax");
 	// Default value for redirect directive. Root location always exists
-	if (vec[0] == "/")
+	location.redirect_is_extern = false;
+	location.redirect = "false";
+	if (vec[0] == "false;")
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
 	const std::string& url = vec[0].substr(0, vec[0].find(';'));
-	location.redirect_is_extern = false;
 	if (url.find("https://") == 0 || url.find("http://") == 0)
 		location.redirect_is_extern = true;
 	location.redirect = url;
-	MLOG("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
 }
 
 // =====================
@@ -327,6 +326,16 @@ Server::getSocket(void) const {
 std::map<int, std::string>
 Server::getErrorMap(void) const {
 	return (this->error_page);
+}
+
+std::string
+Server::getHost(void) const {
+	return (this->s_host);
+}
+
+uint16_t
+Server::getPort(void) const {
+	return (this->s_port);
 }
 
 t_location*
@@ -374,7 +383,7 @@ defaultServerConfig(int directive) {
 	switch (directive) {
 		case 0: return ("0.0.0.0:8080;"); //Listen
 		case 1: return ("default;"); //Server_name
-		case 2: return ("/var/www/error_pages;"); //Error_page
+		case 2: return ("404 /var/www/error_pages;"); //Error_page
 		default: throw std::runtime_error("Server.cpp defaultServerConfig invalid server directives");
 	}
 }
@@ -384,11 +393,11 @@ defaultLocationConfig(int directive) {
 	switch (directive) {
 		case 0: return ("/var/www;"); //Root
 		case 1: return ("index.html;"); //Index
-		case 2: return ("off;"); //Auto_index
-		case 3: return ("1M"); //Client_max_body_size
+		case 2: return ("false;"); //Auto_index
+		case 3: return ("1M;"); //Client_max_body_size
 		case 4: return ("GET;"); // Allow_methods
 		case 5: return ("PLACEHOLDER;"); //Cgi_pass
-		case 6: return ("/"); //Redirect
+		case 6: return ("false;"); //Redirect
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}
 }

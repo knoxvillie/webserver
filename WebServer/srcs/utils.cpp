@@ -49,14 +49,14 @@ namespace Utils {
 	void
 	printServer(std::vector<Server>& serverList) {
 		for (size_t i = 0; i < serverList.size(); i++) {
-			std::cout << "***************************************************************************";
-			std::cout << "\n******************* Server " << i + 1 << " - "<< serverList[i].getListen() << " - Socket: " << serverList[i].getSocket() << " *******************\n";
-			std::cout << "***************************************************************************\n";
+			std::cout << ANSI_COLOR_CYAN << "***************************************************************************";
+			std::cout << "\n******************* "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
+				ANSI_COLOR_YELLOW << serverList[i].getHost() << ANSI_COLOR_RED << ":" << ANSI_COLOR_YELLOW <<
+				serverList[i].getPort() << ANSI_COLOR_GREEN << " - Socket: " << ANSI_COLOR_YELLOW <<
+				serverList[i].getSocket() << ANSI_COLOR_CYAN << " *******************\n";
+			std::cout << "***************************************************************************\n" << ANSI_COLOR_RESET;
 			printMapVec(serverList[i].getServer());
-			if (serverList[i].getLocationMap().empty())
-				std::cout << "None Location block" << std::endl;
-			else
-				printMapMapVec(serverList[i].getLocationMap());
+			printMapMapVec(serverList[i].getLocationMap());
 		}
 	}
 
@@ -115,9 +115,26 @@ namespace Utils {
 		return ("");
 	}
 
-	void signal_handler(int signum) {
+	void
+	signal_handler(int signum) {
 		if (signum == SIGINT)
 			gEndLoop = 1;
+	}
+
+	bool
+	isDirectory(const std::string& str) {
+		return (str[str.size() - 1] == '/');
+	}
+
+	int
+	isRegularFile(const std::string& path) {
+		struct stat fileInfo;
+
+		// Path doesn't exist
+		if (stat(path.c_str(), &fileInfo) != 0)
+			return (-1);
+		//Se o arquivo for regular, isso significa que não é um diretório, dispositivo especial ou link simbólico, e a função retorna 1.
+		return (((fileInfo.st_mode & S_IFMT) == S_IFREG) ? 1 : 0);
 	}
 
 	void
@@ -175,7 +192,7 @@ namespace Utils {
 			   "    <meta charset=\"UTF-8\">\n"
 			   "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
 			   "    <title>" << status_code << "- Generic error page</title>\n"
-			   "    <link rel=\"stylesheet\" href=\"" << Global::pwd << "/var/www/css/styles.css" << "\">\n"
+			   "    <link rel=\"stylesheet\" href=\"/css/styles.css" << "\">\n"
 			   "</head>\n"
 			   "<body>\n"
 			   "<div class=\"container\">\n"

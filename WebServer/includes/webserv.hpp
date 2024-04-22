@@ -133,9 +133,9 @@ template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
 	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Directive: " << std::left << std::setw(25) << it->first << ":: ";
+		std::cout << ANSI_COLOR_GREEN << "Directive: " << ANSI_COLOR_YELLOW << std::left << std::setw(25) << it->first << ANSI_COLOR_RED << ":: ";
 		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
-			std::cout << *ut << " ";
+			std::cout << ANSI_COLOR_YELLOW << *ut << " ";
 		std::cout << std::endl;
 	}
 }
@@ -143,7 +143,7 @@ void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 template <typename T>
 void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
 	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "\nLocation: " << it->first << std::endl;
+		std::cout << ANSI_COLOR_GREEN "\n* Location: " << ANSI_COLOR_YELLOW << it->first << std::endl;
 		printMapVec(it->second);
 		std::cout << std::endl;
 	}

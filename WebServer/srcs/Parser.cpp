@@ -40,6 +40,8 @@ Parser::parsingConfigFile(const std::string &config_file) {
 	std::ifstream inputFile(config_file.c_str());
 	std::string token;
 	std::string line;
+	bool is_server_closed;
+	bool is_location_closed = true;
 
 	if (inputFile.is_open()) {
 		// Peek looks at the next character in the stream. If peek returns EOF the file is empty.
@@ -54,24 +56,42 @@ Parser::parsingConfigFile(const std::string &config_file) {
 			// Isolated commentaries means a content commented line.
 			if (!(ss >> token) || token[0] == '#') continue;
 			if (token != "server")
-				throw std::runtime_error("Invalid block");
-			if (!(ss >> token) || token != "{")
-				throw std::runtime_error("Server block must be opened with `{");
-
-			//Inside the server block
-			while (std::getline(inputFile, line)) {
+				throw std::runtime_error("Invalid Server block");
+			//After "server" found.
+			if (!(ss >> token) || token != "{") {
+				if (token == "{}") {
+					is_server_closed = true;
+					break;
+				}
+				else throw std::runtime_error("Server block must be opened with `{");
+			}
+			//Inside the SERVER BLOCK
+			is_server_closed = false;
+			while (std::getline(inputFile, line) && is_location_closed) {
 				std::stringstream ss(line);
 				if (!(ss >> token) || token[0] == '#') continue;
-				if (token == "}") break; //Closing server block
+				//Closing server block
+				if (token == "}") {
+					is_server_closed = true;
+					break;
+				}
 				if (!isTokenInDirectives(token, "server"))
 					throw std::runtime_error(token + " is an invalid server directive");
 				std::vector<std::string> vec(Utils::extractValues(line));
 
 				if (token == "location") {
 					Parser::parsingLocationBlock(vec);
+					is_location_closed = false;
 					//URI - Uniform Resource Identifier
 					std::string uri(vec[0]);
-
+					// After parsingLocationBlock the line must be -> location /* { or location /* {}
+					(ss >> token); (ss >> token);
+					// It is an empty location
+					if (token == "{}") {
+						is_location_closed = true;
+						Parser::_locations[uri]["index"] = Utils::splitStringToVector("index.html;");
+						continue;
+					}
 					//Inside the location block
 					while (std::getline(inputFile, line)) {
 						std::stringstream ss(line);
@@ -80,13 +100,16 @@ Parser::parsingConfigFile(const std::string &config_file) {
 							if (Parser::_locations.empty()) {
 								Parser::_locations[uri]["index"] = Utils::splitStringToVector("index.html;");
 							}
+							is_location_closed = true;
 							break; //Closing location block
 						}
-
+						// New block opened
 						vec.clear();
 						if (!isTokenInDirectives(token, "location")) // missing location block
 							throw std::runtime_error(token + " is an invalid location directive");
 						vec = Utils::extractValues(line);
+						if (vec.size() == 1 && vec[0] == ";")
+							throw std::runtime_error("Directive " + token + " is empty");
 						Parser::parsingDirectives(token, vec, Parser::_locations[uri]);
 						Parser::_locations[uri][token] = vec;
 					}
@@ -95,15 +118,20 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					Parser::_directives[token] = vec;
 				}
 			}
+			if (!is_location_closed)
+				throw std::runtime_error("Error: Location block isn't closed");
 			// The object is created, then push back creates a copy, then the temporary server object is destructed
 			_servers.push_back(Server(_directives, _locations));
 			_directives.clear(); _locations.clear();
 		}
 	} else
 		throw std::runtime_error("Cannot open the config file");
-	if (line != "}")
-		throw std::runtime_error("all blocks must be closed");
+	if (!is_server_closed)
+		throw std::runtime_error("Error: Server block isn't closed!");
 	inputFile.close();
+	std::cout << ANSI_COLOR_CYAN << "\n***************************************************************************\n";
+	std::cout << "******************************* " << ANSI_COLOR_GREEN << "PARSER - OK" << ANSI_COLOR_CYAN << " *******************************\n";
+	std::cout << "***************************************************************************\n\n" << ANSI_COLOR_RESET;
 	Utils::printServer(_servers);
 }
 
@@ -129,9 +157,9 @@ Parser::parsingLocationBlock(std::vector<std::string>& vec) {
 		throw std::runtime_error("Invalid location block, URI or {");
 	// even if some vec[string] is empty, is ok to index it. No segfault
 	std::vector<std::string>::const_iterator end = vec.end(); --end;
-	// The last element os the location line has to be '{'
-	if ((*end) != "{") // check if \n is included in >> extract
-		throw std::runtime_error("Location block must has a opening {");
+	// The last element os the location line has to be "{" or "{}"
+	if ((*end) != "{" && (*end) != "{}")
+		throw std::runtime_error("Location block must has a opening { or {}");
 	--end;
 	// Location has only 1 URI, the URI must starts and ends with '/'
 	if ((*end)[0] != '/' && (*end)[(*end).size() - 1] != '/')
