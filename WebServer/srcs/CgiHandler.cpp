@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/22 12:04:28 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 14:27:41 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,13 +39,13 @@ CgiHandler::CgiHandler(const t_request& request)
 
 CgiHandler::~CgiHandler() {}
  
-void
+/* void
 CgiHandler::setEnvVariables(const std::map<std::string, std::string>& header) {
 	std::map<std::string, std::string>::const_iterator it;
     for (it = header.begin(); it != header.end(); it++)
 		*_envp = (it->first + "=" + it->second).c_str();
 }
-
+ */
 
 // TODO: test this
 void
@@ -84,10 +84,27 @@ CgiHandler::executeCgi() {
 	if (_interpreter == NULL)
 		return;
 
-	// pid_t = fork()
+	int pipefds[2];
+	int tmp;
+	
+	// Cant use pipe2, how do we make it nonblocking ?
+	pipe(pipefds); // Write on pipefds[1] read on pipefds[0]
+	
+	//TODO: Might need to create another pipe to send the request body to the script in the STDIN
 
-	// dup2 and what not
-
-	// execve(_interpreter, _request.file_path, _envp)
+	pid_t pid = fork();
+	if (!pid) { // Child Process
+		dup2(pipefds[1], STDOUT_FILENO);
+		close(pipefds[0]);
+		close(pipefds[1]);
+		
+		//TODO: execve
+		// According to the subject: Your program should call the CGI with the file requested as first argument.
+		//execve((_request.file_path).c_str(), NULL, _envp);
+	
+	} else {
+		close(pipefds[1]);
+		//TODO: recv(pipefds[0], ...) and whatever
+	}
 }
 
