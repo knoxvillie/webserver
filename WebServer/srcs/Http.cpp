@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 16:11:14 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/17 12:27:11 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,9 @@ static std::string formatSize(const size_t&);
 
 Http::Http(int connection, Server* server) : _clientSock(connection), _server(server) {
 	this->requestFromClient();
+	this->requestParser();
 	this->setHeaderAndBody();
 	this->fillHeaderMap();
-	this->requestParser();
 	this->sendResponse();
 }
 
@@ -47,7 +47,7 @@ void Http::requestParser(void) {
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
-		(this->request).method = token;
+		this->request.method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
@@ -160,8 +160,17 @@ Http::sendResponse(void) {
 
 	// If the location is found in the URL
 	if (actual_location != NULL) {
-		request.file_path = actual_location->root + request.url;
+		this->request.file_path = (actual_location->root + request.url);
 
+		// Checking Location Client Max Body Size.
+		if (size_t(actual_location->CMaxBodySize) < this->request.body.size()) {
+			this->findErrorPage(403);
+			return ;
+		}
+		if (actual_location->redirect_is_extern) {
+			this->doResponse(actual_location->redirect, 402, this->_clientSock);
+			return ;
+		}
 		// It is a location or a directory
 		if (request.file_path[request.file_path.size() - 1] == '/') {
 			// Check if the location index exists
@@ -179,6 +188,7 @@ Http::sendResponse(void) {
 				return ;
 			}
 		}
+		// The url is requesting a file
 		if (request.method == "GET")
 			statusCode = getMethod(actual_location->allow_methods, content);
 		else if (request.method == "POST")
@@ -274,7 +284,7 @@ Http::deleteMethod(const t_location *location) {
 void
 Http::setHeaderAndBody(void) {
 	GPS;
-	std::string content = request.content;
+	std::string& content = this->request.content;
 
 	this->request.request_line = content.substr(0, content.find("\r\n"));
 	this->request.header = content.substr((request.request_line).length() + 2, content.find("\r\n\r\n"));
@@ -284,9 +294,9 @@ Http::setHeaderAndBody(void) {
 void
 Http::fillHeaderMap(void) {
 	GPS;
+	size_t pos = 0;
 	std::string line;
 	std::string header(request.header);
-	size_t pos = 0;
 
 	while ((pos = header.find("\r\n")) != std::string::npos) {
 		line = header.substr(0, pos);

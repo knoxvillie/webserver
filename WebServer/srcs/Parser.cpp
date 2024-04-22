@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:28:03 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/17 15:21:22 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ std::map<std::string, std::vector<std::string> > Parser::_directives;
 std::map<std::string, std::map<std::string, std::vector<std::string> > > Parser::_locations;
 const char* Parser::server_directives[] = {"listen", "server_name", "error_page", NULL};
 const char* Parser::location_directives[] = {"root", "index", "auto_index", "client_max_body_size",
-											 "allow_methods", "redirect", "cgi_pass", NULL};
+											 "allow_methods", "cgi_pass", "redirect", NULL};
 
 Parser::Parser(void) {}
 

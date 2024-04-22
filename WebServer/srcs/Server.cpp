@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:27:12 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/17 12:36:55 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,18 +240,17 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& locati
 		throw std::runtime_error("Error: Invalid number of arguments location client_max_body_size");
 	size_t size = vec[0].size();
 
-	//The last char was already check, and it must be ';'
-	//10M;
 	if (vec[0][size - 2] != 'M')
 		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
 	for (size_t i = 0; i < size - 2; i++) {
 		if (!std::isdigit(vec[0][i]))
 			throw std::runtime_error("Error: invalid argument " + vec[0]);
 	}
-	long value = std::atoi(vec[0].substr(0, vec[0].find('M')).c_str());
+	long value = std::atol(vec[0].substr(0, vec[0].find('M')).c_str());
 	if (value < 1 || value > 10)
 		throw std::runtime_error("Error: Client Max Body Size out of bound");
-	location.CMaxBodySize = (short)value;
+	// (2^10 * 10^3) ~ (2^10 + 2^10) : bytes
+	location.CMaxBodySize = (1024 * 1000) * value;
 }
 
 void
@@ -290,6 +289,7 @@ Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 
 void
 Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
+	MLOG("AAAAAAAAAAAAAAAAAAAAAA" + vec[0]);
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location redirect syntax");
 	// Default value for redirect directive. Root location always exists
@@ -297,11 +297,12 @@ Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
-	const std::string& url = vec[0];
+	const std::string& url = vec[0].substr(0, vec[0].find(';'));
 	location.redirect_is_extern = false;
 	if (url.find("https://") == 0 || url.find("http://") == 0)
 		location.redirect_is_extern = true;
 	location.redirect = url;
+	MLOG("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
 }
 
 // =====================

@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:35:42 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/17 10:39:30 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,8 @@ class Http {
 		void sendResponse(void);
 		void doResponse(const std::string& content, int status_code, int& clientSock);
 		void findErrorPage(int);
-		
+
+		void checkBodySize(t_location*);
 		int getMethod(const std::vector<std::string>&, std::string& content);
 		int postMethod(const std::vector<std::string>&);
 		int deleteMethod(const t_location *location);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/16 15:08:40 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/17 10:41:53 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ struct t_location {
 	std::string root;
 	std::string index;
 	bool auto_index;
-	short CMaxBodySize;
+	long CMaxBodySize; //bytes
 	std::vector<std::string> allow_methods;
 	std::string cgi_pass;
 	bool redirect_is_extern;
