@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/22 11:10:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 12:38:56 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ static void generateResponse(std::ostringstream&, const std::string&, const std:
 
 
 Http::Http(int connection, Server* server) : _client(connection), _server(server) {
+	(this->request).server = server;
 	this->requestFromClient();
 	this->setHeaderAndBody();
 	this->requestParser();
@@ -62,26 +63,12 @@ void Http::requestParser(void) {
 
 static void
 generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
-	if (status_code == "201 Created") {
-		oss << "HTTP/1.1 201 Created\r\n";
-		oss << "Location: http://0.0.0.0:8080/FormInputs/followers.txt\r\n";
-		oss << "Cache-Control: no-cache, private\r\n";
-		oss << "Content-Type: application/json\r\n";
-		oss << "Content-Length: 75\r\n";
-		oss << "\r\n";
-		oss << "{";
-		oss << "\"status\": \"success\",";
-		oss << "\"message\": \"Your request was processed successfully.\"";
-		oss << "}";
-	}
-	else {
-		oss << http_version << " " << status_code << "\r\n";
-		oss << "Cache-Control: no-cache, private\r\n";
-		oss << "Content-Type: text/html\r\n";
-		oss << "Content-Length: " << content.length() << "\r\n";
-		oss << "\r\n";
-		oss << content;
-	}
+	oss << http_version << " " << status_code << "\r\n";
+	oss << "Cache-Control: no-cache, private\r\n";
+	oss << "Content-Type: text/html\r\n";
+	oss << "Content-Length: " << content.length() << "\r\n";
+	oss << "\r\n";
+	oss << content;
 }
 
 void
@@ -390,7 +377,7 @@ Http::ParseURL(void)
 
 	pos = url.find(".");
 	if (pos == std::string::npos) {
-		request.path_info = "";
+		request.path_info = "/";
 		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
 			request.query_string = url.substr(pos + 1);
 			request.url = url.substr(0, pos);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/22 10:47:29 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 12:43:13 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 
-	event.events = EPOLLIN ;// | EPOLLOUT;
+	event.events = EPOLLIN ; //| EPOLLOUT;
 	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
 	
 	if (epoll_fd < 0)
@@ -61,10 +61,9 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 		if (new_connection) {
 			std::cout << std::endl << "========================\n";
 			std::cout << "Waiting for connections...\n";
-			std::cout << "========================\n\n" << std::endl;;
+			std::cout << "========================\n\n" << std::endl;
 		}
 		num_ready_events = epoll_wait(epoll_fd, event_buffer, MAX_EVENTS, -1);
-		
 		if (num_ready_events < 0)
 			std::cout << "EVENT < 0" << std::endl;
 
@@ -85,30 +84,39 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				if (event_buffer[i].events == EPOLLIN) {
 					try {
 						Http request(client_sock, Cluster::sockToServer[client_sock]);
-						new_connection = true; // TODO: Check if this is right
 					} catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
-						Cluster::sockToServer.erase(client_sock);
-						epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
-						close(client_sock);
+						Cluster::closeConnection(epoll_fd, client_sock);
 					}
 				} 
 				else if (event_buffer[i].events == EPOLLOUT) {
-					new_connection = true;
-					continue;
 					// EPOLLOUT event means that the socket is ready for writing
-					; // TODO: THIS	
+					; // TODO: THIS
 				}
-				/*
-				 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
-				 close(client_sock);
-				 Cluster::fdToServer.erase(client_sock);
-				*/
+				else { // EPOLLERR and EPOLLHUP will still be returned even if not added to monitor with epoll_ctl
+        			if (event_buffer[i].events & EPOLLERR)
+        			    MLOG("Event: EPOLLERR\n");
+        			if (event_buffer[i].events & EPOLLHUP)
+        			    MLOG("Event: EPOLLHUP\n");
+					
+					Cluster::closeConnection(epoll_fd, client_sock);
+					// might need to do some more stuff to handle this events
+				}	
+				
+				new_connection = true; // TODO: Check if this is right
+				//Cluster::closeConnection(epoll_fd, client_sock);
 			}
 		}
 	}
-	close (epoll_fd);
+	close(epoll_fd);
 	Cluster::deleteServers();
+}
+
+void
+Cluster::closeConnection(int epoll_fd, int client_sock) {
+	Cluster::sockToServer.erase(client_sock);
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL);
+	close(client_sock);
 }
 
 void

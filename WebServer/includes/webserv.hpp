@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/16 15:43:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 12:06:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,15 @@ struct t_location {
 	std::string redirect;
 };
 
+//	Prototypes
+class Server;
+
 // HTTP Request
 struct t_request {
+	Server *server;					// The server to which the request was sent
+	
+	// Could be useful to store the location of the request too ?
+
 	std::string full; 				// The full request
 	std::string first_line; 		// <method> <status code> <http version>
 	std::string header; 			// Header of the request
@@ -114,9 +121,6 @@ struct t_request {
 // ======================
 //       Functions       
 // ======================
-
-//	Prototypes
-class Server;
 
 //	Utils.cpp
 std::vector<std::string> splitStringToVector(const std::string&);
