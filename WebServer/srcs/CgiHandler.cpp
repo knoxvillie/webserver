@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/18 12:03:35 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 10:32:26 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,11 +66,6 @@ CgiHandler::getPathInfo(void) {
 		pos = url.find(_extension, i);
 		i = pos;
 		std::string current_file = url.substr(url.find("/", pos)); 
-		/* 
-		 Should it be len here ? or check until the next "/"?
-		 it will cause errors if there is a dir that contains _extension
-		 but doesn't end with it. (e.g. thisisa.pydirectory)
-		*/
 		if (isDirectory(current_file))
 			continue;
 		else {

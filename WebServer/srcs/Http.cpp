@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/18 12:02:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/22 11:10:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -344,7 +344,7 @@ Http::setHeaderAndBody(void) {
 	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
 	actual_location = this->_server->getBestLocation(this->request.url);
 
-	if (actual_location->CMaxBodySize * 1024 * 1000 < this->request.body.size())
+	//if (actual_location->CMaxBodySize * 1024 * 1000 < this->request.body.size())
 
 
 	fillHeaderMap();
@@ -380,34 +380,57 @@ Http::fillHeaderMap(void) {
 	}
 }
 
-// TODO: Test this function
 void
 Http::ParseURL(void)
 {
+	GPS;
+	MLOG("\n\nUNPARSED URL: " + request.unparsed_url + "\n\n");
 	std::string extension, url = request.unparsed_url;
 	size_t pos;
 
 	pos = url.find(".");
 	if (pos == std::string::npos) {
-		request.url = url;
+		request.path_info = "";
+		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
+			request.query_string = url.substr(pos + 1);
+			request.url = url.substr(0, pos);
+		} else
+			request.url = url;
+		MLOG("PARSED URL: " + request.url + "\n\n");
+		MLOG("QUERY STRING: " + request.query_string + "\n\n");
 		return;
 	} else
 		extension = url.substr(pos);
-	
+
 	pos = extension.find("?"); // There is a query_string
 	if (pos != std::string::npos) {
 		request.query_string = extension.substr(pos + 1);
 		extension = extension.substr(0, pos);
+
+		MLOG("QUERY STRING: " + request.query_string + "\n\n");
+		
 	}
 	pos = extension.find("/");
 	if (pos != std::string::npos) { // There is path_info
 		request.path_info = extension.substr(pos); // no need for extension.find("?") because we already remove query string before
 		extension = extension.substr(0, pos);
+
+		MLOG("PATH INFO: " + request.path_info + "\n\n");
 	}
 	
-	if (extension != "py" && extension != "php" && extension != "pl") request.isCGI = false;
+	if (extension != ".py" && extension != ".php" && extension != ".pl") request.isCGI = false;
 	else request.isCGI = true;
+	
+	std::string cgi;
+	if (request.isCGI == true)
+		cgi = "true";
+	else
+		cgi = "false";
+
+	MLOG("CGI: " + cgi + "\n\n");
+	
 	request.url = url.substr(0, (url.find(extension) + extension.length()));
+	MLOG("PARSED URL: " + request.url + "\n\n");
 }
 
 void 
