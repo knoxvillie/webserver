@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/19 11:30:11 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/23 14:13:24 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,12 +49,12 @@ namespace Utils {
 	void
 	printServer(std::vector<Server>& serverList) {
 		for (size_t i = 0; i < serverList.size(); i++) {
-			std::cout << ANSI_COLOR_CYAN << "***************************************************************************";
-			std::cout << "\n******************* "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
+			std::cout << ANSI_COLOR_CYAN << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
+			std::cout << "\n-=-=-=-=-=-=-=-=-=-= "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
 				ANSI_COLOR_YELLOW << serverList[i].getHost() << ANSI_COLOR_RED << ":" << ANSI_COLOR_YELLOW <<
 				serverList[i].getPort() << ANSI_COLOR_GREEN << " - Socket: " << ANSI_COLOR_YELLOW <<
-				serverList[i].getSocket() << ANSI_COLOR_CYAN << " *******************\n";
-			std::cout << "***************************************************************************\n" << ANSI_COLOR_RESET;
+				serverList[i].getSocket() << ANSI_COLOR_CYAN << " =-=-=-=-=-=-=-=-=-\n";
+			std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n" << ANSI_COLOR_RESET;
 			printMapVec(serverList[i].getServer());
 			printMapMapVec(serverList[i].getLocationMap());
 		}

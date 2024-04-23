@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/17 12:27:11 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:20:48 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ Http::Http(int connection, Server* server) : _clientSock(connection), _server(se
 	this->requestParser();
 	this->setHeaderAndBody();
 	this->fillHeaderMap();
-	this->sendResponse();
+	this->handleResponse();
 }
 
 Http::~Http() {}
@@ -94,9 +94,9 @@ Http::fillHeaderMap(void) {
 }
 
 void
-Http::sendResponse(void) {
-	int statusCode = 404;
+Http::handleResponse(void) {
 	std::string content;
+	bool is_redirect = false;
 	t_location* best_location;
 
 	// Find the location corresponding to the URL
@@ -111,40 +111,56 @@ Http::sendResponse(void) {
 	// Checking Location Client Max Body Size.
 	if (size_t(best_location->CMaxBodySize) < this->request.body.size())
 		this->findErrorPage(403);
-	else if (best_location->redirect != "off;") {
-		this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
-		return ;
+	// Handle redirect
+	else if (best_location->redirect != "false") {
+		is_redirect = true;
+		if (best_location->redirect_is_extern)
+			this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
+		else {
+			best_location = this->_server->getBestLocation(best_location->redirect);
+			// Location not found to redirect.
+			if (best_location == NULL)
+				this->findErrorPage(404);
+			this->request.file_path = (best_location->location_name);
+			this->doResponse(this->request.file_path, "void", 302, this->_clientSock);
+		}
 	}
+	else if (Utils::isDirectory(this->request.file_path))
+		this->doDirectoryResponse(best_location, is_redirect);
+	else
+		this->handleMethod(best_location);
+}
 
-	if (Utils::isDirectory(this->request.file_path)) {
-		this->doDirectoryResponse(best_location);
-		return ;
-	}
+void
+Http::handleMethod(t_location* location) {
+	int status_code = 404;
+	std::string content;
 
 	// The url is requesting a file
 	if (request.method == "GET")
-		statusCode = getMethod(best_location->allow_methods, content);
+		status_code = this->getMethod(location->allow_methods, content);
 	else if (request.method == "POST")
-		statusCode = postMethod(best_location->allow_methods);
+		status_code = this->postMethod(location->allow_methods);
 
-	switch (statusCode) {
+	switch (status_code) {
 		case 200:
+			// When a css style file is requested.
 			if (this->request.file_path.find(".css") != std::string::npos)
-				this->doResponse(content, "text/css", statusCode, this->_clientSock);
+				this->doResponse(content, "text/css", status_code, this->_clientSock);
 			else
-				this->doResponse(content, "text/html", statusCode, this->_clientSock);
+				this->doResponse(content, "text/html", status_code, this->_clientSock);
 			break;
 		case 201:
 			this->doResponse(content, "text/html", 201, this->_clientSock);
 			break;
 		default:
-			this->findErrorPage(statusCode);
+			this->findErrorPage(status_code);
 			break;
-		}
+	}
 }
 
 void
-Http::doDirectoryResponse(t_location *location) {
+Http::doDirectoryResponse(t_location *location, bool is_redirect) {
 	int statusCode;
 	struct stat buf;
 	std::string content;
@@ -160,8 +176,12 @@ Http::doDirectoryResponse(t_location *location) {
 	else if (!location->auto_index)
 		this->findErrorPage(403);
 	// then listing
-	else
-		this->doResponse(directoryListing(), "text/html", 200, this->_clientSock);
+	else {
+		if (is_redirect)
+			this->doResponse(directoryListing(), "text/html", 302, this->_clientSock);
+		else
+			this->doResponse(directoryListing(), "text/html", 200, this->_clientSock);
+	}
 }
 
 void
@@ -208,7 +228,6 @@ std::string Http::directoryListing(void) {
 	struct stat file_stat;
 	std::stringstream html;
 
-	MLOG("PATH-> " + this->request.file_path);
 	dir = opendir(this->request.file_path.c_str());
 	if (!dir) {
 		MLOG("ERROR: Unable to open directory");
@@ -322,9 +341,6 @@ Http::deleteMethod(const t_location *location) {
 	(void)location;
 	return 200;
 }
-
-
-
 
 // Static
 static std::string

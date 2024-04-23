@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/17 15:21:22 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/23 14:15:11 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,9 +129,9 @@ Parser::parsingConfigFile(const std::string &config_file) {
 	if (!is_server_closed)
 		throw std::runtime_error("Error: Server block isn't closed!");
 	inputFile.close();
-	std::cout << ANSI_COLOR_CYAN << "\n***************************************************************************\n";
-	std::cout << "******************************* " << ANSI_COLOR_GREEN << "PARSER - OK" << ANSI_COLOR_CYAN << " *******************************\n";
-	std::cout << "***************************************************************************\n\n" << ANSI_COLOR_RESET;
+	std::cout << ANSI_COLOR_CYAN << "\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n";
+	std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- " << ANSI_COLOR_GREEN << "PARSER - OK" << ANSI_COLOR_CYAN << " -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n";
+	std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n\n" << ANSI_COLOR_RESET;
 	Utils::printServer(_servers);
 }
 

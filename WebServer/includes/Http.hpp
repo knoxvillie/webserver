@@ -50,10 +50,11 @@ class Http {
 		void requestParser(void);
 		//	Response
 		std::string directoryListing(void);
-		void sendResponse(void);
+		void handleResponse(void);
 		void doResponse(const std::string&, const std::string&, int status_code, int& clientSock);
 		void findErrorPage(int);
-		void doDirectoryResponse(t_location*);
+		void doDirectoryResponse(t_location*, bool);
+		void handleMethod(t_location*);
 
 		void checkBodySize(t_location*);
 		int getMethod(const std::vector<std::string>&, std::string& content);
