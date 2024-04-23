@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/23 15:23:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 17:04:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,12 +82,12 @@ CgiHandler::executeCgi() {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
-		char *argv[2] = { const_cast<char*>((_request.file_path).c_str()), NULL };
-		
+		char *argv[] = { NULL, const_cast<char*>((_request.file_path).c_str()), NULL };
+		// argv[0] is not reachable by execve when using filename in the first argument
 		
 		// TODO: execve
 		// According to the subject: Your program should call the CGI with the file requested as first argument.
-		execve((_request.file_path).c_str(), argv, const_cast<char**>(_envp));
+		execve((_request.file_path).c_str(), argv, const_cast<char**>(_envp)); // SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 	
 	} else {
 		close(pipe_to_child[0]);

@@ -1,8 +1,25 @@
 
-* Complete ServerConfig class
+* Handle chunked requests
 
-* Change some functions that need the directives listed to use the static variable in the ServerConfig class
+* Do recv in a loop
 
-* Make it so the TcpServer Class is initialized with a ServerConfig class object
+* listen with multiple ports
 
-* A lot more...
+* server_names
+
+* finish CGI
+
+* Build response class
+
+* Handle EPOLLOUT events
+
+* Change the way we handle EPOLLIN events to only read data
+
+===========
+ Optional:
+===========
+
+* Create request class
+
+* Make Http class static
+

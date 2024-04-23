@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:46:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 16:06:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,6 +224,7 @@ Http::findErrorPage(int status_code) {
 		to the client and move on;
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
+
 std::string Http::directoryListing(void) {
 	DIR* dir;
 	struct dirent* entry;
