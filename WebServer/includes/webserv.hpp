@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/22 12:06:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:39:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,11 @@
 
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
+
+// ========================
+//  My Namespaces
+// ========================
+//#include "Utils.hpp"
 
 // ========================
 //  C++ Standard Libraries
@@ -39,6 +44,8 @@
 #include <csignal>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <ctime>
 
 // ========================
 // 		Macros and struct
@@ -81,12 +88,17 @@ class FuncLogger {
 		};
 };
 
+class Global {
+	public:
+		static std::string pwd;
+};
+
 struct t_location {
 	std::string location_name;
 	std::string root;
 	std::string index;
 	bool auto_index;
-	short CMaxBodySize;
+	long CMaxBodySize; //bytes
 	std::vector<std::string> allow_methods;
 	std::string cgi_pass;
 	bool redirect_is_extern;
@@ -108,6 +120,12 @@ struct t_request {
 	std::string body; 				// body of the request
 	std::string unparsed_url;		// URL before checking for QUERY_STRING and PATH_INFO
 	std::string url;				// URL without QUERY_STRING and PATH_INFO
+	std::string content;
+	std::string request_line;
+	std::string header;
+	std::string body;
+	std::string url;
+	std::string http_version;
 	
 	std::string method;				// Http method
 	std::string file_path;			// Path to the file (for cases when its the index)
@@ -142,17 +160,17 @@ template <typename T>
 void printMapVec(const std::map<T, std::vector<T> >& myMap) {
 	//Using const_iterator instead of iterator because I don't intend to modify the elements of the container.
 	for (typename std::map<T, std::vector<T> >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "Directive: " << std::left << std::setw(25) << it->first << "-> ";
+		std::cout << ANSI_COLOR_GREEN << "|Directive: " << ANSI_COLOR_YELLOW << std::left << std::setw(25) << it->first << ANSI_COLOR_RED << ":: ";
 		for (typename std::vector<T>::const_iterator ut = it->second.begin(); ut != it->second.end(); ut++)
-			std::cout << *ut << " ";
-		std::cout << std::endl;
+			std::cout << ANSI_COLOR_YELLOW << *ut << " ";
+		std::cout << ANSI_COLOR_RESET << std::endl;
 	}
 }
 
 template <typename T>
 void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
 	for (typename std::map<T, std::map<T, std::vector<T> > >::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
-		std::cout << "\nLocation: " << it->first << std::endl;
+		std::cout << ANSI_COLOR_GREEN "\n- Location: " << ANSI_COLOR_YELLOW << it->first << std::endl;
 		printMapVec(it->second);
 		std::cout << std::endl;
 	}

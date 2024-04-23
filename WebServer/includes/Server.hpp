@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/05 12:56:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/16 15:27:38 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,6 @@ class Server {
 		std::map<std::string, std::vector<std::string> > _serverDirectives;
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
-		// Global config
-		std::string _pwd;
-
 		//	Server
 		int server_sock;
 		struct sockaddr_in server_address;
@@ -45,7 +42,7 @@ class Server {
 
 	public:
 		~Server(void);
-		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&, std::string&);
+		Server(std::map<std::string, std::vector<std::string> >&, std::map<std::string, std::map<std::string, std::vector<std::string> > >&);
 
 		//	Methods
 		void applyServerDirectives(void);
@@ -57,9 +54,11 @@ class Server {
 		std::map<std::string, std::vector<std::string> > &getServer(void);
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationMap(void);
 		int getSocket(void) const;
-		std::string getPWD(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
+		std::string getHost(void) const;
+		uint16_t getPort(void) const;
 		t_location* getBestLocation(const std::string&);
+		std::string getListen(void) const;
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
 		//Server Directives Parser

@@ -1,6 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
+/*   Http.hpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/04/23 15:37:10 by diogmart         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
 /*   Http.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
@@ -25,7 +37,7 @@ class Http {
 	private:
 		Http(void);
 
-		int _client;
+		int _clientSock;
 		Server* _server;
 		std::string _decodedURI;
 
@@ -41,9 +53,13 @@ class Http {
 		void requestParser(void);
 		//	Response
 		std::string directoryListing(void);
-		void responseSend(void);
-		void generateErrorResponse(std::ostringstream&, int);
-		
+		void handleResponse(void);
+		void doResponse(const std::string&, const std::string&, int status_code, int& clientSock);
+		void findErrorPage(int);
+		void doDirectoryResponse(t_location*, bool);
+		void handleMethod(t_location*);
+
+		void checkBodySize(t_location*);
 		int getMethod(const std::vector<std::string>&, std::string& content);
 		int postMethod(const std::vector<std::string>&);
 		int deleteMethod(const t_location *location);

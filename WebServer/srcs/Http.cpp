@@ -6,22 +6,26 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:35:08 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:41:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Http.hpp"
+#include "Response.hpp"
+#include "utils.hpp"
+#include "webserv.hpp"
 
 // Prototypes
-static void generateResponse(std::ostringstream&, const std::string&, const std::string&, const std::string&);
+static std::string dirTypes(const unsigned char&);
+static std::string formatSize(const size_t&);
 
-
-Http::Http(int connection, Server* server) : _client(connection), _server(server) {
+Http::Http(int connection, Server* server) : _clientSock(connection), _server(server) {
 	(this->request).server = server;
 	this->requestFromClient();
-	this->setHeaderAndBody();
 	this->requestParser();
-	this->responseSend();
+	this->setHeaderAndBody();
+	this->fillHeaderMap();
+	this->handleResponse();
 }
 
 Http::~Http() {}
@@ -30,23 +34,21 @@ void Http::requestFromClient() {
 	GPS;
 	char content[BUFFER_SIZE] = {0};
 
-	// Multiple recv calls might be needed for a request bigger than BUFFER_SIZE no ?
-	// also BUFFER_SIZE value was just a placeholder, might need to be changed
-	if (recv(this->_client, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
+	if (recv(this->_clientSock, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
-	(this->request).full = std::string(content);
-	MLOG(content);
+	this->request.content = std::string(content);
+	//MLOG(content);
 }
 
 void Http::requestParser(void) {
 	GPS;
 	std::string token;
-	std::stringstream ss((this->request).full);
+	std::stringstream ss(this->request.content);
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
-		(this->request).method = token;
+		this->request.method = token;
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
@@ -57,116 +59,183 @@ void Http::requestParser(void) {
 	if (ss >> token) {
 		if (token != "HTTP/1.1")
 			throw std::runtime_error("Error: Invalid HTTP version");
-		this->http_version = token;
+		this->request.http_version = token;
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
-static void
-generateResponse(std::ostringstream& oss, const std::string& http_version, const std::string& status_code, const std::string& content) {
-	oss << http_version << " " << status_code << "\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: text/html\r\n";
-	oss << "Content-Length: " << content.length() << "\r\n";
-	oss << "\r\n";
-	oss << content;
+void
+Http::setHeaderAndBody(void) {
+	GPS;
+	std::string& content = this->request.content;
+
+	this->request.request_line = content.substr(0, content.find("\r\n"));
+	this->request.header = content.substr((request.request_line).length() + 2, content.find("\r\n\r\n"));
+	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
 }
 
 void
-Http::generateErrorResponse(std::ostringstream& oss, int error_code) {
-	// Find the error page corresponding to the error code
-	std::map<int, std::string>::const_iterator error_page_it;
-	error_page_it = this->_server->getErrorMap().find(error_code);
+Http::fillHeaderMap(void) {
+	GPS;
+	size_t pos = 0;
+	std::string line;
+	std::string header(request.header);
 
-	// There is an error page defined for the specif error
-	if (error_page_it != this->_server->getErrorMap().end()) {
-		std::string error_path = this->_server->getErrorMap()[error_code];
-		std::string path(this->_server->getPWD() + error_path);
-		path = path.substr(0, path.find(';'));
+	while ((pos = header.find("\r\n")) != std::string::npos) {
+		line = header.substr(0, pos);
+		header.erase(0, pos + 2);
+		if (line.empty())
+			break;
+		size_t colPos = line.find(":");
 
-		// Open the error page
-		std::ifstream file(path.c_str());
-		if (file.is_open()) {
-			// Read the content of the error page
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			std::string content = buffer.str();
-			file.close();
-
-			// Generate the HTTP response with the content of the error page
-			generateResponse(oss, this->http_version, intToString(error_code) + " Not Found", content);
-		} else {
-			throw std::runtime_error("Error: Cannot open the error_page file");
+		if (colPos != std::string::npos) {
+			std::string key = line.substr(0, colPos);
+			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
+			request.headerMap[key] = value;
 		}
-	} else {
-		throw std::runtime_error("Error: Error page not found for code " + intToString(error_code));
 	}
 }
 
+void
+Http::handleResponse(void) {
+	std::string content;
+	bool is_redirect = false;
+	t_location* best_location;
+
+	// Find the location corresponding to the URL
+	best_location = this->_server->getBestLocation(request.url);
+
+	//Location not found, generate a 404 Not Found response
+	if (best_location == NULL) {
+		this->findErrorPage(404);
+		return;
+	}
+	this->request.file_path = (best_location->root + this->request.url);
+	// Checking Location Client Max Body Size.
+	if (size_t(best_location->CMaxBodySize) < this->request.body.size())
+		this->findErrorPage(403);
+	// Handle redirect
+	else if (best_location->redirect != "false") {
+		is_redirect = true;
+		if (best_location->redirect_is_extern)
+			this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
+		else {
+			best_location = this->_server->getBestLocation(best_location->redirect);
+			// Location not found to redirect.
+			if (best_location == NULL)
+				this->findErrorPage(404);
+			this->request.file_path = (best_location->location_name);
+			this->doResponse(this->request.file_path, "void", 302, this->_clientSock);
+		}
+	}
+	else if (Utils::isDirectory(this->request.file_path))
+		this->doDirectoryResponse(best_location, is_redirect);
+	else
+		this->handleMethod(best_location);
+}
+
+void
+Http::handleMethod(t_location* location) {
+	int status_code = 404;
+	std::string content;
+
+	// The url is requesting a file
+	if (request.method == "GET")
+		status_code = this->getMethod(location->allow_methods, content);
+	else if (request.method == "POST")
+		status_code = this->postMethod(location->allow_methods);
+
+	switch (status_code) {
+		case 200:
+			// When a css style file is requested.
+			if (this->request.file_path.find(".css") != std::string::npos)
+				this->doResponse(content, "text/css", status_code, this->_clientSock);
+			else
+				this->doResponse(content, "text/html", status_code, this->_clientSock);
+			break;
+		case 201:
+			this->doResponse(content, "text/html", 201, this->_clientSock);
+			break;
+		default:
+			this->findErrorPage(status_code);
+			break;
+	}
+}
+
+void
+Http::doDirectoryResponse(t_location *location, bool is_redirect) {
+	int statusCode;
+	struct stat buf;
+	std::string content;
+
+	// Check if the location index exists
+	if (stat(location->index.c_str(), &buf) == 0) {
+		// Index exists so must be sent.
+		this->request.file_path = location->index;
+		statusCode = getMethod(location->allow_methods, content);
+		this->doResponse(content, "text/html", statusCode, this->_clientSock);
+	}
+	// If auto_index off and the index doesn't exist -> forbidden request
+	else if (!location->auto_index)
+		this->findErrorPage(403);
+	// then listing
+	else {
+		if (is_redirect)
+			this->doResponse(directoryListing(), "text/html", 302, this->_clientSock);
+		else
+			this->doResponse(directoryListing(), "text/html", 200, this->_clientSock);
+	}
+}
+
+void
+Http::findErrorPage(int status_code) {
+	// Find the error page corresponding to the status code
+	std::map<int, std::string>::const_iterator it;
+	it  = this->_server->getErrorMap().find(status_code);
+
+	// There isn't an error page defined for the specif error
+	if (it == this->_server->getErrorMap().end()) {
+		std::ostringstream content;
+
+		Utils::createStyleIfNotExists();
+		Utils::createGenericErrorPage(content, status_code);
+		this->doResponse(content.str(), "text/html", status_code, this->_clientSock);
+		return ;
+	}
+	std::string error_path(this->_server->getErrorMap()[status_code]);
+	std::string path(Global::pwd + error_path);
+	path = path.substr(0, path.find(';'));
+
+	// Open the error page
+	std::ifstream file(path.c_str());
+	if (file.is_open()) {
+		// Read the content of the error page
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		std::string content = buffer.str();
+		file.close();
+		// Generate the HTTP response with the content of the error page
+		this->doResponse(content, "text/html", status_code, this->_clientSock);
+	} else throw std::runtime_error("Error: Cannot open the error_page file");
+}
+
 /*
-	Things to change in the generateErrorResponse() function:
+	Things to change in the findErrorPage() function:
 		- Dont throw exceptions just because one server couldn't find an error page, probably just send a standard error
 		to the client and move on;
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
-
-#include <sys/stat.h>
-#include <ctime>
-
-std::string dirTypes(unsigned char type) {
-	switch (type) {
-		case DT_BLK: return ("block device");
-		case DT_CHR: return ("character device");
-		case DT_DIR: return ("directory");
-		case DT_FIFO: return ("named pipe (FIFO");
-		case DT_LNK: return ("symbolic link");
-		case DT_REG: return ("regular file");
-		case DT_SOCK: return ("UNIX domain socket");
-		default: return ("unknown");
-	}
-}
-
-std::string formatSize(size_t size) {
-	std::stringstream sstream;
-	if (size < 1024) sstream << size << " B";
-	else if (size < 1024 * 1024) sstream << size / 1024 << " KB";
-	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
-	else sstream << size / (1024 * 1024 * 1024) << " GB";
-	return (sstream.str());
-}
-
 std::string Http::directoryListing(void) {
 	DIR* dir;
 	struct dirent* entry;
 	struct stat file_stat;
 	std::stringstream html;
 
-	MLOG("PATH-> " + this->request.file_path);
 	dir = opendir(this->request.file_path.c_str());
 	if (!dir) {
 		MLOG("ERROR: Unable to open directory");
 		return "<html><head><title>Error</title></head><body><h1>Error opening directory.</h1></body></html>";
 	}
-	html << "<html><head><title>Directory Listing</title>"
-		<< "<style>"
-		<< "body { font-family: Arial, sans-serif; margin: 20px; }"
-		<< "table { width: 100%; border-collapse: collapse; }"
-		<< "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }"
-		<< "th { background-color: #f2f2f2; }"
-		<< "h2 {"
-		<< "  color: #333;"
-		<< "  text-align: center;"
-		<< "  font-size: 24px;"
-		<< "  font-weight: normal;"
-		<< "  text-shadow: 1px 1px 1px #aaa;"
-		<< "  margin-bottom: 20px;"
-		<< "  padding: 10px 0;"
-		<< "  border-bottom: 2px solid #eee;"
-		<< "}"
-		<< "</style>"
-		<< "</head><body>"
-		<< "<h2>Listing of " << this->request.file_path << "</h2>"
-		<< "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
-
+	Utils::createListingPage(html, this->request.file_path);
 	while ((entry = readdir(dir))) {
 		if (std::strcmp(entry->d_name, ".") == 0 ) continue; // Skip hidden current directory markers.
 		std::string filePath = this->request.file_path + "/" + entry->d_name;
@@ -185,94 +254,49 @@ std::string Http::directoryListing(void) {
 }
 
 void
-Http::responseSend(void) {
-	int statusCode;
-	struct stat buf;
-	std::string content;
+Http::doResponse(const std::string& content, const std::string& type, int status_code, int& clientSock) {
 	std::ostringstream oss;
-	t_location* actual_location;
-
-	// Find the location corresponding to the URL
-	statusCode = 404;
-	actual_location = this->_server->getBestLocation(request.url);
-
-	// If the location is found in the URL
-	if (actual_location != NULL) {
-		request.file_path = actual_location->root + request.url;
-
-		// It is a location or a directory
-		if (request.file_path[request.file_path.size() - 1] == '/') {
-			// Check if the location index exists
-			if (stat(actual_location->index.c_str(), &buf) == 0) {
-				request.file_path = actual_location->index;
-				statusCode = getMethod(actual_location->allow_methods, content);
-			}
-			// If auto_index off or the directory doesn't exist and the index file cannot be opened
-			else if (!actual_location->auto_index || (stat(request.file_path.c_str(), &buf) != 0)) {
-				generateErrorResponse(oss, 403); // Forbidden request
-				return;
-			}
-			else
-				generateResponse(oss, http_version, "200", directoryListing());
-		} // file_path must be a file, and it will be checked on the response.
-
-		else if (request.method == "GET")
-			statusCode = getMethod(actual_location->allow_methods, content);
-		else if (request.method == "POST")
-			statusCode = postMethod(actual_location->allow_methods);
-
-
-		switch (statusCode) {
-			case 200:
-				generateResponse(oss, http_version, "200 OK", content);
-				break;
-			case 201:
-				generateResponse(oss, http_version, "201 Created", content);
-				break;
-			default:
-				generateErrorResponse(oss, statusCode);
-				break;
-		}
-	} else {
-		MLOG("LOCATION NOT FOUND");
-		// Location not found, generate a 404 Not Found response
-		generateErrorResponse(oss, 404);
+	if (status_code == 302) {
+		oss << "HTTP/1.1" << " " << status_code << "\r\n";
+		oss << "Cache-Control: no-cache, private\r\n";
+		oss << "Location: " << content << "\r\n";
+		oss << "\r\n";
 	}
-
-	// Get the generated response
-	std::string response = oss.str();
+	oss << "HTTP/1.1" << " " << status_code << "\r\n";
+	oss << "Cache-Control: no-cache, private\r\n";
+	oss << "Content-Type: " << type << "\r\n";
+	oss << "Content-Length: " << content.length() << "\r\n";
+	oss << "\r\n";
+	oss << content;
 
 	// Send the response to the client
-	if (send(this->_client, response.c_str(), response.length(), 0) < 0) {
+	if (send(clientSock, oss.str().c_str(), oss.str().length(), 0) < 0) {
 		throw std::runtime_error("Error: send function failed");
 	}
 }
 
 int
 Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
-	// Method not allowed on location
-	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
-		return 405;
-	std::stringstream buffer;
-	std::ifstream file((request.file_path).c_str());
+	if (std::find(methods.begin(), methods.end(), "GET") != methods.end()) {
+		std::stringstream buffer;
+		int flag = Utils::isRegularFile(this->request.file_path);
+		if (flag == 1) {
+			std::ifstream file(this->request.file_path.c_str());
 
-	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
-	if (!file) {
-		// No such file or directory
-		if (errno == ENOENT)
-			return (404);
-		// Permission denied
-		else if (errno == EACCES)
-			return (403);
-		// Internal Server Error
-		else
-			return (500);
+			if(!file.is_open())
+				return (500);
+			buffer << file.rdbuf();
+			content = buffer.str();
+			file.close();
+			return (200);
+		}
+		// The file doesn't exist.
+		if (flag == 0) return (404);
+		// The request is a directory, special device or a symbolic link.
+		if (flag == -1) return (400);
 	}
-	buffer << file.rdbuf();
-	content = buffer.str();
-	file.close();
-	// Success
-	return (200);
+	// Method not allowed on location
+	return (405);
 }
 
 int
@@ -297,7 +321,7 @@ Http::postMethod(const std::vector<std::string>& methods) {
 		else
 			return (500);
 	}
-	std::string output = this->request.full.substr(this->request.full.find("\r\n\r\n") + 4, std::string::npos);
+	std::string output = this->request.content.substr(this->request.content.find("\r\n\r\n") + 4, std::string::npos);
 
 	MLOG("Output: " + output);
 	out_file << "\n**************\n\n";
@@ -320,120 +344,27 @@ Http::deleteMethod(const t_location *location) {
 	return 200;
 }
 
-void
-Http::setHeaderAndBody(void) {
-	GPS;
-	t_location *actual_location;
-	std::string content = request.full;
-
-	this->request.first_line = content.substr(0, content.find("\r\n"));
-	this->request.header = content.substr((request.first_line).length() + 2, content.find("\r\n\r\n"));
-	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
-	actual_location = this->_server->getBestLocation(this->request.url);
-
-	//if (actual_location->CMaxBodySize * 1024 * 1000 < this->request.body.size())
-
-
-	fillHeaderMap();
-}
-
-void
-Http::fillHeaderMap(void) {
-	GPS;
-	std::string line, header = request.header;
-	size_t pos = 0;
-
-	MLOG("\n\n\n\nHEADER: " + header);
-
-	while ((pos = header.find("\r\n")) != std::string::npos) {
-
-		line = header.substr(0, pos);
-		header.erase(0, pos + 2);
-		if (line.empty())
-			break;
-
-		size_t colPos = line.find(":");
-		if (colPos != std::string::npos) {
-			std::string key = line.substr(0, colPos);
-			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
-			request.headerMap[key] = value;
-		}
-	}
-
-	// printing map for debug
-	std::map<std::string, std::string>::const_iterator it;
-	for (it = request.headerMap.begin(); it != request.headerMap.end(); it++) {
-		std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+// Static
+static std::string
+dirTypes(const unsigned char& type) {
+	switch (type) {
+		case DT_BLK: return ("block device");
+		case DT_CHR: return ("character device");
+		case DT_DIR: return ("directory");
+		case DT_FIFO: return ("named pipe (FIFO");
+		case DT_LNK: return ("symbolic link");
+		case DT_REG: return ("regular file");
+		case DT_SOCK: return ("UNIX domain socket");
+		default: return ("unknown");
 	}
 }
 
-void
-Http::ParseURL(void)
-{
-	GPS;
-	MLOG("\n\nUNPARSED URL: " + request.unparsed_url + "\n\n");
-	std::string extension, url = request.unparsed_url;
-	size_t pos;
-
-	pos = url.find(".");
-	if (pos == std::string::npos) {
-		request.path_info = "/";
-		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
-			request.query_string = url.substr(pos + 1);
-			request.url = url.substr(0, pos);
-		} else
-			request.url = url;
-		MLOG("PARSED URL: " + request.url + "\n\n");
-		MLOG("QUERY STRING: " + request.query_string + "\n\n");
-		return;
-	} else
-		extension = url.substr(pos);
-
-	pos = extension.find("?"); // There is a query_string
-	if (pos != std::string::npos) {
-		request.query_string = extension.substr(pos + 1);
-		extension = extension.substr(0, pos);
-
-		MLOG("QUERY STRING: " + request.query_string + "\n\n");
-		
-	}
-	pos = extension.find("/");
-	if (pos != std::string::npos) { // There is path_info
-		request.path_info = extension.substr(pos); // no need for extension.find("?") because we already remove query string before
-		extension = extension.substr(0, pos);
-
-		MLOG("PATH INFO: " + request.path_info + "\n\n");
-	}
-	
-	if (extension != ".cgi") request.isCGI = false;
-	else request.isCGI = true;
-
-	MLOG("CGI: " << request.isCGI << "\n\n");
-	
-	request.url = url.substr(0, (url.find(extension) + extension.length()));
-	MLOG("PARSED URL: " + request.url + "\n\n");
-}
-
-void 
-Http::decodeURI() {
-  
-	std::string	newUri;
-
-	for (std::string::iterator iter = this->_decodedURI.begin(); iter != this->_decodedURI.end(); ++iter) 
-	{
-		if (*iter == '%' && iter + 1 != this->_decodedURI.end() && iter + 2 != this->_decodedURI.end())
-		{
-			char numberChar[3] = {*(iter + 1), *(iter + 2), 0};
-			char *endptr = NULL;
-			u_int64_t numberInt = std::strtoul(numberChar, &endptr, 16);
-			if (endptr && *endptr == 0)
-			{
-				newUri += static_cast<char>(numberInt);
-				iter += 2;
-			}
-		} else {
-			newUri += *iter;
-		}
-	}
-	this->request.url = newUri;
+static std::string
+formatSize(const size_t& size) {
+	std::stringstream sstream;
+	if (size < 1024) sstream << size << " B";
+	else if (size < 1024 * 1024) sstream << size / 1024 << " KB";
+	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
+	else sstream << size / (1024 * 1024 * 1024) << " GB";
+	return (sstream.str());
 }

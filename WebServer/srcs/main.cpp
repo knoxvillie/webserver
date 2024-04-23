@@ -6,25 +6,41 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 09:36:33 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/03 11:28:09 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/19 10:47:56 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "Parser.hpp"
 #include "Cluster.hpp"
+#include "utils.hpp"
+
+std::string Global::pwd;
+
+void printPattern() {
+	std::cout << ANSI_COLOR_CYAN;
+	std::cout << "██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗███████╗██████╗\n";
+	std::cout << "██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗\n";
+	std::cout << "██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║█████╗  ██████╔╝\n";
+	std::cout << "██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  ██╔══██╗\n";
+	std::cout << "╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║\n";
+	std::cout << " ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝\n";
+	std::cout << ANSI_COLOR_RESET << "\n" << std::endl;
+}
 
 int	main(int argc, char* argv[], char* env[]) {
+	printPattern();
 	GPS;
-	
+	Global::pwd = Utils::getValueFromEnv(env, "PWD");
+
 	if (argc > 2) {
 		MERROR("wrong number of arguments.\nTry: \"./webserv [configuration file]\"");
 	}
-	signal(SIGINT, signal_handler);
+	signal(SIGINT, Utils::signal_handler);
 	const std::string config_file(argc == 1 ? "./conf/default.conf" : argv[1]);
 
 	try {
-		Parser::parsingConfigFile(config_file, env);
+		Parser::parsingConfigFile(config_file);
 		Cluster::startServers(Parser::getServers());
 	}
 	catch (const std::runtime_error& except) {
