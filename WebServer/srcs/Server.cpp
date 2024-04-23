@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/19 11:03:39 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/23 18:15:42 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -291,10 +291,10 @@ void
 Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location redirect syntax");
-	// Default value for redirect directive. Root location always exists
 	location.redirect_is_extern = false;
 	location.redirect = "false";
-	if (vec[0] == "false;")
+	// Need to check if the location is root, so, root must never redirect.
+	if (location.location_name == "/" ||  vec[0] == "false;")
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
