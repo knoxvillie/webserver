@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/22 14:27:41 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 12:26:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ CgiHandler::setPathTranslated(void) {
 	PATH_TRANSLATED = root_path + PATH_INFO;
 }
 
-
 std::map<std::string, std::string> CgiHandler::buildEnv() 
 {
 	std::map<std::string, std::string> env;
@@ -84,27 +83,32 @@ CgiHandler::executeCgi() {
 	if (_interpreter == NULL)
 		return;
 
-	int pipefds[2];
-	int tmp;
+	int pipe_to_parent[2];
+	int pipe_to_child[2];
 	
 	// Cant use pipe2, how do we make it nonblocking ?
-	pipe(pipefds); // Write on pipefds[1] read on pipefds[0]
-	
-	//TODO: Might need to create another pipe to send the request body to the script in the STDIN
+	pipe(pipe_to_parent); // Write on pipe[1] read on pipe[0]
+	pipe(pipe_to_child);
 
 	pid_t pid = fork();
 	if (!pid) { // Child Process
-		dup2(pipefds[1], STDOUT_FILENO);
-		close(pipefds[0]);
-		close(pipefds[1]);
+		close(pipe_to_child[1]);
+		dup2(pipe_to_child[0], STDIN_FILENO);
+		close(pipe_to_child[0]);
+		
+		close(pipe_to_parent[0]);
+		dup2(pipe_to_parent[1], STDOUT_FILENO);
+		close(pipe_to_parent[1]);
 		
 		//TODO: execve
 		// According to the subject: Your program should call the CGI with the file requested as first argument.
-		//execve((_request.file_path).c_str(), NULL, _envp);
+		// execve((_request.file_path).c_str(), NULL, _envp);
 	
 	} else {
-		close(pipefds[1]);
-		//TODO: recv(pipefds[0], ...) and whatever
+		close(pipe_to_child[0]);
+		close(pipe_to_parent[1]);
+		
+		//TODO: send(pipe_to_child[1], ...)
+		//TODO: recv(pipe_to_parent[0], ...) and whatever
 	}
 }
-
