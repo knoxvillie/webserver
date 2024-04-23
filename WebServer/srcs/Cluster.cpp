@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/23 12:36:14 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:31:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				   	// EPOLLOUT event means that the socket is ready for writing
 					; // TODO: THIS
 					Cluster::closeConnection(epoll_fd, client_sock);
-					new_connection = true; // TODO: Check if this is right
+					//new_connection = true; // TODO: Check if this is right
 				}
 				
 				// TODO: Check if this is right

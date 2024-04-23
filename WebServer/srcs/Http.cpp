@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/22 12:38:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:35:08 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -405,16 +405,10 @@ Http::ParseURL(void)
 		MLOG("PATH INFO: " + request.path_info + "\n\n");
 	}
 	
-	if (extension != ".py" && extension != ".php" && extension != ".pl") request.isCGI = false;
+	if (extension != ".cgi") request.isCGI = false;
 	else request.isCGI = true;
-	
-	std::string cgi;
-	if (request.isCGI == true)
-		cgi = "true";
-	else
-		cgi = "false";
 
-	MLOG("CGI: " + cgi + "\n\n");
+	MLOG("CGI: " << request.isCGI << "\n\n");
 	
 	request.url = url.substr(0, (url.find(extension) + extension.length()));
 	MLOG("PARSED URL: " + request.url + "\n\n");

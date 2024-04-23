@@ -6,21 +6,11 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/23 12:26:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:23:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiHandler.hpp"
-
-std::map<std::string, std::string> CgiHandler::extensionToInterpreter;
-
-void 
-CgiHandler::initMap(void) {
-	// Supported scripting languages:
-	extensionToInterpreter[".py"] = "/usr/bin/python3";
-	extensionToInterpreter[".php"] = "/usr/bin/php";		
-	extensionToInterpreter[".pl"] = "/usr/bin/perl";
-}
 
 CgiHandler::CgiHandler(const t_request& request)
 	: _request(request), QUERY_STRING(request.query_string), PATH_INFO(request.path_info) {
@@ -28,13 +18,8 @@ CgiHandler::CgiHandler(const t_request& request)
 	std::string file = this->_request.file_path;
 	_extension = file.substr(file.find_last_of('.'), std::string::npos);
 	this->setPathTranslated();
-
-	try {
-		_interpreter = (extensionToInterpreter.at(_extension)).c_str();
-	} catch (std::out_of_range& e) { // if at() doesnt exist in map
-		MLOG("NO CGI FOUND FOR THAT extension!");
-		_interpreter = NULL;
-	}
+	
+	// To handle multiple CGIs we just need to execute scripts ending in .cgi as long as they start with #!/interpreter
 }
 
 CgiHandler::~CgiHandler() {}
@@ -80,9 +65,6 @@ std::map<std::string, std::string> CgiHandler::buildEnv()
 void
 CgiHandler::executeCgi() {
 
-	if (_interpreter == NULL)
-		return;
-
 	int pipe_to_parent[2];
 	int pipe_to_child[2];
 	
@@ -100,9 +82,12 @@ CgiHandler::executeCgi() {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
-		//TODO: execve
+		char *argv[2] = { const_cast<char*>((_request.file_path).c_str()), NULL };
+		
+		
+		// TODO: execve
 		// According to the subject: Your program should call the CGI with the file requested as first argument.
-		// execve((_request.file_path).c_str(), NULL, _envp);
+		execve((_request.file_path).c_str(), argv, const_cast<char**>(_envp));
 	
 	} else {
 		close(pipe_to_child[0]);
