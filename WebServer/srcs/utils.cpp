@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:42:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:44:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,12 +120,12 @@ namespace Utils {
 		if (signum == SIGINT)
 			gEndLoop = 1;
 	}
-/* 
+
 	bool
 	isDirectory(const std::string& str) {
 		return (str[str.size() - 1] == '/');
 	}
- */
+
 	int
 	isRegularFile(const std::string& path) {
 		struct stat fileInfo;
@@ -227,17 +227,6 @@ namespace Utils {
 			 << "<h2>Listing of " << path << "</h2>"
 			 << "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
 	}
-}
-
-bool isDirectory(const std::string& path) {
-	struct stat fileInfo;
-
-	if (stat(path.c_str(), &fileInfo) != 0) {
-		MLOG("Error on isDir().");
-		return false;
-	}
-
-	return (S_ISDIR(fileInfo.st_mode));
 }
 
 bool isDirectory(const std::string& path) {

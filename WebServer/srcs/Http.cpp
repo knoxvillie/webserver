@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:41:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/23 15:46:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -367,4 +367,75 @@ formatSize(const size_t& size) {
 	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
 	else sstream << size / (1024 * 1024 * 1024) << " GB";
 	return (sstream.str());
+}
+
+void
+Http::ParseURL(void)
+{
+	GPS;
+	MLOG("\n\nUNPARSED URL: " + request.unparsed_url + "\n\n");
+	std::string extension, url = request.unparsed_url;
+	size_t pos;
+
+	pos = url.find(".");
+	if (pos == std::string::npos) {
+		request.path_info = "/";
+		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
+			request.query_string = url.substr(pos + 1);
+			request.url = url.substr(0, pos);
+		} else
+			request.url = url;
+		MLOG("PARSED URL: " + request.url + "\n\n");
+		MLOG("QUERY STRING: " + request.query_string + "\n\n");
+		return;
+	} else
+		extension = url.substr(pos);
+
+	pos = extension.find("?"); // There is a query_string
+	if (pos != std::string::npos) {
+		request.query_string = extension.substr(pos + 1);
+		extension = extension.substr(0, pos);
+
+		MLOG("QUERY STRING: " + request.query_string + "\n\n");
+		
+	}
+	pos = extension.find("/");
+	if (pos != std::string::npos) { // There is path_info
+		request.path_info = extension.substr(pos); // no need for extension.find("?") because we already remove query string before
+		extension = extension.substr(0, pos);
+
+		MLOG("PATH INFO: " + request.path_info + "\n\n");
+	}
+	
+	if (extension != ".cgi") request.isCGI = false;
+	else request.isCGI = true;
+
+	MLOG("CGI: " << request.isCGI << "\n\n");
+	
+	request.url = url.substr(0, (url.find(extension) + extension.length()));
+	MLOG("PARSED URL: " + request.url + "\n\n");
+}
+
+void 
+Http::decodeURI() {
+  
+	std::string	newUri;
+
+	for (std::string::iterator iter = this->_decodedURI.begin(); iter != this->_decodedURI.end(); ++iter) 
+	{
+		if (*iter == '%' && iter + 1 != this->_decodedURI.end() && iter + 2 != this->_decodedURI.end())
+		{
+			char numberChar[3] = {*(iter + 1), *(iter + 2), 0};
+			char *endptr = NULL;
+			u_int64_t numberInt = std::strtoul(numberChar, &endptr, 16);
+			if (endptr && *endptr == 0)
+			{
+				newUri += static_cast<char>(numberInt);
+				iter += 2;
+			}
+		} else {
+			newUri += *iter;
+		}
+	}
+	this->request.url = newUri;
 }
