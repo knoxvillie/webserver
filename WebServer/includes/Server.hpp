@@ -32,8 +32,8 @@ class Server {
 		struct sockaddr_in server_address;
 
 		// Server config
-		uint16_t s_port;
 		std::string s_host;
+		std::vector<uint16_t> s_port;
 		std::string server_name;
 		std::map<int, std::string> error_page;
 
@@ -62,7 +62,8 @@ class Server {
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
 		//Server Directives Parser
-		void checkListen(std::vector<std::string>&);
+		void checkHost(std::vector<std::string>&);
+		void checkPorts(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
 		void checkErrorPage(std::vector<std::string>&);
 

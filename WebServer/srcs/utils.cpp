@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 14:13:24 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/24 14:54:35 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ namespace Utils {
 		std::stringstream ss(input);
 		std::string token;
 
-		ss >> token; //skipping the (directive) the first element of input.
+		// skipping the (directive) the first element of input
+		ss >> token;
 		for (;ss >> token;)
 			result.push_back(token);
 		return (result);
@@ -71,7 +72,8 @@ namespace Utils {
 		return (true);
 	}
 
-	uint32_t ipParserHtonl(const std::string& ip_address) {
+	uint32_t
+	ipParserHtonl(const std::string& ip_address) {
 		char* endptr;
 		short dot_count = 0;
 		uint32_t bytes = 0;
@@ -83,16 +85,16 @@ namespace Utils {
 				dot_count += 1;
 		}
 		if (dot_count != 3)
-			throw std::runtime_error("Error: Invalid IP address format: " + ip_address);
+			throw std::runtime_error("ERROR - Server: Invalid IP address format: " + ip_address);
 		for (short i = 0; i < 4; i++) {
-			if (!std::getline(iss, token, '.'))
-				throw  std::runtime_error("Error: Invalid IP address format");
+			// Number of '.' has already been checked.
+			std::getline(iss, token, '.');
 			long octet = std::strtol(token.c_str(), &endptr, 10);
 
 			if (*endptr != '\0')
-				throw std::runtime_error("Error: IP address conversion failed octet: " + token);
+				throw std::runtime_error("ERROR - Server: IP address conversion failed: " + ip_address);
 			if (octet < 0 || octet > 255)
-				throw std::runtime_error("Error: Invalid IP address, octet out of range");
+				throw std::runtime_error("ERROR - Server: Invalid IP address, octet out of range: " + ip_address);
 			bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
 		}
 		return (bytes);
