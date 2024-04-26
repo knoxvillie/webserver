@@ -6,13 +6,11 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/26 13:28:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/26 18:28:58 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiHandler.hpp"
-
-#include <sys/wait.h>
 
 CgiHandler::CgiHandler(const t_request& request)
 	: _request(request) {
@@ -78,10 +76,10 @@ CgiHandler::executeCgi() {
 
 	//_request.file_path = (_request.server->getBestLocation("/"))->root + _request.url;
 	//_request.file_path = "WebServer/var/www/cgi-bin/helloworld.cgi";
-	
+	_request.file_path = (_request.server->getBestLocation("/"))->root + _request.url;
 	MLOG("EXECVE ARGS:\n");
 	MLOG(_request.file_path.c_str());
-
+	
 	pid_t pid = fork();
 	if (!pid) { // Child Process
 		close(pipe_to_child[1]);
@@ -92,19 +90,17 @@ CgiHandler::executeCgi() {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
-		//char *argv[] = { const_cast<char*>((_request.url).c_str()), const_cast<char*>((_request.url).c_str()), NULL };
+		char *filename = const_cast<char *>(_request.file_path.c_str());
+		char *argv[] = {NULL, filename, NULL};
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
-
-		char *filename = const_cast<char *>("var/www/cgi-bin/helloworld.cgi");
-		char *argv[] = {NULL, filename, NULL};
 	
-
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(filename, argv, NULL) != 0) {
 			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
 			exit(1);
 		}
+		
 	} else {
 		close(pipe_to_child[0]);
 		close(pipe_to_parent[1]);
