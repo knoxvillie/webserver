@@ -6,19 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:37:10 by diogmart         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Http.hpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/01 16:24:59 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/26 10:49:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +15,9 @@
 #ifndef HTTP_HPP
 # define HTTP_HPP
 
-#define BUFFER_SIZE 4096
-
 #include "webserv.hpp"
 #include "Server.hpp"
+#include "CgiHandler.hpp"
 
 class Http {
 	

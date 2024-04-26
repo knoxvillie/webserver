@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 16:06:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/26 11:25:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,18 +25,33 @@ Http::Http(int connection, Server* server) : _clientSock(connection), _server(se
 	this->requestParser();
 	this->setHeaderAndBody();
 	this->fillHeaderMap();
-	this->handleResponse();
+	if (!request.isCGI)
+		this->handleResponse();
+	else {
+		CgiHandler cgi(request);
+	}
 }
 
 Http::~Http() {}
 
+// TODO: test
 void Http::requestFromClient() {
 	GPS;
-	char content[BUFFER_SIZE] = {0};
+	char buf[BUFFER_SIZE] = {0};
+	std::stringstream ss;
+	ssize_t bytes;
 
-	if (recv(this->_clientSock, content, BUFFER_SIZE, MSG_DONTWAIT) < 0)
-		throw std::runtime_error("Error: Read from client socket");
-	this->request.content = std::string(content);
+	do {
+		bytes = recv(this->_clientSock, buf, BUFFER_SIZE, MSG_DONTWAIT);
+		
+		ss.write(buf, bytes);
+		bzero(buf, BUFFER_SIZE);
+		
+		if (bytes < 0)
+			throw std::runtime_error("Error: Read from client socket failed."); // TODO: Check this
+	} while (bytes != 0);
+	
+	this->request.content = ss.str();
 	//MLOG(content);
 }
 
@@ -271,7 +286,7 @@ Http::doResponse(const std::string& content, const std::string& type, int status
 	oss << content;
 
 	// Send the response to the client
-	if (send(clientSock, oss.str().c_str(), oss.str().length(), 0) < 0) {
+	if (send(clientSock, oss.str().c_str(), oss.str().length(), MSG_DONTWAIT) < 0) {
 		throw std::runtime_error("Error: send function failed");
 	}
 }

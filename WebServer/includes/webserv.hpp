@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/23 15:43:41 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/26 10:49:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ class FuncLogger;
 #ifndef MERROR 
 # define MERROR(message) std::cerr << "Error: " << message << std::endl; exit(1);
 #endif
+
+#define BUFFER_SIZE 4096
 
 class FuncLogger {
 	private:
