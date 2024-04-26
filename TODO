@@ -1,7 +1,11 @@
 
+===========
+ Functionalities:
+===========
+
 * Handle chunked requests
 
-* Do recv in a loop
+* Check if we read all info in the socket before handling the connection
 
 * listen with multiple ports
 
@@ -14,6 +18,15 @@
 * Handle EPOLLOUT events
 
 * Change the way we handle EPOLLIN events to only read data
+
+===========
+ Checks/tests:
+===========
+
+* Check almost all throws we do to see if we should handle the error in another way
+especially in the HTTP class.
+
+* Check if there really is a need to have the whole program inside a try catch
 
 ===========
  Optional:

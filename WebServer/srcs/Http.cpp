@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/26 11:25:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/26 12:08:19 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,25 +34,20 @@ Http::Http(int connection, Server* server) : _clientSock(connection), _server(se
 
 Http::~Http() {}
 
-// TODO: test
+/* 
+NOTE:
+ Recv doesn't need to be called in a loop if handled properly, as epoll_wait will keep
+ returning EPOLLIN in the socket as long as there is more info to read. We just need
+ to make sure all the info is received before we handle the connection
+*/
 void Http::requestFromClient() {
 	GPS;
 	char buf[BUFFER_SIZE] = {0};
-	std::stringstream ss;
-	ssize_t bytes;
 
-	do {
-		bytes = recv(this->_clientSock, buf, BUFFER_SIZE, MSG_DONTWAIT);
-		
-		ss.write(buf, bytes);
-		bzero(buf, BUFFER_SIZE);
-		
-		if (bytes < 0)
-			throw std::runtime_error("Error: Read from client socket failed."); // TODO: Check this
-	} while (bytes != 0);
-	
-	this->request.content = ss.str();
-	//MLOG(content);
+	if (recv(this->_clientSock, buf, BUFFER_SIZE, MSG_DONTWAIT) < 0)
+		throw std::runtime_error("Error: Read from client socket");
+	this->request.content = std::string(buf);
+	//MLOG(buf);
 }
 
 void Http::requestParser(void) {

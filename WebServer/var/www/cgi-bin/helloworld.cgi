@@ -1,4 +1,4 @@
-#!/usr/bin python3
+#!/usr/bin/env python3
 
 print("Content-type: text/plain\r\n")
 print("\r\n")

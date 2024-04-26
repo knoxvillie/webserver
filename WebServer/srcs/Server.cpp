@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/19 11:03:39 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/04/26 11:53:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,8 +106,11 @@ Server::startServerSocket(void) {
 	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (this->server_sock < 0)
-		throw std::runtime_error("Error: Couldn't create socket");
+		throw std::runtime_error("Error: Couldn't create socket.");
 
+	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
+		throw std::runtime_error("Errror: failed to set socket as nonblocking.");
+	
 	// ============= <DEBUG> ================
 	int optval = 1;
 	if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
@@ -118,7 +121,7 @@ Server::startServerSocket(void) {
 	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
 		throw std::runtime_error(std::string("Error: Couldn't bind socket ") + std::strerror(errno));
 	if (listen(this->server_sock, SOMAXCONN) < 0)
-		throw std::runtime_error("Error: Couldn't listen");
+		throw std::runtime_error("Error: Couldn't listen.");
 }
 
 int
