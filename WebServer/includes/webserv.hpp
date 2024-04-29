@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/26 10:49:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 10:05:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,14 +117,13 @@ struct t_request {
 	// Could be useful to store the location of the request too ?
 
 	std::string full; 				// The full request
-	std::string first_line; 		// <method> <status code> <http version>
+	std::string request_line; 		// <method> <status code> <http version>
 	std::string header; 			// Header of the request
 	std::string body; 				// body of the request
 	std::string unparsed_url;		// URL before checking for QUERY_STRING and PATH_INFO
 	std::string url;				// URL without QUERY_STRING and PATH_INFO
 	
 	std::string content;
-	std::string request_line;
 	std::string http_version;
 	
 	std::string method;				// Http method

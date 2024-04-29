@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/26 12:00:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 09:43:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@ Cluster::startServers(std::vector<Server>& servers) {
 	IMPORTANT NOTE: 
 	It is normal that after connecting to the server when restarting it takes a while for the
 	socket to be able to bind again, this is due to TIME_WAIT, a standard TCP behaviour
+
+	Right now this is not happening because we put SO_REUSEADDR to better test the program
 */
 
 void
