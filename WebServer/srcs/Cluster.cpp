@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 09:43:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 12:06:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					continue;
 				}
 				
-				if (event_buffer[i].events & EPOLLIN) { // Not closing these sockets, should probably depend if "Connection: keep-alive" or not
+				if (event_buffer[i].events & EPOLLIN) { // Not closing these sockets
 				    MLOG("EPOLLIN is present\n");
 					try {
 						Http request(client_sock, Cluster::sockToServer[client_sock]);
