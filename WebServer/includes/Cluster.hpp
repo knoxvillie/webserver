@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:35:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/22 12:33:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 12:55:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ class Cluster {
 		static std::map<int, Server*> sockToServer;
 		static void serversLoop(std::vector<Server>&);
 		static void closeConnection(int epoll_fd, int client_sock);
+		static void deleteRequests(std::map<int, Request&>& requests);
 
 	public:
 		static void startServers(std::vector<Server>&);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/29 11:21:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 13:15:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,16 +20,16 @@ static std::string dirTypes(const unsigned char&);
 static std::string formatSize(const size_t&);
 
 Http::Http(int connection, Server* server) : _clientSock(connection), _server(server) {
-	(this->request).server = server;
+/* 	(this->request).server = server;
 	this->requestFromClient();
-	//this->requestParser();
+	this->requestParser();
 	this->setHeaderAndBody();
 	this->fillHeaderMap();
 	if (!request.isCGI)
-		this->handleResponse();
+		this->BuildResponse();
 	else {
 		CgiHandler cgi(request);
-	}
+	} */
 }
 
 Http::~Http() {}
@@ -40,13 +40,14 @@ NOTE:
  returning EPOLLIN in the socket as long as there is more info to read. We just need
  to make sure all the info is received before we handle the connection
 */
-void Http::requestFromClient() {
+void
+Http::receiveFromClient(int socket, Request& request) {
 	GPS;
 	char buf[BUFFER_SIZE] = {0};
 
-	if (recv(this->_clientSock, buf, BUFFER_SIZE, MSG_DONTWAIT) < 0)
+	if (recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
-	this->request.content = std::string(buf);
+	request.receiveData(std::string(buf));
 	MLOG(buf);
 }
 
@@ -64,7 +65,7 @@ Http::requestParser(Request& request) {
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
-		request.setURI(token);
+		request.setURI(token); // Parses the URI and sets it
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
 	if (ss >> token) {
@@ -74,74 +75,44 @@ Http::requestParser(Request& request) {
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
+// TODO: make this static and implement the use of Reponse class here
 void
-Http::setHeaderAndBody(void) {
-	GPS;
-	std::string& content = this->request.content;
-
-	this->request.request_line = content.substr(0, content.find("\r\n"));
-	this->request.header = content.substr((request.request_line).length() + 2, content.find("\r\n\r\n"));
-	this->request.body = content.substr(content.find("\r\n\r\n") + 1, std::string::npos);
-}
-
-void
-Http::fillHeaderMap(void) {
-	GPS;
-	size_t pos = 0;
-	std::string line;
-	std::string header(request.header);
-
-	while ((pos = header.find("\r\n")) != std::string::npos) {
-		line = header.substr(0, pos);
-		header.erase(0, pos + 2);
-		if (line.empty())
-			break;
-		size_t colPos = line.find(":");
-
-		if (colPos != std::string::npos) {
-			std::string key = line.substr(0, colPos);
-			std::string value = line.substr(colPos + 2, std::string::npos); // +2 because of whitespace after ":"
-			request.headerMap[key] = value;
-		}
-	}
-}
-
-void
-Http::handleResponse(void) {
-	std::string content;
+Http::BuildResponse(Request& request) {
 	bool is_redirect = false;
 	t_location* best_location;
 
+	Http::requestParser(request);
+
 	// Find the location corresponding to the URL
-	best_location = this->_server->getBestLocation(request.url);
+	best_location = request.server->getBestLocation(request.getURI());
 
 	//Location not found, generate a 404 Not Found response
 	if (best_location == NULL) {
-		this->findErrorPage(404);
+		;//this->findErrorPage(404);
 		return;
 	}
-	this->request.file_path = (best_location->root + this->request.url);
+	request.setFilePath(best_location->root + request.getURI());
 	// Checking Location Client Max Body Size.
-	if (size_t(best_location->CMaxBodySize) < this->request.body.size())
-		this->findErrorPage(403);
+	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
+		;//this->findErrorPage(403);
 	// Handle redirect
 	else if (best_location->redirect != "false") {
 		is_redirect = true;
 		if (best_location->redirect_is_extern)
-			this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
+			; //this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
 		else {
-			best_location = this->_server->getBestLocation(best_location->redirect);
+			best_location = request.server->getBestLocation(best_location->redirect);
 			// Location not found to redirect.
 			if (best_location == NULL)
-				this->findErrorPage(404);
-			this->request.file_path = (best_location->location_name);
-			this->doResponse(this->request.file_path, "void", 302, this->_clientSock);
+				; //this->findErrorPage(404);
+			request.setFilePath(best_location->location_name);
+			//this->doResponse(request.getFilePath(), "void", 302, this->_clientSock);
 		}
 	}
-	else if (Utils::isDirectory(this->request.file_path))
-		this->doDirectoryResponse(best_location, is_redirect);
+	else if (Utils::isDirectory(request.getFilePath()))
+		;//this->doDirectoryResponse(best_location, is_redirect);
 	else
-		this->handleMethod(best_location);
+		;//this->handleMethod(best_location);
 }
 
 void
@@ -236,7 +207,8 @@ Http::findErrorPage(int status_code) {
 		- Not all errors will be "Not Found", only 404 is. Read https://datatracker.ietf.org/doc/html/rfc2616#autoid-45 for more info
 */
 
-std::string Http::directoryListing(void) {
+std::string
+Http::directoryListing(void) {
 	DIR* dir;
 	struct dirent* entry;
 	struct stat file_stat;
@@ -379,53 +351,6 @@ formatSize(const size_t& size) {
 	else if (size < 1024 * 1024 * 1024) sstream << size / (1024 * 1024) << " MB";
 	else sstream << size / (1024 * 1024 * 1024) << " GB";
 	return (sstream.str());
-}
-
-void
-Http::ParseURL(void)
-{
-	GPS;
-	MLOG("\n\nUNPARSED URL: " + request.unparsed_url + "\n\n");
-	std::string extension, url = request.unparsed_url;
-	size_t pos;
-
-	pos = url.find(".");
-	if (pos == std::string::npos) {
-		request.path_info = "/";
-		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
-			request.query_string = url.substr(pos + 1);
-			request.url = url.substr(0, pos);
-		} else
-			request.url = url;
-		MLOG("PARSED URL: " + request.url + "\n\n");
-		MLOG("QUERY STRING: " + request.query_string + "\n\n");
-		return;
-	} else
-		extension = url.substr(pos);
-
-	pos = extension.find("?"); // There is a query_string
-	if (pos != std::string::npos) {
-		request.query_string = extension.substr(pos + 1);
-		extension = extension.substr(0, pos);
-
-		MLOG("QUERY STRING: " + request.query_string + "\n\n");
-		
-	}
-	pos = extension.find("/");
-	if (pos != std::string::npos) { // There is path_info
-		request.path_info = extension.substr(pos); // no need for extension.find("?") because we already remove query string before
-		extension = extension.substr(0, pos);
-
-		MLOG("PATH INFO: " + request.path_info + "\n\n");
-	}
-	
-	if (extension != ".cgi") request.isCGI = false;
-	else request.isCGI = true;
-
-	MLOG("CGI: " << request.isCGI << "\n\n");
-	
-	request.url = url.substr(0, (url.find(extension) + extension.length()));
-	MLOG("PARSED URL: " + request.url + "\n\n");
 }
 
 void 

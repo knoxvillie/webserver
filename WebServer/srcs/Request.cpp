@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 11:30:14 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 13:01:40 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,6 +206,6 @@ Request::setFilePath(const std::string& file_path) {
 
 void
 Request::setURI(const std::string& uri) {
-	this->uri = uri;
 	ParseURL();
+	this->uri = uri;
 }

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/29 11:10:05 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 13:15:30 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,12 @@ class Http {
 		~Http();
 
 		//	Request
-		void requestFromClient(void);
+		static void receiveFromClient(int socket, Request& request);
 		static void requestParser(Request& request);
 
 		//	Response
 		std::string directoryListing(void);
-		void handleResponse(void);
+		static void BuildResponse(Request& request);
 		void doResponse(const std::string&, const std::string&, int status_code, int& clientSock);
 		void findErrorPage(int);
 		void doDirectoryResponse(t_location*, bool);

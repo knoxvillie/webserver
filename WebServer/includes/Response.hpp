@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 11:56:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 12:41:47 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,16 +20,18 @@
 class Response {
 	
 	private:
-		int status_code;
-		int body_length;
 		std::string header;
 		std::map<std::string, std::string> headerMap;
 		std::string body;
+		std::string contentType;
+		int status_code;
+		int body_length;
 		
 		bool isError;
 	
 	public:
 		Response(void);
+		Response(int statusCode, const std::string& content);
 		Response(int errorCode);
 		~Response(void);
 
