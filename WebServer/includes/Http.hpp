@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/26 10:49:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 11:10:05 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include "webserv.hpp"
 #include "Server.hpp"
 #include "CgiHandler.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 
 class Http {
 	
@@ -37,7 +39,8 @@ class Http {
 
 		//	Request
 		void requestFromClient(void);
-		void requestParser(void);
+		static void requestParser(Request& request);
+
 		//	Response
 		std::string directoryListing(void);
 		void handleResponse(void);
@@ -45,6 +48,10 @@ class Http {
 		void findErrorPage(int);
 		void doDirectoryResponse(t_location*, bool);
 		void handleMethod(t_location*);
+		
+		// Error
+		void httpError(int status_code);
+
 
 		void checkBodySize(t_location*);
 		int getMethod(const std::vector<std::string>&, std::string& content);

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/26 12:08:19 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 11:21:56 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static std::string formatSize(const size_t&);
 Http::Http(int connection, Server* server) : _clientSock(connection), _server(server) {
 	(this->request).server = server;
 	this->requestFromClient();
-	this->requestParser();
+	//this->requestParser();
 	this->setHeaderAndBody();
 	this->fillHeaderMap();
 	if (!request.isCGI)
@@ -47,29 +47,30 @@ void Http::requestFromClient() {
 	if (recv(this->_clientSock, buf, BUFFER_SIZE, MSG_DONTWAIT) < 0)
 		throw std::runtime_error("Error: Read from client socket");
 	this->request.content = std::string(buf);
-	//MLOG(buf);
+	MLOG(buf);
 }
 
-void Http::requestParser(void) {
+// TODO: change the exception to send an error page
+void
+Http::requestParser(Request& request) {
 	GPS;
 	std::string token;
-	std::stringstream ss(this->request.content);
+	std::stringstream ss(request.getFull());
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw std::runtime_error("Error: Invalid HTTP request method");
-		this->request.method = token;
+		request.setMethod(token);
 	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
 
 	if (ss >> token) {
-		(this->request).unparsed_url = token;
-		this->ParseURL();
+		request.setURI(token);
 	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
 
 	if (ss >> token) {
 		if (token != "HTTP/1.1")
 			throw std::runtime_error("Error: Invalid HTTP version");
-		this->request.http_version = token;
+		request.setHttpVersion(token);
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 

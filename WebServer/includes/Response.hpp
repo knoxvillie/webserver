@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/23 15:38:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/29 11:03:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 class Response {
 	
 	private:
-		t_request request;
 		int status_code;
 		int body_length;
 		std::string header;
@@ -28,7 +27,7 @@ class Response {
 		//...
 	
 	public:
-		Response(t_request&);
+		Response(void);
 		~Response(void);
 		void findErrorPage(int&);
 		//static void doResponse(const std::string&, int, int&);
