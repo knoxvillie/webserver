@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 13:15:53 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 10:13:13 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,12 +87,14 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				if (event_buffer[i].events & EPOLLERR) {
 					MLOG("EPOLLERR is present\n");
 					Cluster::closeConnection(epoll_fd, client_sock);
+					// TODO: DELETE THE REQUEST IF IT EXISTS
 					continue;
 				}
 				
 				if (event_buffer[i].events & EPOLLHUP) {
 				    MLOG("EPOLLHUP is present\n");
 					Cluster::closeConnection(epoll_fd, client_sock);
+					// TODO: DELETE THE REQUEST IF IT EXISTS
 					continue;
 				}
 				
