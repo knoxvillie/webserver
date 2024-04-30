@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/29 13:15:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 12:02:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,7 +305,7 @@ Http::postMethod(const std::vector<std::string>& methods) {
 		else
 			return (500);
 	}
-	std::string output = this->request.content.substr(this->request.content.find("\r\n\r\n") + 4, std::string::npos);
+	std::string output = this->request.content.substr(this->request.content.find("\r\n\r\n") + 4);
 
 	MLOG("Output: " + output);
 	out_file << "\n**************\n\n";

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 12:41:47 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 12:05:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,15 +28,21 @@ class Response {
 		int body_length;
 		
 		bool isError;
+
+		void buildHeader();
+		void buildHeaderMap();
 	
 	public:
 		Response(void);
 		Response(int statusCode, const std::string& content);
+		Response(int statusCode, const std::string& content, const std::string& type);
 		Response(int errorCode);
 		~Response(void);
 
 		void findErrorPage(int&);
 		//static void doResponse(const std::string&, int, int&);
+
+		std::string to_string(Response& response) const;
 
 		// Here or in Http ?
 		static const std::string& createResponse(int statusCode, const std::string& content);

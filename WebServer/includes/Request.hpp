@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 13:07:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 10:41:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,8 @@ class Request {
 
 		// CGI
 		bool cgi;
-		std::string path_info = "";
-		std::string query_string = "";
+		std::string path_info;
+		std::string query_string;
 	
 		void setHeaderAndBody(void);
 		void fillHeaderMap(void);

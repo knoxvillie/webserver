@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/30 10:13:13 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 10:48:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	bool new_connection = true;
 	int epoll_fd, num_ready_events, client_sock;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
-	std::map<int, Request&> requests;
+	std::map<int, Request*> requests;
 	
 	event.events = EPOLLIN | EPOLLOUT;
 	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
@@ -102,11 +102,12 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				    MLOG("EPOLLIN is present\n");
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
 						Request *cl_request = new Request();
-						requests[client_sock] = *cl_request;
+						requests[client_sock] = cl_request;
 					}
-					Http::receiveFromClient(client_sock, requests[client_sock]);
+					Http::receiveFromClient(client_sock, *requests[client_sock]);
 					new_connection = true;
-/* 					try {
+					/*
+					try {
 						Http request(client_sock, Cluster::sockToServer[client_sock]);
 						new_connection = true; // TODO: Check if this is right
 					} catch (std::exception& e) {
@@ -117,9 +118,10 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				
 				if (event_buffer[i].events & EPOLLOUT) {
 				    MLOG("EPOLLOUT is present\n");
-				   	Http::BuildResponse(requests[client_sock]);
+				   	Http::BuildResponse(*requests[client_sock]);
 					// EPOLLOUT event means that the socket is ready for writing
 					// TODO: THIS
+					// delete request
 					Cluster::closeConnection(epoll_fd, client_sock);
 					//new_connection = true; // TODO: Check if this is right
 				}
@@ -135,10 +137,10 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 }
 
 void
-Cluster::deleteRequests(std::map<int, Request&>& requests) {
-	std::map<int, Request&>::iterator it;
+Cluster::deleteRequests(std::map<int, Request*>& requests) {
+	std::map<int, Request*>::iterator it;
 	for (it = requests.begin(); it != requests.end(); it++) {
-		delete &(it->second);
+		delete (it->second);
 	}
 }
 
@@ -160,4 +162,3 @@ Cluster::deleteServers(void) {
 	}
 	MLOG("deleted all server");
 }
-

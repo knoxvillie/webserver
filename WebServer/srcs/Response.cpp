@@ -6,13 +6,58 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/29 12:07:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/04/30 12:08:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
 
 Response::Response() {}
+
+Response::Response(int statusCode, const std::string& content) : status_code(statusCode), body(content) {
+	buildHeaderMap();
+	buildHeader();
+}
+
+Response::Response(int statusCode, const std::string& content, const std::string& type) : status_code(statusCode), body(content), contentType(type) {
+	buildHeaderMap();
+	buildHeader();
+}
+
+Response::Response(int errorCode) {
+	generateErrorPage(errorCode);
+		
+}
+
+Response::~Response() {}
+
+void
+Response::buildHeader() {
+	std::stringstream buf;
+
+	buf << "HTTP/1.1" << std::to_string(status_code) << getStatusMessage(status_code) << "\r\n";
+	
+	// Build headerMap first
+	
+	std::map<std::string, std::string>::iterator it;
+	for (it = this->headerMap.begin(); it != this->headerMap.end(); it++) {
+		buf << it->first << ": " << it->second << "\r\n";
+	}
+
+	this->header = buf.str();
+}
+
+void
+Response::buildHeaderMap() {
+	// Date ? example: Date: Tue, 15 Nov 1994 08:12:31 GMT
+	headerMap["Content-length"] = std::to_string(this->body.size());
+	if (this->contentType.size() != 0)
+		headerMap["Content-type"] = this->contentType; // something
+	else
+		headerMap["Content-type"] = "";
+	headerMap["Cache-control"] = "no-cache, private";
+	headerMap["Server"] = "";
+}
 
 /*
 static void
@@ -32,6 +77,17 @@ doResponse(const std::string& content, int status_code, int& clientSock) {
 	}
 }*/
 
+std::string
+Response::to_string(Response& response) const {
+	std::stringstream buf;
+
+	buf << response.header;
+	buf << "\r\n";
+	buf << response.body;
+
+	return buf.str();
+}
+
 const std::string&
 Response::createResponse(int statusCode, const std::string& content) {
 	std::stringstream buf;
@@ -49,21 +105,21 @@ Response::createResponse(int statusCode, const std::string& content) {
 const std::string&
 Response::generateErrorPage(int errorCode)
 {
-	std::string res;
+	std::stringstream res;
 	std::string message = getStatusMessage(errorCode);
 	std::string code = std::to_string(errorCode);
 	
-	res = "<html><head><title>";
-	res += code;
-	res += " ";
-	res += message;
-	res += "</title></head><body><center><h1>";
-	res += code;
-	res += " ";
-	res += message;
-	res += "</h1></center><hr><center>42_WebServer</center></body></html>";
+	res << "<!DOCTYPE html><html><head><title>";
+	res << code;
+	res << " ";
+	res << message;
+	res << "</title></head><body><center><h1>";
+	res << code;
+	res << " ";
+	res << message;
+	res << "</h1></center><hr><center>42_WebServer</center></body></html>";
 
-	return (res);
+	return res.str();
 }
 
 const std::string&
