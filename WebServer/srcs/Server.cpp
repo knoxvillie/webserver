@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/24 16:12:25 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/02 12:22:47 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,7 @@ Server::startServerSocket(void) {
 		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
 
 	// the SO_REUSEADDR option is set on the socket to allow binding to multiple ports. Then, the bind() function is called for each port in the ports vector, binding the socket to each port. Finally, the server listens for incoming connections on all specified ports.
+	MLOG("TAMANHO PORT:" << Utils::intToString(int(this->s_port.size())));
 	if (this->s_port.size() > 1) {
 		int optval = 1;
 
@@ -127,6 +128,7 @@ Server::startServerSocket(void) {
 			close(this->server_sock);
 			throw std::runtime_error(std::string("ERROR - Server: Couldn't bind socket: ") + Utils::intToString((int)this->s_port[i]) + " Why? " + std::strerror(errno));
 		}
+		MLOG("BIND OK PORT: " + Utils::intToString((int)this->s_port[i]));
 
 	}
 	if (listen(this->server_sock, SOMAXCONN) < 0)
@@ -153,12 +155,10 @@ Server::acceptConnection(void) const {
 
 void
 Server::checkHost(std::vector<std::string>& vec) {
-	int s_port;
-
 	std::memset(&this->server_address, 0, sizeof(this->server_address));
 
 	if (vec.size() != 1)
-		throw std::runtime_error("ERROR - Server: Invalid number of hosts detected. Expected 1, but received: " + std::to_string((int)vec.size()));
+		throw std::runtime_error("ERROR - Server: Invalid number of hosts detected. Expected 1, but received: " + Utils::intToString((int)vec.size()));
 	// Removing ';' from the end of the directive value.
 	this->s_host = vec[0].substr(0, vec[0].find(';'));
 
@@ -362,7 +362,7 @@ Server::getHost(void) const {
 	return (this->s_host);
 }
 
-uint16_t
+std::vector<uint16_t>
 Server::getPort(void) const {
 	return (this->s_port);
 }
@@ -387,7 +387,7 @@ Server::getBestLocation(const std::string& name) {
 
 std::string
 Server::getListen(void) const {
-	return (std::string(this->s_host + ":" + Utils::intToString(this->s_port)));
+	return ("MUDAR DEPOIS");
 }
 
 void *

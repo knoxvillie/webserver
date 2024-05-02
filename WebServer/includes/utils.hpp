@@ -6,7 +6,7 @@
 /*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 12:34:57 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 16:10:30 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/02 12:14:12 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ namespace Utils {
 	std::vector<std::string> splitStringToVector(const std::string&);
 	// Split config file directive line, values only
 	std::vector<std::string> extractValues(const std::string&);
+	std::string serverPortToString (std::vector<uint16_t> vec);
 	void printServer(std::vector<Server>&);
 	bool isStringUnsignedInt(const std::string&);
 	uint32_t ipParserHtonl(const std::string&);
