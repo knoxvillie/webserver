@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/30 12:08:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 12:48:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,15 @@ Response::Response(int statusCode, const std::string& content, const std::string
 	buildHeader();
 }
 
-Response::Response(int errorCode) {
-	generateErrorPage(errorCode);
-		
+Response::Response(int errorCode, Server* arg) : status_code(errorCode), server(arg) {
+	this->contentType = "text/html";
+	
+	if (!findErrorPage()) {
+		Utils::createStyleIfNotExists();
+		this->body = Utils::createGenericErrorPage(this->status_code, Response::getStatusMessage(this->status_code));
+	}
+	buildHeaderMap();
+	buildHeader();
 }
 
 Response::~Response() {}
@@ -35,7 +41,7 @@ void
 Response::buildHeader() {
 	std::stringstream buf;
 
-	buf << "HTTP/1.1" << std::to_string(status_code) << getStatusMessage(status_code) << "\r\n";
+	buf << "HTTP/1.1 " << Utils::intToString(status_code) << " " << getStatusMessage(status_code) << "\r\n";
 	
 	// Build headerMap first
 	
@@ -49,80 +55,71 @@ Response::buildHeader() {
 
 void
 Response::buildHeaderMap() {
-	// Date ? example: Date: Tue, 15 Nov 1994 08:12:31 GMT
-	headerMap["Content-length"] = std::to_string(this->body.size());
-	if (this->contentType.size() != 0)
+	// Date: Tue, 15 Nov 1994 08:12:31 GMT
+	headerMap["Date"] = getCurrentDate(); // The server MUST send the date according to the 2616 RFC 
+	MLOG("DATE: " << headerMap["Date"] << "\n");
+	headerMap["Content-length"] = Utils::intToString(this->body.size());
+	if (this->contentType.empty())
 		headerMap["Content-type"] = this->contentType; // something
 	else
 		headerMap["Content-type"] = "";
 	headerMap["Cache-control"] = "no-cache, private";
 	headerMap["Server"] = "";
-}
-
-/*
-static void
-doResponse(const std::string& content, int status_code, int& clientSock) {
-	std::ostringstream oss;
-
-	oss << "HTTP/1.1" << " " << status_code << "\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: text/html\r\n";
-	oss << "Content-Length: " << content.length() << "\r\n";
-	oss << "\r\n";
-	oss << content;
-
-	// Send the response to the client
-	if (send(clientSock, oss.str().c_str(), oss.str().length(), 0) < 0) {
-		throw std::runtime_error("Error: send function failed");
+	if (this->status_code == 302) {
+		headerMap["Location"] = this->body;
+		this->body.clear();
 	}
-}*/
+}
 
 std::string
-Response::to_string(Response& response) const {
+Response::to_string(void) const {
 	std::stringstream buf;
 
-	buf << response.header;
+	buf << this->header;
 	buf << "\r\n";
-	buf << response.body;
+	buf << this->body;
 
 	return buf.str();
 }
 
-const std::string&
-Response::createResponse(int statusCode, const std::string& content) {
-	std::stringstream buf;
+bool
+Response::findErrorPage(void) {
+	// Find the error page corresponding to the status code
+	std::map<int, std::string>::const_iterator it;
+	it = this->server->getErrorMap().find(status_code);
 
-	buf << "HTTP/1.1" << std::to_string(statusCode) << getStatusMessage(statusCode) << "\r\n";
-	// buff << header... << "\r\n";
-	buf << "Content-length: " << content.length() << "\r\n";
-	buf << "Content-type: " << "text/plain" << "\r\n"; // placeholder
-	buf << "\r\n";
-	buf << content;
+	// There isn't an error page defined for the specif error
+	if (it == this->server->getErrorMap().end())
+		return false;
 
-	return buf.str();
-}
+	std::string error_path(this->server->getErrorMap()[status_code]);
+	std::string path(Global::pwd + error_path);
+	path = path.substr(0, path.find(';'));
 
-const std::string&
-Response::generateErrorPage(int errorCode)
-{
-	std::stringstream res;
-	std::string message = getStatusMessage(errorCode);
-	std::string code = std::to_string(errorCode);
+	// Open the error page
+	std::ifstream file(path.c_str());
+	if (file.is_open()) {
+		// Read the content of the error page
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		this->body = buffer.str();
+		file.close();
+		// Generate the HTTP response with the content of the error page
+	} else return false;
 	
-	res << "<!DOCTYPE html><html><head><title>";
-	res << code;
-	res << " ";
-	res << message;
-	res << "</title></head><body><center><h1>";
-	res << code;
-	res << " ";
-	res << message;
-	res << "</h1></center><hr><center>42_WebServer</center></body></html>";
-
-	return res.str();
+	return true;
 }
 
-const std::string&
+void
+Response::sendToClient(int client_sock) {
+	std::string response = this->to_string();
+	
+	if (send(client_sock, response.c_str(), response.length(), MSG_DONTWAIT) < 0) {
+		throw std::runtime_error("Error: send function failed");
+	}
+}
+
+const std::string
 Response::getStatusMessage(int statusCode)
 {
 	switch (statusCode)

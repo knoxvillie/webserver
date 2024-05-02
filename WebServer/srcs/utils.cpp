@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/15 12:51:54 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/23 15:44:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 11:44:58 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,14 +184,16 @@ namespace Utils {
 		}
 	}
 
-	void
-	createGenericErrorPage(std::ostringstream& oss, int& status_code) {
+	const std::string
+	createGenericErrorPage(int status_code, const std::string& message) {
+		std::stringstream oss;
+		
 		oss << "<!DOCTYPE html>\n"
 			   "<html lang=\"en\">\n"
 			   "<head>\n"
 			   "    <meta charset=\"UTF-8\">\n"
 			   "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			   "    <title>" << status_code << "- Generic error page</title>\n"
+			   "    <title>" << status_code << "- " << message << "</title>\n"
 			   "    <link rel=\"stylesheet\" href=\"/css/styles.css" << "\">\n"
 			   "</head>\n"
 			   "<body>\n"
@@ -202,6 +204,8 @@ namespace Utils {
 			   "</div>\n"
 			   "</body>\n"
 			   "</html>\n";
+		
+		return oss.str();
 	}
 
 	void
@@ -238,4 +242,25 @@ bool isDirectory(const std::string& path) {
 	}
 
 	return (S_ISDIR(fileInfo.st_mode));
+}
+
+const std::string getCurrentDate(void) {
+	const char *days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+	const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+	time_t now = time(NULL);
+	struct tm* gmTime = gmtime(&now); // returns time in GMT
+	
+	// Http date format, example: Tue, 15 Nov 1994 08:12:31 GMT
+	std::stringstream http_date;
+	http_date << days[gmTime->tm_wday] << ", ";
+	http_date << gmTime->tm_mday << " ";
+	http_date << months[gmTime->tm_mon] << " ";
+	http_date <<  gmTime->tm_year + 1900 << " "; // for some reason tm_year is the nbr of years since 1900
+	http_date << std::setw(2) << std::setfill('0') << gmTime->tm_hour << ":";
+	http_date << std::setw(2) << std::setfill('0') << gmTime->tm_min << ":";
+	http_date << std::setw(2) << std::setfill('0') << gmTime->tm_sec << " ";
+	http_date << "GMT";
+
+	return http_date.str();
 }

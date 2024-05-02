@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/30 12:02:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 12:46:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ Http::requestParser(Request& request) {
 }
 
 // TODO: make this static and implement the use of Reponse class here
-void
+Response*
 Http::BuildResponse(Request& request) {
 	bool is_redirect = false;
 	t_location* best_location;
@@ -88,83 +88,76 @@ Http::BuildResponse(Request& request) {
 
 	//Location not found, generate a 404 Not Found response
 	if (best_location == NULL) {
-		;//this->findErrorPage(404);
-		return;
+		return (new Response(404, request.server));
 	}
 	request.setFilePath(best_location->root + request.getURI());
 	// Checking Location Client Max Body Size.
 	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
-		;//this->findErrorPage(403);
+		return (new Response(403, request.server));
 	// Handle redirect
 	else if (best_location->redirect != "false") {
 		is_redirect = true;
 		if (best_location->redirect_is_extern)
-			; //this->doResponse(best_location->redirect,"text/html", 302, this->_clientSock);
+			return (new Response(302, best_location->redirect, "text/html"));
 		else {
 			best_location = request.server->getBestLocation(best_location->redirect);
 			// Location not found to redirect.
 			if (best_location == NULL)
-				; //this->findErrorPage(404);
+				return (new Response(404, request.server));
 			request.setFilePath(best_location->location_name);
-			//this->doResponse(request.getFilePath(), "void", 302, this->_clientSock);
+			return (new Response(302, request.getFilePath()));
 		}
 	}
 	else if (Utils::isDirectory(request.getFilePath()))
-		;//this->doDirectoryResponse(best_location, is_redirect);
+		return (Http::doDirectoryResponse(request, is_redirect));
 	else
-		;//this->handleMethod(best_location);
+		return (Http::handleMethod(request));
 }
 
-void
-Http::handleMethod(t_location* location) {
+Response*
+Http::handleMethod(Request& request) {
 	int status_code = 404;
-	std::string content;
+	t_location* location = request.location;
+	std::string content, type;
 
 	// The url is requesting a file
-	if (request.method == "GET")
-		status_code = this->getMethod(location->allow_methods, content);
-	else if (request.method == "POST")
-		status_code = this->postMethod(location->allow_methods);
+	if (request.getMethod() == "GET")
+		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
+	else if (request.getMethod() == "POST")
+		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 
-	switch (status_code) {
-		case 200:
-			// When a css style file is requested.
-			if (this->request.file_path.find(".css") != std::string::npos)
-				this->doResponse(content, "text/css", status_code, this->_clientSock);
-			else
-				this->doResponse(content, "text/html", status_code, this->_clientSock);
-			break;
-		case 201:
-			this->doResponse(content, "text/html", 201, this->_clientSock);
-			break;
-		default:
-			this->findErrorPage(status_code);
-			break;
-	}
+	// TODO: make a type file getter
+	if ((request.getFilePath()).find(".css") != std::string::npos)
+		type = "text/css";
+	else
+		type = "text/html";
+
+	return (new Response(status_code, content, type));
 }
 
-void
-Http::doDirectoryResponse(t_location *location, bool is_redirect) {
+Response*
+Http::doDirectoryResponse(Request& request, bool is_redirect) {
 	int statusCode;
 	struct stat buf;
+	t_location* location = request.location;
 	std::string content;
 
 	// Check if the location index exists
 	if (stat(location->index.c_str(), &buf) == 0) {
 		// Index exists so must be sent.
-		this->request.file_path = location->index;
-		statusCode = getMethod(location->allow_methods, content);
-		this->doResponse(content, "text/html", statusCode, this->_clientSock);
+		request.setFilePath(location->index);
+		statusCode = getMethod(request.getFilePath(), location->allow_methods, content);
+		return (new Response(statusCode, content, "text/html"));
 	}
 	// If auto_index off and the index doesn't exist -> forbidden request
 	else if (!location->auto_index)
-		this->findErrorPage(403);
+		return (new Response(403, request.server));
 	// then listing
 	else {
 		if (is_redirect)
-			this->doResponse(directoryListing(), "text/html", 302, this->_clientSock);
+			return (new Response(302, Http::directoryListing(request), "text/html"));
 		else
-			this->doResponse(directoryListing(), "text/html", 200, this->_clientSock);
+			return (new Response(200, Http::directoryListing(request), "text/html"));
 	}
 }
 
@@ -179,7 +172,7 @@ Http::findErrorPage(int status_code) {
 		std::ostringstream content;
 
 		Utils::createStyleIfNotExists();
-		Utils::createGenericErrorPage(content, status_code);
+		//Utils::createGenericErrorPage(content, status_code);
 		this->doResponse(content.str(), "text/html", status_code, this->_clientSock);
 		return ;
 	}
@@ -208,21 +201,21 @@ Http::findErrorPage(int status_code) {
 */
 
 std::string
-Http::directoryListing(void) {
+Http::directoryListing(Request& request) {
 	DIR* dir;
 	struct dirent* entry;
 	struct stat file_stat;
 	std::stringstream html;
 
-	dir = opendir(this->request.file_path.c_str());
+	dir = opendir((request.getFilePath()).c_str());
 	if (!dir) {
 		MLOG("ERROR: Unable to open directory");
 		return "<html><head><title>Error</title></head><body><h1>Error opening directory.</h1></body></html>";
 	}
-	Utils::createListingPage(html, this->request.file_path);
+	Utils::createListingPage(html, request.getFilePath());
 	while ((entry = readdir(dir))) {
 		if (std::strcmp(entry->d_name, ".") == 0 ) continue; // Skip hidden current directory markers.
-		std::string filePath = this->request.file_path + "/" + entry->d_name;
+		std::string filePath = request.getFilePath() + "/" + entry->d_name;
 		if(stat(filePath.c_str(), &file_stat) == 0) {
 			char time_buf[100];
 			std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", localtime(&file_stat.st_ctime));
@@ -260,12 +253,12 @@ Http::doResponse(const std::string& content, const std::string& type, int status
 }
 
 int
-Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
+Http::getMethod(const std::string& file_path, const std::vector<std::string>& methods, std::string& content) {
 	if (std::find(methods.begin(), methods.end(), "GET") != methods.end()) {
 		std::stringstream buffer;
-		int flag = Utils::isRegularFile(this->request.file_path);
+		int flag = Utils::isRegularFile(file_path);
 		if (flag == 1) {
-			std::ifstream file(this->request.file_path.c_str());
+			std::ifstream file(file_path.c_str());
 
 			if(!file.is_open())
 				return (500);
@@ -284,8 +277,8 @@ Http::getMethod(const std::vector<std::string>& methods, std::string& content) {
 }
 
 int
-Http::postMethod(const std::vector<std::string>& methods) {
-	std::ofstream out_file(request.file_path.c_str(), std::ofstream::app);
+Http::postMethod(const std::string& file_path, const std::vector<std::string>& methods, const std::string& body) {
+	std::ofstream out_file(file_path.c_str(), std::ofstream::app);
 
 	// Status code for method not allowed
 	if (std::find(methods.begin(), methods.end(), "POST") == methods.end())
@@ -305,7 +298,7 @@ Http::postMethod(const std::vector<std::string>& methods) {
 		else
 			return (500);
 	}
-	std::string output = this->request.content.substr(this->request.content.find("\r\n\r\n") + 4);
+	std::string output = body.substr(body.find("\r\n\r\n") + 4);
 
 	MLOG("Output: " + output);
 	out_file << "\n**************\n\n";
@@ -313,7 +306,7 @@ Http::postMethod(const std::vector<std::string>& methods) {
 	out_file << std::endl;
 	out_file.close();
 
-	// Generate the HTTP 200 OK response
+	// Generate the HTTP 201 OK response
 	return (201);
 }
 

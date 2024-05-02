@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/29 13:01:40 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 10:39:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ Request::ParseURL(void) {
 			this->uri = url.substr(0, pos);
 		} else
 			this->uri = url;
-		MLOG("PARSED URL: " + this->url + "\n\n");
+		MLOG("PARSED URL: " + this->uri + "\n\n");
 		MLOG("QUERY STRING: " + this->query_string + "\n\n");
 		return;
 	} else

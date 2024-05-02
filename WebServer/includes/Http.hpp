@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/29 13:15:30 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 12:44:27 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,21 +42,21 @@ class Http {
 		static void requestParser(Request& request);
 
 		//	Response
-		std::string directoryListing(void);
-		static void BuildResponse(Request& request);
+		static std::string directoryListing(Request& request);
+		static Response* BuildResponse(Request& request);
+		static Response* doDirectoryResponse(Request& request, bool is_redirect);
 		void doResponse(const std::string&, const std::string&, int status_code, int& clientSock);
 		void findErrorPage(int);
-		void doDirectoryResponse(t_location*, bool);
-		void handleMethod(t_location*);
 		
 		// Error
 		void httpError(int status_code);
 
+		static Response* handleMethod(Request& request);
+		static int getMethod(const std::string& file_path, const std::vector<std::string>&, std::string& content);
+		static int postMethod(const std::string& file_path, const std::vector<std::string>&, const std::string& body);
+		static int deleteMethod(const t_location *location);
 
 		void checkBodySize(t_location*);
-		int getMethod(const std::vector<std::string>&, std::string& content);
-		int postMethod(const std::vector<std::string>&);
-		int deleteMethod(const t_location *location);
 		void setHeaderAndBody(void);
 		void fillHeaderMap(void);
 		void ParseURL(void);

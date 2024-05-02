@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 12:34:57 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 16:10:30 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/02 11:46:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 #include "webserv.hpp"
 #include "Server.hpp"
+#include "Response.hpp"
 
 extern volatile sig_atomic_t gEndLoop;
 
@@ -35,7 +36,7 @@ namespace Utils {
 	bool isDirectory(const std::string& str);
 	int isRegularFile(const std::string& path);
 	void createStyleIfNotExists(void);
-	void createGenericErrorPage(std::ostringstream&, int&);
+	const std::string createGenericErrorPage(int status_code, const std::string& message);
 	void createListingPage(std::stringstream&, const std::string&);
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorCode.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/10 12:32:39 by pealexan          #+#    #+#             */
-/*   Updated: 2024/04/10 14:23:07 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/05/02 11:11:32 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,11 +95,13 @@ std::string getErrorMessage(int errorCode)
 	}
 }
 
+#include "utils.hpp"
+
 std::string ErrorCode::generateErrorPage(int errorCode)
 {
 	std::string res;
 	std::string message = getErrorMessage(errorCode);
-	std::string code = std::to_string(errorCode);
+	std::string code = Utils::intToString(errorCode);
 	
 	res = "<html><head><title>";
 	res += code;
