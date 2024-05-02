@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:31:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:07:49 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,17 +111,16 @@ Server::startServerSocket(void) {
 	if (this->server_sock < 0)
 		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
 
+	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
+		throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
+
 	// the SO_REUSEADDR option is set on the socket to allow binding to multiple ports. Then, the bind() function is called for each port in the ports vector, binding the socket to each port. Finally, the server listens for incoming connections on all specified ports.
 	MLOG("TAMANHO PORT:" << Utils::intToString(int(this->s_port.size())));
-	if (this->s_port.size() > 1) {
+	if (this->s_port.size() >= 1) {
 		int optval = 1;
 
 		if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
 			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
-		
-		if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
-		throw std::runtime_error("Errror: failed to set socket as nonblocking.");
-	
 	}
 	for (size_t i = 0; i < this->s_port.size(); i++) {
 		this->server_address.sin_port = htons(this->s_port[i]);

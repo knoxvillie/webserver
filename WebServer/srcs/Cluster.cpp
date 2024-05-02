@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/30 10:48:10 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:19:57 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 	std::map<int, Request*> requests;
 	
-	event.events = EPOLLIN | EPOLLOUT;
+	event.events = EPOLLIN; // The server sockets only need to be monitored for read calls
 	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
 	
 	if (epoll_fd < 0)
@@ -76,7 +76,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
 				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
-				event_buffer[i].events = EPOLLIN | EPOLLOUT;
+				event_buffer[i].events = EPOLLIN | EPOLLOUT | EPOLLET; // EPOLLET = Edge Triggered mode
 				event_buffer[i].data.fd = client_sock;
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");
@@ -101,15 +101,13 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				if (event_buffer[i].events & EPOLLIN) { // Not closing these sockets yet
 				    MLOG("EPOLLIN is present\n");
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
-						Request *cl_request = new Request();
+						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
 						requests[client_sock] = cl_request;
 					}
 					Http::receiveFromClient(client_sock, *requests[client_sock]);
-					new_connection = true;
 					/*
 					try {
 						Http request(client_sock, Cluster::sockToServer[client_sock]);
-						new_connection = true; // TODO: Check if this is right
 					} catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
 						Cluster::closeConnection(epoll_fd, client_sock);
@@ -118,12 +116,17 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				
 				if (event_buffer[i].events & EPOLLOUT) {
 				    MLOG("EPOLLOUT is present\n");
-				   	Http::BuildResponse(*requests[client_sock]);
 					// EPOLLOUT event means that the socket is ready for writing
-					// TODO: THIS
-					// delete request
+				   	if (requests.find(client_sock) == requests.end()) // No previous request for this client_sock
+						continue;
+						
+					Response* response = Http::BuildResponse(*requests[client_sock]);
+					response->sendToClient(client_sock);
+					delete response;
+					delete requests[client_sock];
+					requests.erase(client_sock);
 					Cluster::closeConnection(epoll_fd, client_sock);
-					//new_connection = true; // TODO: Check if this is right
+					new_connection = true; // TODO: Check if this is right
 				}
 				
 				// TODO: Check if this is right

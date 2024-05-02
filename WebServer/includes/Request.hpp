@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 12:42:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:10:27 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,13 +43,11 @@ class Request {
 		std::string path_info;
 		std::string query_string;
 	
-		void setHeaderAndBody(void);
-		void fillHeaderMap(void);
 		void requestParser(void);
 		void ParseURL(void);
 
 	public:
-		Request();
+		Request(Server* server);
 		Request(const std::string& request);
 		~Request();
 
@@ -74,6 +72,8 @@ class Request {
 		const std::string& getPathInfo(void) const;
 		
 	//	Setters	//
+		void setHeaderAndBody(void);
+		void fillHeaderMap(void);
 		void setHttpVersion(const std::string& http_version);
 		void setMethod(const std::string& method);
 		void setFilePath(const std::string& file_path);

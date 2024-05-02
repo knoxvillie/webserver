@@ -6,13 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 10:39:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 15:07:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-Request::Request(void) {}
+Request::Request(Server* arg) : server(arg) {}
 
 // TODO
 Request::Request(const std::string& request) : full(request) {
@@ -206,6 +206,6 @@ Request::setFilePath(const std::string& file_path) {
 
 void
 Request::setURI(const std::string& uri) {
-	ParseURL();
 	this->uri = uri;
+	ParseURL();
 }

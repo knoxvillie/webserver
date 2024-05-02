@@ -6,19 +6,13 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/26 18:28:58 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 16:14:16 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiHandler.hpp"
 
-CgiHandler::CgiHandler(const t_request& request)
-	: _request(request) {
-	
-	this->buildEnv();
-	this->executeCgi();
-}
-
+CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
  
 /* void
@@ -31,40 +25,43 @@ CgiHandler::setEnvVariables(const std::map<std::string, std::string>& header) {
 
 // TODO: test this
 const std::string
-CgiHandler::getPathTranslated(void) {
+CgiHandler::getPathTranslated(Request& request) {
 	// Add root to the path_info
 	std::string root_path;
 	
-	root_path = (_request.server->getBestLocation("/"))->root;
+	root_path = (request.server->getBestLocation("/"))->root;
 	
-	return (root_path + _request.path_info);
+	return (root_path + request.getPathInfo());
 }
 
-void
-CgiHandler::buildEnv()
+char **
+CgiHandler::buildEnv(Request& request)
 {
 	std::map<std::string, std::string> env;
-	std::string uri = _request.url;
+	const char **envp = { 0 };
+	std::string uri = request.getURI();
 
 	env["AUTH_TYPE"] = ""; //Not used in our webserver, no authentication protocol needs to be implemented
-	env["REQUEST_METHOD"] = _request.method;
-	env["QUERY_STRING"] = _request.query_string; // call getQueryString before;
-	env["REQUEST_URI"] = _request.url; // should this be unparsed_url ?
+	env["REQUEST_METHOD"] = request.getMethod();
+	env["QUERY_STRING"] = request.getQueryString(); // call getQueryString before;
+	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
 	env["SERVER_PROTOCOL"] = ""; 
 	env["CONTENT_TYPE"] = ""; // TODO
 	env["CONTENT_LENGTH"] = "";  // TODO //in case of GET requests, no need to handle, get from POST requests
-	env["PATH_INFO"] = _request.path_info;
-	env["PATH_TRANSLATED"] = this->getPathTranslated();
+	env["PATH_INFO"] = request.getPathInfo();
+	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
 	std::map<std::string, std::string>::const_iterator it;
     for (it = env.begin(); it != env.end(); it++)
-		*_envp = (it->first + "=" + it->second).c_str();
+		*envp = (it->first + "=" + it->second).c_str();
 }
 
-void
-CgiHandler::executeCgi() {
+Response*
+CgiHandler::executeCgi(Request& request) {
 
+	char **envp = CgiHandler::buildEnv(request);
+	
 	int pipe_to_parent[2];
 	int pipe_to_child[2];
 	
@@ -74,11 +71,9 @@ CgiHandler::executeCgi() {
 
 	// Might need to use fcntl for non blocking fds
 
-	//_request.file_path = (_request.server->getBestLocation("/"))->root + _request.url;
-	//_request.file_path = "WebServer/var/www/cgi-bin/helloworld.cgi";
-	_request.file_path = (_request.server->getBestLocation("/"))->root + _request.url;
+	request.setFilePath((request.server->getBestLocation("/"))->root + request.getURI());
 	MLOG("EXECVE ARGS:\n");
-	MLOG(_request.file_path.c_str());
+	MLOG((request.getFilePath()).c_str());
 	
 	pid_t pid = fork();
 	if (!pid) { // Child Process
@@ -90,13 +85,13 @@ CgiHandler::executeCgi() {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
-		char *filename = const_cast<char *>(_request.file_path.c_str());
+		char *filename = const_cast<char *>((request.getFilePath()).c_str());
 		char *argv[] = {NULL, filename, NULL};
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
 	
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
-		if (execve(filename, argv, NULL) != 0) {
+		if (execve(filename, argv, envp) != 0) {
 			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
 			exit(1);
 		}
@@ -105,9 +100,12 @@ CgiHandler::executeCgi() {
 		close(pipe_to_child[0]);
 		close(pipe_to_parent[1]);
 		
-		// TODO: sendToCgi()
+		CgiHandler::writeToCgi(pipe_to_child[1], request.getBody());
+		
 		MLOG("\nCgi output: \n" + readFromCgi(pipe_to_parent[0]));
-		// TODO: created response from Cgi output
+		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
+		// TODO: Send only the response from the CGI without adding headers or anything, since the CGI already does that
+		return Response();
 	}
 }
 

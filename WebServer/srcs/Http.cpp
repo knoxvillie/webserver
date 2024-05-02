@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:29:22 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 16:11:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,18 +19,7 @@
 static std::string dirTypes(const unsigned char&);
 static std::string formatSize(const size_t&);
 
-Http::Http(int connection, Server* server) : _clientSock(connection), _server(server) {
-/* 	(this->request).server = server;
-	this->requestFromClient();
-	this->requestParser();
-	this->setHeaderAndBody();
-	this->fillHeaderMap();
-	if (!request.isCGI)
-		this->BuildResponse();
-	else {
-		CgiHandler cgi(request);
-	} */
-}
+Http::Http() {}
 
 Http::~Http() {}
 
@@ -75,16 +64,21 @@ Http::requestParser(Request& request) {
 	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
 }
 
-// TODO: make this static and implement the use of Reponse class here
 Response*
 Http::BuildResponse(Request& request) {
 	bool is_redirect = false;
 	t_location* best_location;
 
 	Http::requestParser(request);
+	request.setHeaderAndBody();
+	request.fillHeaderMap();
 
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
+	request.location = best_location;
+	
+	if (request.isCGI())
+		return (CgiHandler::executeCgi(request));
 
 	//Location not found, generate a 404 Not Found response
 	if (best_location == NULL) {
@@ -161,38 +155,6 @@ Http::doDirectoryResponse(Request& request, bool is_redirect) {
 	}
 }
 
-void
-Http::findErrorPage(int status_code) {
-	// Find the error page corresponding to the status code
-	std::map<int, std::string>::const_iterator it;
-	it  = this->_server->getErrorMap().find(status_code);
-
-	// There isn't an error page defined for the specif error
-	if (it == this->_server->getErrorMap().end()) {
-		std::ostringstream content;
-
-		Utils::createStyleIfNotExists();
-		//Utils::createGenericErrorPage(content, status_code);
-		this->doResponse(content.str(), "text/html", status_code, this->_clientSock);
-		return ;
-	}
-	std::string error_path(this->_server->getErrorMap()[status_code]);
-	std::string path(Global::pwd + error_path);
-	path = path.substr(0, path.find(';'));
-
-	// Open the error page
-	std::ifstream file(path.c_str());
-	if (file.is_open()) {
-		// Read the content of the error page
-		std::stringstream buffer;
-		buffer << file.rdbuf();
-		std::string content = buffer.str();
-		file.close();
-		// Generate the HTTP response with the content of the error page
-		this->doResponse(content, "text/html", status_code, this->_clientSock);
-	} else throw std::runtime_error("Error: Cannot open the error_page file");
-}
-
 /*
 	Things to change in the findErrorPage() function:
 		- Dont throw exceptions just because one server couldn't find an error page, probably just send a standard error
@@ -230,50 +192,27 @@ Http::directoryListing(Request& request) {
 	return html.str();
 }
 
-void
-Http::doResponse(const std::string& content, const std::string& type, int status_code, int& clientSock) {
-	std::ostringstream oss;
-	if (status_code == 302) {
-		oss << "HTTP/1.1" << " " << status_code << "\r\n";
-		oss << "Cache-Control: no-cache, private\r\n";
-		oss << "Location: " << content << "\r\n";
-		oss << "\r\n";
-	}
-	oss << "HTTP/1.1" << " " << status_code << "\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: " << type << "\r\n";
-	oss << "Content-Length: " << content.length() << "\r\n";
-	oss << "\r\n";
-	oss << content;
-
-	// Send the response to the client
-	if (send(clientSock, oss.str().c_str(), oss.str().length(), MSG_DONTWAIT) < 0) {
-		throw std::runtime_error("Error: send function failed");
-	}
-}
-
 int
 Http::getMethod(const std::string& file_path, const std::vector<std::string>& methods, std::string& content) {
-	if (std::find(methods.begin(), methods.end(), "GET") != methods.end()) {
-		std::stringstream buffer;
-		int flag = Utils::isRegularFile(file_path);
-		if (flag == 1) {
-			std::ifstream file(file_path.c_str());
+	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
+		return (405); // Method not allowed on location
 
-			if(!file.is_open())
-				return (500);
-			buffer << file.rdbuf();
-			content = buffer.str();
-			file.close();
-			return (200);
-		}
-		// The file doesn't exist.
-		if (flag == 0) return (404);
-		// The request is a directory, special device or a symbolic link.
-		if (flag == -1) return (400);
+	std::stringstream buffer;
+	int flag = Utils::isRegularFile(file_path);
+	
+	if (flag == 1) {
+		std::ifstream file(file_path.c_str());
+		if (!file.is_open())
+			return (500);
+		buffer << file.rdbuf();
+		content = buffer.str();
+		file.close();
+		return (200);
 	}
-	// Method not allowed on location
-	return (405);
+	// The request is a directory, special device or a symbolic link.
+	else if (flag == -1) return (400);
+	// The file doesn't exist.
+	return 404;
 }
 
 int
@@ -346,7 +285,7 @@ formatSize(const size_t& size) {
 	return (sstream.str());
 }
 
-void 
+/* void 
 Http::decodeURI() {
   
 	std::string	newUri;
@@ -368,4 +307,4 @@ Http::decodeURI() {
 		}
 	}
 	this->request.url = newUri;
-}
+} */
