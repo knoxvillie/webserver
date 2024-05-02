@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/26 11:53:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 14:31:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@ Server::Server(void) {}
 
 Server::~Server(void) {}
 
-Server::Server(std::map<std::string, std::vector<std::string> >& server, std::map<std::string,
-			   std::map<std::string, std::vector<std::string> > >& location)
+Server::Server(std::map<std::string, std::vector<std::string> >& server,
+			   std::map<std::string, std::map<std::string, std::vector<std::string> > >& location)
 			   : _serverDirectives(server), _locationDirectives(location) {
 	GPS;
 	this->applyServerDirectives();
@@ -31,7 +31,6 @@ Server::Server(std::map<std::string, std::vector<std::string> >& server, std::ma
 	this->startServerSocket();
 }
 
-// This method stands to check which "essentials directives" are not in the server block and initialize it.
 void
 Server::applyServerDirectives(void) {
 	GPS;
@@ -40,19 +39,20 @@ Server::applyServerDirectives(void) {
 
 	for (int i = 0; Parser::server_directives[i]; ++i) {
 		it_server = this->_serverDirectives.find(Parser::server_directives[i]);
-		// Directive[i] not in the server block
+		// Directive[i] not found in the server block
 		if (it_server == this->_serverDirectives.end()) {
 			// Add the key into the map, and initialize it with default values.
 			// splitStringToVector handles the case that the directive has more than 1 value. (Allow_methods)
 			this->_serverDirectives[Parser::server_directives[i]] = Utils::splitStringToVector(defaultServerConfig(i));
 		}
 	}
+	// Check if the server block doesn't have any location defined or didn't define a root.
 	if (this->_locationDirectives.empty() || this->_locationDirectives.find("/") == this->_locationDirectives.end())
 		this->_locationDirectives["/"]["index"] = Utils::splitStringToVector("index.html");
 
 	for (it_location = this->_locationDirectives.begin(); it_location != this->_locationDirectives.end(); it_location++) {
 		for (int i = 0; Parser::location_directives[i]; i++) {
-			// Directive[i] not in the server block
+			// Directive[i] not in the location block
 			if (it_location->second.find(Parser::location_directives[i]) == it_location->second.end()) {
 				this->_locationDirectives[it_location->first][Parser::location_directives[i]] = Utils::splitStringToVector(
 						defaultLocationConfig(i));
@@ -69,8 +69,11 @@ Server::validateServerDirectives(void) {
 	std::map<std::string, std::vector<std::string> >::iterator it;
 	std::map<std::string, std::map<std::string, std::vector<std::string> > >::iterator ut;
 
-	for (it = server.begin(); it != server.end(); it++) {
-		if (it->first == "listen") this->checkListen(it->second);
+	for (int i = 0; Parser::server_directives[i]; i++) {
+		it = server.find(Parser::server_directives[i]);
+
+		if (it->first == "host") this->checkHost(it->second);
+		else if (it->first == "port") this->checkPorts(it->second);
 		else if (it->first == "server_name") this->checkServerName(it->second);
 		else if (it->first == "error_page") this->checkErrorPage(it->second);
 	}
@@ -78,11 +81,11 @@ Server::validateServerDirectives(void) {
 		t_location temp;
 		temp.location_name = ut->first;
 
-		// The initialization order matter
+		// The initialization order matters, because some directives depend on others
 		for (int i = 0; Parser::location_directives[i]; i++) {
 			it = location[ut->first].find(Parser::location_directives[i]);
 
-			// root = pwd + root
+			// root = Global::pwd + root
 			if (it->first == "root") this->checkRoot(it->second, temp);
 			// index = root + location + index
 			else if (it->first == "index") this->checkIndex(it->second, temp);
@@ -106,20 +109,32 @@ Server::startServerSocket(void) {
 	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (this->server_sock < 0)
-		throw std::runtime_error("Error: Couldn't create socket.");
+		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
 
-	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
+	// the SO_REUSEADDR option is set on the socket to allow binding to multiple ports. Then, the bind() function is called for each port in the ports vector, binding the socket to each port. Finally, the server listens for incoming connections on all specified ports.
+	MLOG("TAMANHO PORT:" << Utils::intToString(int(this->s_port.size())));
+	if (this->s_port.size() > 1) {
+		int optval = 1;
+
+		if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
+			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
+		
+		if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
 		throw std::runtime_error("Errror: failed to set socket as nonblocking.");
 	
-	// ============= <DEBUG> ================
-	int optval = 1;
-	if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
-		throw std::runtime_error("Error: reuse addr error.");
-	// ============= </DEBUG> ===============
+	}
+	for (size_t i = 0; i < this->s_port.size(); i++) {
+		this->server_address.sin_port = htons(this->s_port[i]);
+		// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
 
-	// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
-	if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0)
-		throw std::runtime_error(std::string("Error: Couldn't bind socket ") + std::strerror(errno));
+		// REMOVE std::strerror(errno)
+		if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0) {
+			close(this->server_sock);
+			throw std::runtime_error(std::string("ERROR - Server: Couldn't bind socket: ") + Utils::intToString((int)this->s_port[i]) + " Why? " + std::strerror(errno));
+		}
+		MLOG("BIND OK PORT: " + Utils::intToString((int)this->s_port[i]));
+
+	}
 	if (listen(this->server_sock, SOMAXCONN) < 0)
 		throw std::runtime_error("Error: Couldn't listen.");
 }
@@ -143,31 +158,46 @@ Server::acceptConnection(void) const {
 // ======================
 
 void
-Server::checkListen(std::vector<std::string>& vec) {
-	int s_port;
-
+Server::checkHost(std::vector<std::string>& vec) {
 	std::memset(&this->server_address, 0, sizeof(this->server_address));
-	if (vec.size() > 1)
-		throw std::runtime_error("Error: listen directive has too many arguments");
-	std::string token(vec[0]);
-	// ':' not in token
-	if (token.find(':') == std::string::npos) {
-		this->s_host = "0.0.0.0";
-		this->server_address.sin_addr.s_addr = INADDR_ANY;
-		s_port = std::atoi(token.substr(0, token.find(';')).c_str());
-	} else {
-		size_t	pos = token.find(':');
-		this->s_host = token.substr(0, pos);
-		if (this->s_host == "127.0.0.1")
-			this->s_host = "0.0.0.0";
-		s_port = (std::atoi(token.substr(pos + 1).c_str()));
-		this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
-	}
-	if (s_port < 1024 || s_port > 65535)
-		throw std::runtime_error("Error: Server s_port out of range [1024, 65535]");
-	this->s_port = (uint16_t)s_port;
+
+	if (vec.size() != 1)
+		throw std::runtime_error("ERROR - Server: Invalid number of hosts detected. Expected 1, but received: " + Utils::intToString((int)vec.size()));
+	// Removing ';' from the end of the directive value.
+	this->s_host = vec[0].substr(0, vec[0].find(';'));
+
+	if (this->s_host == "localhost")
+		this->s_host = "127.0.0.1";
+	// Redirection to "0.0.0.0" if needed.
+	//if (host == "127.0.0.1") host = "0.0.0.0";
+
+	//this->server_address.sin_addr.s_addr = INADDR_ANY;
+	this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
+	// IPV4 only
 	this->server_address.sin_family = AF_INET;
-	this->server_address.sin_port = htons(this->s_port);
+}
+
+void
+Server::checkPorts(std::vector<std::string> &vec) {
+	char* endptr;
+	std::string token;
+
+	// For safety only, the parser do not allow empty directives values
+	if (vec.empty())
+		throw std::runtime_error("ERROR - Server: Server block has a empty port directive");
+	for (size_t i = 0; i < vec.size(); i++) {
+		// Handling the last element of the vec that always ends in ';'
+		token = vec[i].substr(0, vec[i].find(';'));
+		long ip = std::strtol(token.c_str(), &endptr, 10);
+
+		// Check if the port is numerical.
+		if (*endptr != '\0')
+			throw std::runtime_error("ERROR - Server: Invalid port type. Expected numerical but received: " + token);
+		// Check port range
+		if (ip < 1024 || ip > 65535)
+			throw std::runtime_error("ERROR - Server: Invalid port range. Expected between [1024, 65535] but received: " + token);
+		this->s_port.push_back((uint16_t)ip);
+	}
 }
 
 void
@@ -294,10 +324,10 @@ void
 Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location redirect syntax");
-	// Default value for redirect directive. Root location always exists
 	location.redirect_is_extern = false;
 	location.redirect = "false";
-	if (vec[0] == "false;")
+	// Need to check if the location is root, so, root must never redirect.
+	if (location.location_name == "/" ||  vec[0] == "false;")
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
@@ -336,7 +366,7 @@ Server::getHost(void) const {
 	return (this->s_host);
 }
 
-uint16_t
+std::vector<uint16_t>
 Server::getPort(void) const {
 	return (this->s_port);
 }
@@ -361,7 +391,7 @@ Server::getBestLocation(const std::string& name) {
 
 std::string
 Server::getListen(void) const {
-	return (std::string(this->s_host + ":" + Utils::intToString(this->s_port)));
+	return ("MUDAR DEPOIS");
 }
 
 void *
@@ -384,10 +414,11 @@ Server::getDirectiveFromLocation(std::vector<t_location> &locations, const std::
 std::string
 defaultServerConfig(int directive) {
 	switch (directive) {
-		case 0: return ("0.0.0.0:8080;"); //Listen
-		case 1: return ("default;"); //Server_name
-		case 2: return ("404 /var/www/error_pages;"); //Error_page
-		default: throw std::runtime_error("Server.cpp defaultServerConfig invalid server directives");
+		case 0: return ("127.0.0.1;"); //Host
+		case 1: return ("8080;"); //Ports
+		case 2: return ("default;"); //Server_name
+		case 3: return ("404 /var/www/error_pages;"); //Error_page
+		default: throw std::runtime_error("INTERNAL ERROR: defaultServerConfig func. Invalid server directives");
 	}
 }
 

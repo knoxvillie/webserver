@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/15 10:00:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:28:33 by kfaustin         ###   ########.fr       */
+/*   Created: 2024/04/24 12:43:34 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/04/24 12:43:37 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ class Parser {
 	public:
 		static const char* server_directives[];
 		static const char* location_directives[];
-		static void parsingConfigFile(const std::string&);
-		static void parsingDirectives(const std::string&, std::vector<std::string>&, std::map<std::string, std::vector<std::string > >&);
-		static void parsingLocationBlock(std::vector<std::string>&);
+		static void parsingConfigFile(const std::string&);;
 		static std::vector<Server> &getServers(void);
 };

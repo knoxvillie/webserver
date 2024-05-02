@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/16 15:27:38 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/02 11:12:59 by kfaustin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,8 @@ class Server {
 		struct sockaddr_in server_address;
 
 		// Server config
-		uint16_t s_port;
 		std::string s_host;
+		std::vector<uint16_t> s_port;
 		std::string server_name;
 		std::map<int, std::string> error_page;
 
@@ -56,13 +56,14 @@ class Server {
 		int getSocket(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
 		std::string getHost(void) const;
-		uint16_t getPort(void) const;
+		std::vector<uint16_t> getPort(void) const;
 		t_location* getBestLocation(const std::string&);
 		std::string getListen(void) const;
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
 		//Server Directives Parser
-		void checkListen(std::vector<std::string>&);
+		void checkHost(std::vector<std::string>&);
+		void checkPorts(std::vector<std::string>&);
 		void checkServerName(std::vector<std::string>&);
 		void checkErrorPage(std::vector<std::string>&);
 
