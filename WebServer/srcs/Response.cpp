@@ -6,13 +6,15 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 12:48:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 09:18:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
 
 Response::Response() {}
+
+Response::Response(const std::string& cgi_content) : cgi_response(cgi_content) {}
 
 Response::Response(int statusCode, const std::string& content) : status_code(statusCode), body(content) {
 	buildHeaderMap();
@@ -74,6 +76,10 @@ Response::buildHeaderMap() {
 std::string
 Response::to_string(void) const {
 	std::stringstream buf;
+
+	if (!this->cgi_response.empty()) { // There is a Cgi reponse so the rest will be empty
+		return this->cgi_response;
+	}
 
 	buf << this->header;
 	buf << "\r\n";

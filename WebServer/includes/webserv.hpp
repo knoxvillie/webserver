@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 10:21:29 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 10:15:02 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,6 +151,8 @@ std::string getValueFromEnv(char** env, const std::string&);
 void signal_handler(int signum);
 bool isDirectory(const std::string& path);
 const std::string getCurrentDate(void);
+void free_env(char** env);
+bool isExecutable(const std::string& filepath);
 
 
 // ======================

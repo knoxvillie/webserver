@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 16:14:16 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 10:19:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ char **
 CgiHandler::buildEnv(Request& request)
 {
 	std::map<std::string, std::string> env;
-	const char **envp = { 0 };
 	std::string uri = request.getURI();
 
 	env["AUTH_TYPE"] = ""; //Not used in our webserver, no authentication protocol needs to be implemented
@@ -52,29 +51,40 @@ CgiHandler::buildEnv(Request& request)
 	env["PATH_INFO"] = request.getPathInfo();
 	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
+	char** envp = new char*[env.size() + 1]; 
+
 	std::map<std::string, std::string>::const_iterator it;
-    for (it = env.begin(); it != env.end(); it++)
-		*envp = (it->first + "=" + it->second).c_str();
+	int i = 0;
+    for (it = env.begin(); it != env.end(); it++) {
+		std::string line = (it->first + "=" + it->second).c_str();
+		envp[i] = new char[line.size() + 1];
+		std::strcpy(envp[i], line.c_str()); // strcpy also copies the terminating '\0'
+		++i;
+	}
+	envp[i] = NULL;
+
+	return envp;
 }
 
 Response*
 CgiHandler::executeCgi(Request& request) {
 
-	char **envp = CgiHandler::buildEnv(request);
-	
+	if (!isExecutable((request.getFilePath()).c_str()))
+		return (new Response(403, request.server)); // Might be 404
+
 	int pipe_to_parent[2];
 	int pipe_to_child[2];
 	
 	// Cant use pipe2, how do we make it nonblocking ?
 	pipe(pipe_to_parent); // Write on pipe[1] read on pipe[0]
 	pipe(pipe_to_child);
-
 	// Might need to use fcntl for non blocking fds
 
-	request.setFilePath((request.server->getBestLocation("/"))->root + request.getURI());
+	std::string response;
+
 	MLOG("EXECVE ARGS:\n");
 	MLOG((request.getFilePath()).c_str());
-	
+
 	pid_t pid = fork();
 	if (!pid) { // Child Process
 		close(pipe_to_child[1]);
@@ -85,14 +95,16 @@ CgiHandler::executeCgi(Request& request) {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
-		char *filename = const_cast<char *>((request.getFilePath()).c_str());
-		char *argv[] = {NULL, filename, NULL};
+		char* filename = const_cast<char *>((request.getFilePath()).c_str());
+		char* argv[] = {filename, filename, NULL};
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
-	
+		char** envp = CgiHandler::buildEnv(request);	
+		
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(filename, argv, envp) != 0) {
 			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
+			free_env(envp);
 			exit(1);
 		}
 		
@@ -102,11 +114,11 @@ CgiHandler::executeCgi(Request& request) {
 		
 		CgiHandler::writeToCgi(pipe_to_child[1], request.getBody());
 		
-		MLOG("\nCgi output: \n" + readFromCgi(pipe_to_parent[0]));
-		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
-		// TODO: Send only the response from the CGI without adding headers or anything, since the CGI already does that
-		return Response();
+		response = readFromCgi(pipe_to_parent[0]);
+		MLOG("\nCgi output: \n" + response);
+		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent	}
 	}
+	return (new Response(response));
 }
 
 // TODO: test

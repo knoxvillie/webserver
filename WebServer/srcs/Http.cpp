@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 16:11:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 10:25:08 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,9 +76,6 @@ Http::BuildResponse(Request& request) {
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
 	request.location = best_location;
-	
-	if (request.isCGI())
-		return (CgiHandler::executeCgi(request));
 
 	//Location not found, generate a 404 Not Found response
 	if (best_location == NULL) {
@@ -88,6 +85,9 @@ Http::BuildResponse(Request& request) {
 	// Checking Location Client Max Body Size.
 	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
 		return (new Response(403, request.server));
+	// Handle Cgi Requests
+	else if (request.isCGI())
+		return (CgiHandler::executeCgi(request));
 	// Handle redirect
 	else if (best_location->redirect != "false") {
 		is_redirect = true;
@@ -126,6 +126,7 @@ Http::handleMethod(Request& request) {
 	else
 		type = "text/html";
 
+	// TODO: When its an error, call the Response error constructor
 	return (new Response(status_code, content, type));
 }
 
@@ -210,7 +211,7 @@ Http::getMethod(const std::string& file_path, const std::vector<std::string>& me
 		return (200);
 	}
 	// The request is a directory, special device or a symbolic link.
-	else if (flag == -1) return (400);
+	else if (flag == -1) return (404); // might be 400, but could also be 404
 	// The file doesn't exist.
 	return 404;
 }

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:32:05 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 10:15:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,4 +275,22 @@ const std::string getCurrentDate(void) {
 	http_date << "GMT";
 
 	return http_date.str();
+}
+
+void free_env(char** env) {
+	
+	for (int i = 0; env[i] != NULL; i++)
+		delete[] env[i];
+	delete[] env;
+}
+
+bool isExecutable(const std::string& filepath) {
+	struct stat fileInfo;
+
+	if (stat(filepath.c_str(), &fileInfo) != 0) {
+		MLOG("Error on isExecutable().");
+		return false;
+	}
+
+	return ((fileInfo.st_mode & S_IXUSR) ? true : false);
 }

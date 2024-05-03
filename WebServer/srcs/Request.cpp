@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 15:07:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 09:35:19 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ Request::ParseURL(void) {
 	std::string extension, url = this->uri;
 	size_t pos;
 
+	this->cgi = false;
+
 	pos = url.find(".");
 	if (pos == std::string::npos) {
 		this->path_info = "/";
@@ -67,8 +69,7 @@ Request::ParseURL(void) {
 		MLOG("PATH INFO: " + this->path_info + "\n\n");
 	}
 	
-	if (extension != ".cgi") this->cgi = false;
-	else this->cgi = true;
+	if (extension == ".cgi") this->cgi = true;
 
 	MLOG("CGI: " << this->cgi << "\n\n");
 	

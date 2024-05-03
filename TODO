@@ -5,19 +5,11 @@
 
 * Handle chunked requests
 
-* Check if we read all info in the socket before handling the connection
-
 * listen with multiple ports
 
 * server_names
 
-* finish CGI
-
-* Build response class
-
-* Handle EPOLLOUT events
-
-* Change the way we handle EPOLLIN events to only read data
+* Make it possible to upload files
 
 ===========
  Checks/tests:
@@ -28,11 +20,5 @@ especially in the HTTP class.
 
 * Check if there really is a need to have the whole program inside a try catch
 
-===========
- Optional:
-===========
-
-* Create request class
-
-* Make Http class static
+* Tests with bigger/more complex CGI scrips
 

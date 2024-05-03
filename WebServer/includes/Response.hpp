@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 11:57:39 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/03 09:09:49 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ class Response {
 		std::map<std::string, std::string> headerMap;
 		std::string body;
 		std::string contentType;
+		std::string cgi_response;
 		int body_length;
 		
 		Server *server;
@@ -39,6 +40,7 @@ class Response {
 	
 	public:
 		Response(void);
+		Response(const std::string& content);
 		Response(int statusCode, const std::string& content);
 		Response(int statusCode, const std::string& content, const std::string& type);
 		Response(int errorCode, Server* server);
