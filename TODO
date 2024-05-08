@@ -3,13 +3,15 @@
  Functionalities:
 ===========
 
-* Handle chunked requests
+* Handle chunked requests (Check if it already works)
 
 * listen with multiple ports
 
 * server_names
 
 * Make it possible to upload files
+
+* Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
 
 ===========
  Checks/tests:

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:35:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/30 10:45:30 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 12:37:47 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Cluster {
 
 	public:
 		static void startServers(std::vector<Server>&);
-		static void deleteServers(void);
+		static void deleteServers(int epoll_fd);
 
 };
 

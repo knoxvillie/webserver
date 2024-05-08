@@ -6,30 +6,67 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/03 09:35:19 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:01:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-Request::Request(Server* arg) : server(arg) {}
+Request::Request(Server* arg) : bytes_read(0), finished(false), keep_alive(true), chunked(false), server(arg) {}
 
 // TODO
-Request::Request(const std::string& request) : full(request) {
+Request::Request(const std::string& request) : full(request), bytes_read(0), finished(false), keep_alive(true), chunked(false) {
 	// this is wrong, the request should be initialized with the default constructor and then
 	// data should be added and parsed when its done receiving data
-	setHeaderAndBody();
+	setHeader();
 	fillHeaderMap();
 	ParseURL();
+	setBody();
 }
 
 Request::~Request(void) {}
 
 void
-Request::receiveData(const std::string& buf) {
-	full.append(buf); // append the new data to the request
-	// No need to check if the request is finished, when its finished the EPOLLIN event
-	// will stop, telling us that there is no more data to receive
+Request::receiveData(const std::string& buf, int bytes) {
+	this->full.append(buf); // append the new data to the request
+	MLOG("Full: " << this->full << "\n");
+
+	if (buf.find("\r\n\r\n") != std::string::npos) { // End of the header
+		this->setHeader();
+		this->fillHeaderMap();
+	}
+
+	if (this->isChunked()) { // Handle chunked requests
+		this->receiveChunked(buf, bytes);
+		return;
+	}
+
+	if (bytes <= 0) { // this indicates that the client has close the connection gracefully
+		this->finished = true;
+		return;
+	}
+
+	if (this->header.empty()) return; // The full header hasn't been read yet
+
+	this->bytes_read += bytes; // The content length is only for the body
+	if ((content_length != -1) && (this->bytes_read >= this->content_length))
+		this->finished = true;
+}
+
+void
+Request::receiveChunked(const std::string& buf, int bytes) {
+	MLOG("CHUNKED REQUEST\n");
+	
+	if (buf.find("0\r\n") != std::string::npos)
+		this->finished = true;
+
+	for (int i = 0;	i < bytes; i++) {
+		int chunk_size = std::atoi(buf.substr(i, buf.find("\r\n", i)).c_str()); // the chunk always starts with the size of the chunk
+		std::string treated_data = buf.substr(buf.find("\r\n", i) + 2, std::string::npos); // the data starts after the \r\n
+		
+		this->body.append(treated_data);
+		i += chunk_size + 3; // +3 because of the <chunk_size>\r\n
+	}
 }
 
 void
@@ -102,12 +139,13 @@ Request::decodeURI(void) {
 
 //	Setters	//
 void
-Request::setHeaderAndBody(void) {
+Request::setHeader(void) {
 	std::string& full_request = this->full;
 
-	this->request_line = full_request.substr(0, full_request.find("\r\n"));
-	this->header = full_request.substr((this->request_line).length() + 2, full_request.find("\r\n\r\n"));
-	this->body = full_request.substr(full_request.find("\r\n\r\n") + 1, std::string::npos);
+	if (!full_request.empty())
+		this->request_line = full_request.substr(0, full_request.find("\r\n"));
+	if (!this->request_line.empty())
+		this->header = full_request.substr((this->request_line).length() + 2, full_request.find("\r\n\r\n"));
 }
 
 void
@@ -129,6 +167,9 @@ Request::fillHeaderMap(void) {
 			this->headerMap[key] = value;
 		}
 	}
+	this->setEnconding();
+	this->setConnection();
+	this->setContentLength();
 }
 
 // Getters
@@ -173,9 +214,29 @@ Request::getFilePath(void) const {
 	return this->file_path;
 }
 
+int
+Request::getContentLength(void) const {
+	return this->content_length;
+}
+
 bool
 Request::isCGI(void) const {
 	return this->cgi;
+}
+
+bool
+Request::isToClose(void) const {
+	return (!this->keep_alive); // True to close, false to keep alive
+}
+
+bool
+Request::isChunked(void) const {
+	return this->chunked;
+}
+
+bool
+Request::isFinished(void) const {
+	return this->finished;
 }
 
 const std::string&
@@ -189,6 +250,13 @@ Request::getPathInfo(void) const {
 }
 
 // Setters
+
+void
+Request::setBody(void) {
+	if (this->isChunked())
+		return;
+	this->body = full.substr(full.find("\r\n\r\n") + 4, std::string::npos);
+}
 
 void
 Request::setHttpVersion(const std::string& http_version) {
@@ -209,4 +277,31 @@ void
 Request::setURI(const std::string& uri) {
 	this->uri = uri;
 	ParseURL();
+}
+
+void
+Request::setContentLength(void) {
+	content_length = -1;
+	if (this->headerMap.find("Content-length") != this->headerMap.end())
+		content_length = std::atoi(this->headerMap["Content-length"].c_str());
+}
+
+void
+Request::setEnconding(void) {
+	// Transfer-Encoding tells us if the request is chunked or not
+	if (this->headerMap.find("Transfer-Encoding") == this->headerMap.end()) {
+		this->chunked = false;
+		return;
+	}
+	
+	this->chunked = false;
+	if (this->headerMap["Transfer-Encoding"].compare("chunked\r\n") == 0)
+		this->chunked = true;
+}
+
+void
+Request::setConnection(void) {
+	if (this->headerMap.find("Connection") != this->headerMap.end())
+		if (this->headerMap["Connection"].compare("close\r\n") == 0)
+			this->keep_alive = false;
 }

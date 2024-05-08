@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/03 10:25:08 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:06:27 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,11 +33,16 @@ void
 Http::receiveFromClient(int socket, Request& request) {
 	GPS;
 	char buf[BUFFER_SIZE] = {0};
+	int bytes;
 
-	if (recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT) < 0)
-		throw std::runtime_error("Error: Read from client socket");
-	request.receiveData(std::string(buf));
-	MLOG(buf);
+	while (!request.isFinished()) {
+		bytes = recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT);
+		MLOG("bytes: " << bytes << "\n");
+		if (bytes < 0)
+			break;
+		request.receiveData(std::string(buf), bytes);
+	}
+	Http::requestParser(request);
 }
 
 // TODO: change the exception to send an error page
@@ -46,6 +51,9 @@ Http::requestParser(Request& request) {
 	GPS;
 	std::string token;
 	std::stringstream ss(request.getFull());
+
+	if (request.getFull().empty())
+		return;
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
@@ -68,10 +76,8 @@ Response*
 Http::BuildResponse(Request& request) {
 	bool is_redirect = false;
 	t_location* best_location;
-
-	Http::requestParser(request);
-	request.setHeaderAndBody();
-	request.fillHeaderMap();
+	
+	request.setBody();
 
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
@@ -89,7 +95,7 @@ Http::BuildResponse(Request& request) {
 	else if (request.isCGI())
 		return (CgiHandler::executeCgi(request));
 	// Handle redirect
-	else if (best_location->redirect != "false") {
+	else if (best_location->redirect != "false") { // FIXME: redirect is not working now
 		is_redirect = true;
 		if (best_location->redirect_is_extern)
 			return (new Response(302, best_location->redirect, "text/html"));
@@ -126,8 +132,14 @@ Http::handleMethod(Request& request) {
 	else
 		type = "text/html";
 
-	// TODO: When its an error, call the Response error constructor
+	// TODO: Check if when its an error, it always calls the Response error constructor
 	return (new Response(status_code, content, type));
+	/* if (!content.empty()) {
+		if (!type.empty())
+			return (new Response(status_code, content, type));
+		return (new Response(status_code, content));
+	}
+	return (new Response(status_code, request.server)); */
 }
 
 Response*
@@ -213,7 +225,7 @@ Http::getMethod(const std::string& file_path, const std::vector<std::string>& me
 	// The request is a directory, special device or a symbolic link.
 	else if (flag == -1) return (404); // might be 400, but could also be 404
 	// The file doesn't exist.
-	return 404;
+	return (404);
 }
 
 int

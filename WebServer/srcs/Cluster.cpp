@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 15:19:57 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 14:57:01 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,25 +76,36 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
 				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
-				event_buffer[i].events = EPOLLIN | EPOLLOUT | EPOLLET; // EPOLLET = Edge Triggered mode
+				
 				event_buffer[i].data.fd = client_sock;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
-					throw std::runtime_error("Error: epoll_ctl failed");
+				event_buffer[i].events = EPOLLIN | EPOLLOUT | EPOLLET; // EPOLLET = Edge Triggered mode 
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0) // Added EPOLLIN separately so it stays in level triggered mode
+					throw std::runtime_error("Error: epoll_ctl failed");	
 				new_connection = false;
 			}
 			else {
 				
 				if (event_buffer[i].events & EPOLLERR) {
 					MLOG("EPOLLERR is present\n");
+					if (requests.find(client_sock) != requests.end()) { // There is an allocated request for this socket
+						delete requests[client_sock];
+						requests.erase(client_sock);
+					}
 					Cluster::closeConnection(epoll_fd, client_sock);
-					// TODO: DELETE THE REQUEST IF IT EXISTS
+					// TODO: Check if the requests is deleted correcly
+					// TODO: Check if we should send some error response to the client
 					continue;
 				}
 				
 				if (event_buffer[i].events & EPOLLHUP) {
 				    MLOG("EPOLLHUP is present\n");
+					if (requests.find(client_sock) != requests.end()) { // There is an allocated request for this socket
+						delete requests[client_sock];
+						requests.erase(client_sock);
+					}
 					Cluster::closeConnection(epoll_fd, client_sock);
-					// TODO: DELETE THE REQUEST IF IT EXISTS
+					// TODO: Check if the requests is deleted correcly
+					// TODO: Check if we should send some error response to the client
 					continue;
 				}
 				
@@ -102,31 +113,26 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				    MLOG("EPOLLIN is present\n");
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
-						requests[client_sock] = cl_request;
+						requests[client_sock] = cl_request;							
 					}
 					Http::receiveFromClient(client_sock, *requests[client_sock]);
-					/*
-					try {
-						Http request(client_sock, Cluster::sockToServer[client_sock]);
-					} catch (std::exception& e) {
-						std::cerr << e.what() << std::endl;
-						Cluster::closeConnection(epoll_fd, client_sock);
-					} */
 				}
 				
 				if (event_buffer[i].events & EPOLLOUT) {
 				    MLOG("EPOLLOUT is present\n");
 					// EPOLLOUT event means that the socket is ready for writing
-				   	if (requests.find(client_sock) == requests.end()) // No previous request for this client_sock
-						continue;
-						
+					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
+
+					MLOG("IN\n");
 					Response* response = Http::BuildResponse(*requests[client_sock]);
 					response->sendToClient(client_sock);
+					if (requests[client_sock]->isToClose()) {
+						Cluster::closeConnection(epoll_fd, client_sock);
+						new_connection = true; // TODO: Check if this is right
+					}
 					delete response;
 					delete requests[client_sock];
 					requests.erase(client_sock);
-					Cluster::closeConnection(epoll_fd, client_sock);
-					new_connection = true; // TODO: Check if this is right
 				}
 				
 				// TODO: Check if this is right
@@ -134,9 +140,9 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			}
 		}
 	}
-	close(epoll_fd);
 	Cluster::deleteRequests(requests);
-	Cluster::deleteServers();
+	Cluster::deleteServers(epoll_fd);
+	close(epoll_fd);
 }
 
 void
@@ -155,10 +161,11 @@ Cluster::closeConnection(int epoll_fd, int client_sock) {
 }
 
 void
-Cluster::deleteServers(void) {
+Cluster::deleteServers(int epoll_fd) {
 	GPS;
 
 	for (size_t i = 0; i < Cluster::serverSockets.size(); i++) {
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, Cluster::serverSockets[i], NULL);
 		if (close(Cluster::serverSockets[i]) < 0) {
 			MERROR("couldn't close socket.");
 		}

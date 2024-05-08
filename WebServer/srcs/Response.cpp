@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/03 09:18:07 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 10:55:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ std::string
 Response::to_string(void) const {
 	std::stringstream buf;
 
-	if (!this->cgi_response.empty()) { // There is a Cgi reponse so the rest will be empty
+	if (!(this->cgi_response.empty())) { // There is a Cgi reponse so the rest will be empty
 		return this->cgi_response;
 	}
 

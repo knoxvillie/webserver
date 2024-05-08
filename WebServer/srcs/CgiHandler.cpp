@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/03 10:19:54 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 10:59:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ CgiHandler::executeCgi(Request& request) {
 		
 		response = readFromCgi(pipe_to_parent[0]);
 		MLOG("\nCgi output: \n" + response);
-		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent	}
+		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
 	}
 	return (new Response(response));
 }

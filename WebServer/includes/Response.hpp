@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/03 09:09:49 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 10:59:50 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,11 +28,8 @@ class Response {
 		std::string body;
 		std::string contentType;
 		std::string cgi_response;
-		int body_length;
 		
 		Server *server;
-
-		bool isError;
 
 		void buildHeader();
 		void buildHeaderMap();

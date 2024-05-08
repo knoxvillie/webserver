@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/02 15:10:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 14:47:12 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,15 +28,14 @@ class Request {
 		
 		std::map<std::string, std::string> headerMap;
 
-		bool isFinished; // whether the request has finished and can be processed or if it still needs to receive more data
 
 		// Info from the header
 		std::string http_version;
 		std::string method; // GET POST DELETE
 		std::string uri;
 		std::string file_path;
-		std::string enconding;
 		int content_length;
+		int bytes_read;
 
 		// CGI
 		bool cgi;
@@ -45,18 +44,22 @@ class Request {
 	
 		void requestParser(void);
 		void ParseURL(void);
+		
+		bool finished; // whether the request has finished and can be processed or if it still needs to receive more data
+		bool keep_alive;
+		bool chunked;
 
 	public:
 		Request(Server* server);
 		Request(const std::string& request);
 		~Request();
 
-		bool keep_alive;
 		t_location *location;
 		Server *server;
 
 		//void decodeURI(void);
-		void receiveData(const std::string& buf);
+		void receiveData(const std::string& buf, int bytes);
+		void receiveChunked(const std::string& buf, int bytes);
 
 	//	Getters	//
 		const std::string& getFull(void) const;
@@ -67,17 +70,25 @@ class Request {
 		const std::string& getMethod(void) const;
 		const std::string& getURI(void) const;
 		const std::string& getFilePath(void) const;
+		int getContentLength(void) const;
 		bool isCGI(void) const;
+		bool isChunked(void) const;
+		bool isFinished(void) const;
+		bool isToClose(void) const;
 		const std::string& getQueryString(void) const;
 		const std::string& getPathInfo(void) const;
 		
 	//	Setters	//
-		void setHeaderAndBody(void);
+		void setHeader(void);
 		void fillHeaderMap(void);
+		void setBody(void);
 		void setHttpVersion(const std::string& http_version);
 		void setMethod(const std::string& method);
 		void setFilePath(const std::string& file_path);
 		void setURI(const std::string& uri);
+		void setContentLength(void);
+		void setEnconding(void);
+		void setConnection(void);
 };
 
 #endif //REQUEST_HPP
