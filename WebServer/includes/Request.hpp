@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 14:47:12 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:23:39 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,10 @@ class Request {
 		bool keep_alive;
 		bool chunked;
 
+		void setContentLength(void);
+		void setEnconding(void);
+		void setConnection(void);
+
 	public:
 		Request(Server* server);
 		Request(const std::string& request);
@@ -86,9 +90,7 @@ class Request {
 		void setMethod(const std::string& method);
 		void setFilePath(const std::string& file_path);
 		void setURI(const std::string& uri);
-		void setContentLength(void);
-		void setEnconding(void);
-		void setConnection(void);
+		void setToClose(void);
 };
 
 #endif //REQUEST_HPP

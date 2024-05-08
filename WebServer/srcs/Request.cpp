@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 15:01:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:24:12 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,7 +255,8 @@ void
 Request::setBody(void) {
 	if (this->isChunked())
 		return;
-	this->body = full.substr(full.find("\r\n\r\n") + 4, std::string::npos);
+	if (!full.empty())
+		this->body = full.substr(full.find("\r\n\r\n") + 4, std::string::npos);
 }
 
 void
@@ -304,4 +305,9 @@ Request::setConnection(void) {
 	if (this->headerMap.find("Connection") != this->headerMap.end())
 		if (this->headerMap["Connection"].compare("close\r\n") == 0)
 			this->keep_alive = false;
+}
+
+void
+Request::setToClose(void) {
+	this->keep_alive = false;
 }

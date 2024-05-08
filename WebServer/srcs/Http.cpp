@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/08 15:06:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:25:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ Http::requestParser(Request& request) {
 
 Response*
 Http::BuildResponse(Request& request) {
+	GPS;
 	bool is_redirect = false;
 	t_location* best_location;
 	
@@ -95,8 +96,9 @@ Http::BuildResponse(Request& request) {
 	else if (request.isCGI())
 		return (CgiHandler::executeCgi(request));
 	// Handle redirect
-	else if (best_location->redirect != "false") { // FIXME: redirect is not working now
+	else if (best_location->redirect != "false") {
 		is_redirect = true;
+		request.setToClose(); // TODO: check if this is needed only in external redirects
 		if (best_location->redirect_is_extern)
 			return (new Response(302, best_location->redirect, "text/html"));
 		else {

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/08 10:55:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/08 15:24:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ Response::buildHeaderMap() {
 	headerMap["Cache-control"] = "no-cache, private";
 	headerMap["Server"] = "";
 	if (this->status_code == 302) {
-		headerMap["Location"] = this->body;
+		headerMap["Location"] = std::string(this->body);
 		this->body.clear();
 	}
 }
@@ -119,8 +119,10 @@ Response::findErrorPage(void) {
 void
 Response::sendToClient(int client_sock) {
 	std::string response = this->to_string();
-	
-	if (send(client_sock, response.c_str(), response.length(), MSG_DONTWAIT) < 0) {
+	MLOG("response: " << response << "\n");
+	GPS;
+
+	if (send(client_sock, response.c_str(), response.length(), 0) < 0) {
 		throw std::runtime_error("Error: send function failed");
 	}
 }
