@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/08 15:24:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 15:30:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,9 +118,9 @@ Response::findErrorPage(void) {
 
 void
 Response::sendToClient(int client_sock) {
+	GPS;
 	std::string response = this->to_string();
 	MLOG("response: " << response << "\n");
-	GPS;
 
 	if (send(client_sock, response.c_str(), response.length(), 0) < 0) {
 		throw std::runtime_error("Error: send function failed");

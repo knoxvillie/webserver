@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/08 15:25:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 15:06:57 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ NOTE:
  returning EPOLLIN in the socket as long as there is more info to read. We just need
  to make sure all the info is received before we handle the connection
 */
+
 void
 Http::receiveFromClient(int socket, Request& request) {
 	GPS;
@@ -98,7 +99,7 @@ Http::BuildResponse(Request& request) {
 	// Handle redirect
 	else if (best_location->redirect != "false") {
 		is_redirect = true;
-		request.setToClose(); // TODO: check if this is needed only in external redirects
+		request.setToClose();
 		if (best_location->redirect_is_extern)
 			return (new Response(302, best_location->redirect, "text/html"));
 		else {
@@ -127,6 +128,8 @@ Http::handleMethod(Request& request) {
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST")
 		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+	else if (request.getMethod() == "DELETE")
+		status_code = Http::deleteMethod(request.getFilePath(), location->allow_methods);
 
 	// TODO: make a type file getter
 	if ((request.getFilePath()).find(".css") != std::string::npos)
@@ -136,12 +139,6 @@ Http::handleMethod(Request& request) {
 
 	// TODO: Check if when its an error, it always calls the Response error constructor
 	return (new Response(status_code, content, type));
-	/* if (!content.empty()) {
-		if (!type.empty())
-			return (new Response(status_code, content, type));
-		return (new Response(status_code, content));
-	}
-	return (new Response(status_code, request.server)); */
 }
 
 Response*
@@ -160,7 +157,7 @@ Http::doDirectoryResponse(Request& request, bool is_redirect) {
 	}
 	// If auto_index off and the index doesn't exist -> forbidden request
 	else if (!location->auto_index)
-		return (new Response(403, request.server));
+		throw Http::HttpErrorException(403);
 	// then listing
 	else {
 		if (is_redirect)
@@ -210,7 +207,7 @@ Http::directoryListing(Request& request) {
 int
 Http::getMethod(const std::string& file_path, const std::vector<std::string>& methods, std::string& content) {
 	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
-		return (405); // Method not allowed on location
+		throw Http::HttpErrorException(405);
 
 	std::stringstream buffer;
 	int flag = Utils::isRegularFile(file_path);
@@ -218,61 +215,71 @@ Http::getMethod(const std::string& file_path, const std::vector<std::string>& me
 	if (flag == 1) {
 		std::ifstream file(file_path.c_str());
 		if (!file.is_open())
-			return (500);
+			throw Http::HttpErrorException(500);
 		buffer << file.rdbuf();
 		content = buffer.str();
 		file.close();
 		return (200);
 	}
-	// The request is a directory, special device or a symbolic link.
-	else if (flag == -1) return (404); // might be 400, but could also be 404
 	// The file doesn't exist.
-	return (404);
+	else if (flag == -1) throw Http::HttpErrorException(404);
+	// The request is a directory, special device or a symbolic link.
+	else throw Http::HttpErrorException(403);
+	
+	return (400);
 }
 
 int
 Http::postMethod(const std::string& file_path, const std::vector<std::string>& methods, const std::string& body) {
-	std::ofstream out_file(file_path.c_str(), std::ofstream::app);
 
 	// Status code for method not allowed
 	if (std::find(methods.begin(), methods.end(), "POST") == methods.end())
-		return (405);
+		throw Http::HttpErrorException(405);
 
 	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
+	int flag = Utils::isRegularFile(file_path);
+	if (flag == 0)
+		throw Http::HttpErrorException(400);
 
+	int statusCode = flag == -1 ? 201 : 200;
+	
+	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Open file in append mode, create one if it doesn't exist
 
 	if (!out_file) {
 		// No such file or directory
 		if (errno == ENOENT)
-			return (404);
-			// Permission denied
+			throw Http::HttpErrorException(404); // This should never get here because it will create a file if it doesn't exit already
+		// Permission denied
 		else if (errno == EACCES)
-			return (403);
-			// Internal Server Error
+			throw Http::HttpErrorException(403);
+		// Internal Server Error
 		else
-			return (500);
+			throw Http::HttpErrorException(500);
 	}
-	std::string output = body.substr(body.find("\r\n\r\n") + 4);
+	const std::string output = body;
 
 	MLOG("Output: " + output);
-	out_file << "\n**************\n\n";
-	out_file << output;
-	out_file << std::endl;
+	out_file.write(output.c_str(), output.size());
 	out_file.close();
 
 	// Generate the HTTP 201 OK response
-	return (201);
+	return (statusCode);
 }
 
 int
-Http::deleteMethod(const t_location *location) {
+Http::deleteMethod(const std::string& file_path, const std::vector<std::string>& methods) {
 	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
 
-	if (std::find(location->allow_methods.begin(), location->allow_methods.end(), "DELETE") == location->allow_methods.end())
-		return 405; // Status code for method not allowed
+	if (std::find(methods.begin(), methods.end(), "DELETE") == methods.end())
+		throw Http::HttpErrorException(405);
 
-	(void)location;
-	return 200;
+	int flag = Utils::isRegularFile(file_path);
+	if (flag == 0)
+		throw Http::HttpErrorException(400);
+	
+	//std::filesystem::remove(file_path);
+	
+	return (400);
 }
 
 // Static
@@ -323,3 +330,17 @@ Http::decodeURI() {
 	}
 	this->request.url = newUri;
 } */
+
+Http::HttpErrorException::HttpErrorException() : http_error(400), message("Bad Request") {}
+
+Http::HttpErrorException::HttpErrorException(int error) : http_error(error), msg(Response::getStatusMessage(error)), message(msg.c_str()) {}
+
+Http::HttpErrorException::~HttpErrorException() throw() {}
+
+const char* Http::HttpErrorException::what() const throw() {
+	return message;
+}
+
+int Http::HttpErrorException::getErrorCode() const {
+        return this->http_error;
+}

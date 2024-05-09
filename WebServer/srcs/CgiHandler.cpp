@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 10:59:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 15:36:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,9 @@ CgiHandler::buildEnv(Request& request)
 	env["QUERY_STRING"] = request.getQueryString(); // call getQueryString before;
 	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
-	env["SERVER_PROTOCOL"] = ""; 
-	env["CONTENT_TYPE"] = ""; // TODO
-	env["CONTENT_LENGTH"] = "";  // TODO //in case of GET requests, no need to handle, get from POST requests
+	env["SERVER_PROTOCOL"] = "";
+	env["CONTENT_TYPE"] = ""; // TODO: this
+	env["CONTENT_LENGTH"] = "";  // TODO: //in case of GET requests, no need to handle, get from POST requests
 	env["PATH_INFO"] = request.getPathInfo();
 	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
@@ -99,7 +99,7 @@ CgiHandler::executeCgi(Request& request) {
 		char* argv[] = {filename, filename, NULL};
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
-		char** envp = CgiHandler::buildEnv(request);	
+		char** envp = CgiHandler::buildEnv(request);
 		
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(filename, argv, envp) != 0) {
@@ -113,11 +113,14 @@ CgiHandler::executeCgi(Request& request) {
 		close(pipe_to_parent[1]);
 		
 		CgiHandler::writeToCgi(pipe_to_child[1], request.getBody());
+		close(pipe_to_child[1]); // This sends EOF to child (?)
 		
 		response = readFromCgi(pipe_to_parent[0]);
 		MLOG("\nCgi output: \n" + response);
-		// TODO: Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
+		// TODO: Test if we only send the response from the CGI when EOF is found
+		close(pipe_to_parent[0]);
 	}
+	//request.setToClose();
 	return (new Response(response));
 }
 
@@ -132,8 +135,15 @@ CgiHandler::writeToCgi(int fd, const std::string& content) {
 std::string
 CgiHandler::readFromCgi(int& fd) {
 	char buf[BUFFER_SIZE] = {0};
+	std::string result;
+	int bytes = 0;
 
-	if (read(fd, buf, BUFFER_SIZE) < 0)
-		throw std::runtime_error("Error: failed to read from cgi pipe.");
-	return std::string(buf);
+	while ((bytes = read(fd, buf, BUFFER_SIZE)) != 0) {
+		MLOG("LOOP\n");
+		if (bytes < 0)
+			throw std::runtime_error("Error: failed to read from cgi pipe.");
+		
+		result.append(std::string(buf));
+	}
+	return result;
 }

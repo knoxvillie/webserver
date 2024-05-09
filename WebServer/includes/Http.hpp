@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 15:51:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 14:52:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,26 @@ class Http {
 		static Response* handleMethod(Request& request);
 		static int getMethod(const std::string& file_path, const std::vector<std::string>&, std::string& content);
 		static int postMethod(const std::string& file_path, const std::vector<std::string>&, const std::string& body);
-		static int deleteMethod(const t_location *location);
+		static int deleteMethod(const std::string& file_path, const std::vector<std::string>&);
 
 		//static void decodeURI(void);
+
+		class HttpErrorException : public std::exception {
+		
+			private:
+				int http_error;
+				const std::string msg;
+				const char* message;
+			
+			public:
+				virtual const char* what() const throw();
+				int getErrorCode() const;
+				
+				HttpErrorException();
+				HttpErrorException(int code);
+				~HttpErrorException() throw();
+		};
+
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 15:23:39 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 14:54:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # define REQUEST_HPP
 
 #include "webserv.hpp"
+#include "utils.hpp"
 
 class Request {
 	

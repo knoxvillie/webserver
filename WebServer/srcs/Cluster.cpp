@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 15:21:46 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 14:07:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				    MLOG("EPOLLIN is present\n");
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
-						requests[client_sock] = cl_request;							
+						requests[client_sock] = cl_request;
 					}
 					Http::receiveFromClient(client_sock, *requests[client_sock]);
 				}
@@ -124,13 +124,20 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
 
 					MLOG("IN\n");
-					Response* response = Http::BuildResponse(*requests[client_sock]);
+					Response* response;
+					try { // This try catch is just to help in the methods and what not where returning is not as pratical
+					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
+						response = Http::BuildResponse(*requests[client_sock]);
+					} catch (const Http::HttpErrorException& e) {
+						e.what();
+						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);	
+					}
 					response->sendToClient(client_sock);
+					delete response;
 					if (requests[client_sock]->isToClose()) {
 						Cluster::closeConnection(epoll_fd, client_sock);
 						new_connection = true; // TODO: Check if this is right
 					}
-					delete response;
 					delete requests[client_sock];
 					requests.erase(client_sock);
 				}

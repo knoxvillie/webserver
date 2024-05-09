@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 15:24:12 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 14:54:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,18 @@ Request::Request(const std::string& request) : full(request), bytes_read(0), fin
 
 Request::~Request(void) {}
 
+// TODO: test
 void
 Request::receiveData(const std::string& buf, int bytes) {
 	this->full.append(buf); // append the new data to the request
 	MLOG("Full: " << this->full << "\n");
 
+	int header_bytes = 0;
+
 	if (buf.find("\r\n\r\n") != std::string::npos) { // End of the header
 		this->setHeader();
 		this->fillHeaderMap();
+		header_bytes = (buf.substr(0, buf.find("\r\n\r\n") + 5)).size(); // 5 because last is excluded
 	}
 
 	if (this->isChunked()) { // Handle chunked requests
@@ -48,11 +52,13 @@ Request::receiveData(const std::string& buf, int bytes) {
 
 	if (this->header.empty()) return; // The full header hasn't been read yet
 
-	this->bytes_read += bytes; // The content length is only for the body
+	this->bytes_read += (bytes - header_bytes); // The content length is only for the body
+	// FIXME: if the buffer has /r/n/r/n and some of the body, the bytes of the rest of the header will also be counted
 	if ((content_length != -1) && (this->bytes_read >= this->content_length))
 		this->finished = true;
 }
 
+// TODO: test
 void
 Request::receiveChunked(const std::string& buf, int bytes) {
 	MLOG("CHUNKED REQUEST\n");
@@ -62,10 +68,10 @@ Request::receiveChunked(const std::string& buf, int bytes) {
 
 	for (int i = 0;	i < bytes; i++) {
 		int chunk_size = std::atoi(buf.substr(i, buf.find("\r\n", i)).c_str()); // the chunk always starts with the size of the chunk
-		std::string treated_data = buf.substr(buf.find("\r\n", i) + 2, std::string::npos); // the data starts after the \r\n
-		
+		std::string treated_data = buf.substr(buf.find("\r\n", i) + 2, chunk_size); // the data starts after the \r\n
+
 		this->body.append(treated_data);
-		i += chunk_size + 3; // +3 because of the <chunk_size>\r\n
+		i += chunk_size + Utils::intToString(chunk_size).size() + 2; // intToString(chunk_size).size() + 2 because of the <chunk_size>\r\n
 	}
 }
 
