@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Http.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/14 11:43:20 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/05/14 11:47:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,6 +206,8 @@ Http::directoryListing(Request& request) {
 
 int
 Http::getMethod(const std::string& file_path, const std::vector<std::string>& methods, std::string& content) {
+	MLOG("~~~~~~~~\n   GET\n~~~~~~~~");
+	
 	if (std::find(methods.begin(), methods.end(), "GET") == methods.end())
 		throw Http::HttpErrorException(405);
 
@@ -231,12 +233,12 @@ Http::getMethod(const std::string& file_path, const std::vector<std::string>& me
 
 int
 Http::postMethod(const std::string& file_path, const std::vector<std::string>& methods, const std::string& body) {
-
+	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
+	
 	// Status code for method not allowed
 	if (std::find(methods.begin(), methods.end(), "POST") == methods.end())
 		throw Http::HttpErrorException(405);
 
-	MLOG("~~~~~~~~\n   POST\n~~~~~~~~");
 	int flag = Utils::isRegularFile(file_path);
 	if (flag == 0)
 		throw Http::HttpErrorException(400);
