@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/14 14:37:02 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 15:29:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,6 @@ Http::BuildResponse(Request& request) {
 	t_location* best_location;
 	
 	request.setBody();
-
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
 	request.location = best_location;
@@ -127,9 +126,9 @@ Http::handleMethod(Request& request) {
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST") {
-		if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+		/* if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
-		else
+		else */
 			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 	}
 	else if (request.getMethod() == "DELETE")

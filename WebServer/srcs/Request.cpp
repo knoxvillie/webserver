@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/14 14:32:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 15:31:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,14 +34,17 @@ Request::receiveData(const std::string& buf, int bytes) {
 	GPS;
 	int header_bytes = 0;
 
-	if (buf.find("\r\n\r\n") != std::string::npos) { // End of the header
+	if ((buf.find("\r\n\r\n") != std::string::npos) && this->header.empty()) { // End of the header. only enter when header is empty
 		this->setHeader();
 		this->fillHeaderMap();
 		header_bytes = (buf.substr(0, buf.find("\r\n\r\n") + 5)).size(); // 5 because last is excluded
 	}
 
 	if (this->isChunked()) { // Handle chunked requests
-		this->receiveChunked(buf, bytes);
+		if (buf.find("\r\n\r\n") != std::string::npos)
+			this->receiveChunked(buf.substr(buf.find("\r\n\r\n") + 4), bytes - header_bytes);
+		else
+			this->receiveChunked(buf, bytes);
 		return;
 	}
 
@@ -66,7 +69,7 @@ Request::receiveChunked(const std::string& buf, int bytes) {
 	if (buf.find("0\r\n") != std::string::npos)
 		this->finished = true;
 
-	for (int i = 0;	i < bytes; i++) {
+	for (int i = 0;	i < bytes; i++) { // FIXME: here
 		int chunk_size = std::atoi(buf.substr(i, buf.find("\r\n", i)).c_str()); // the chunk always starts with the size of the chunk
 		std::string treated_data = buf.substr(buf.find("\r\n", i) + 2, chunk_size); // the data starts after the \r\n
 
@@ -303,9 +306,11 @@ Request::setEnconding(void) {
 	}
 	
 	this->chunked = false;
-	MLOG(this->headerMap["Transfer-Encoding"]);
 	if (this->headerMap["Transfer-Encoding"].compare("chunked\r\n") == 0)
+	{
 		this->chunked = true;
+		MLOG(this->chunked);
+	}
 }
 
 void
