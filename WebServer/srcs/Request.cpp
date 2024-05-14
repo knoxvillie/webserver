@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 14:54:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 14:32:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ void
 Request::receiveData(const std::string& buf, int bytes) {
 	this->full.append(buf); // append the new data to the request
 	MLOG("Full: " << this->full << "\n");
-
+	GPS;
 	int header_bytes = 0;
 
 	if (buf.find("\r\n\r\n") != std::string::npos) { // End of the header
@@ -160,6 +160,7 @@ Request::fillHeaderMap(void) {
 	std::string line;
 	std::string header(this->header);
 
+	GPS;
 	while ((pos = header.find("\r\n")) != std::string::npos) {
 		line = header.substr(0, pos);
 		header.erase(0, pos + 2);
@@ -302,6 +303,7 @@ Request::setEnconding(void) {
 	}
 	
 	this->chunked = false;
+	MLOG(this->headerMap["Transfer-Encoding"]);
 	if (this->headerMap["Transfer-Encoding"].compare("chunked\r\n") == 0)
 		this->chunked = true;
 }

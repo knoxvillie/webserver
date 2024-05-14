@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/14 11:47:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 14:37:02 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,8 +126,12 @@ Http::handleMethod(Request& request) {
 	// The url is requesting a file
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
-	else if (request.getMethod() == "POST")
-		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+	else if (request.getMethod() == "POST") {
+		if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+			status_code = Http::handleUpload(request);	
+		else
+			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+	}
 	else if (request.getMethod() == "DELETE")
 		status_code = Http::deleteMethod(request.getFilePath(), location->allow_methods);
 
@@ -244,7 +248,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 		throw Http::HttpErrorException(400);
 
 	int statusCode = flag == -1 ? 201 : 200;
-	
+
 	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Open file in append mode, create one if it doesn't exist
 
 	if (!out_file) {
@@ -258,9 +262,10 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 		else
 			throw Http::HttpErrorException(500);
 	}
-	const std::string output = body;
 
+	const std::string output = body;
 	MLOG("Output: " + output);
+	
 	out_file.write(output.c_str(), output.size());
 	out_file.write("\n", 1);	
 	out_file.close();
@@ -285,7 +290,41 @@ Http::deleteMethod(const std::string& file_path, const std::vector<std::string>&
 	return (400);
 }
 
-// Static
+int
+Http::handleUpload(const Request& request) {
+	MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
+	(void)request;
+	return 0;
+/* 	std::string content_type, boundary, body, part, line;
+
+	content_type = (request.getHeaderMap().find("Content-type"))->second;
+	boundary = content_type.substr(content_type.find("bondary=") + 9);
+	boundary = boundary.substr(0, boundary.find(";"));
+
+	MLOG(".|. Boundary: " << boundary << " .|.\n");
+
+	body = request.getBody();
+	for (int i = 0; i < body.size();) {
+		// Get each part
+		int partStart = body.find(boundary, i) + boundary.size();	
+		int partEnd = body.find(boundary, partStart);
+		part = body.substr(partStart, partEnd - partStart); // Note: might need to add 1
+		i = partEnd;	// Place i at the end of the part found
+		
+		// Separate header and body of the current part
+		std::string partHeader = part.substr(0, part.find("\r\n\r\n"));
+		std::string partBody = part.substr(part.find("\r\n\r\n") + 4);
+		
+		// Get the filename from the header
+		int pos = partHeader.find("filename=") + 10; // 10 because 9 is for filename=, and 1 extra for the " after
+		std::string filename = (pos != std::string::npos) ? partHeader.substr(pos, partHeader.find("\"", pos)) : "default";
+		
+		// Create the file and send the body there
+		 
+	}*/
+}
+
+
 static std::string
 dirTypes(const unsigned char& type) {
 	switch (type) {

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/09 14:52:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 14:19:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Http {
 		static int getMethod(const std::string& file_path, const std::vector<std::string>&, std::string& content);
 		static int postMethod(const std::string& file_path, const std::vector<std::string>&, const std::string& body);
 		static int deleteMethod(const std::string& file_path, const std::vector<std::string>&);
+		static int handleUpload(const Request& request);
 
 		//static void decodeURI(void);
 
