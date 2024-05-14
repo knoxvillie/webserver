@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Http.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/09 15:06:57 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/14 11:43:20 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,6 +260,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 
 	MLOG("Output: " + output);
 	out_file.write(output.c_str(), output.size());
+	out_file.write("\n", 1);	
 	out_file.close();
 
 	// Generate the HTTP 201 OK response
