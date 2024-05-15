@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/14 15:31:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 12:34:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,12 +69,15 @@ Request::receiveChunked(const std::string& buf, int bytes) {
 	if (buf.find("0\r\n") != std::string::npos)
 		this->finished = true;
 
-	for (int i = 0;	i < bytes; i++) { // FIXME: here
+	for (int i = 0;	i < bytes;) {
 		int chunk_size = std::atoi(buf.substr(i, buf.find("\r\n", i)).c_str()); // the chunk always starts with the size of the chunk
-		std::string treated_data = buf.substr(buf.find("\r\n", i) + 2, chunk_size); // the data starts after the \r\n
+		std::string treated_data = buf.substr(buf.find("\r\n", i) +2, chunk_size -2); // the data starts after the \r\n, and ends before the final /r/n
+
+		MLOG("CSIZE: " << chunk_size << "\n");
+		MLOG("CDATA: " << treated_data << "\n");
 
 		this->body.append(treated_data);
-		i += chunk_size + Utils::intToString(chunk_size).size() + 2; // intToString(chunk_size).size() + 2 because of the <chunk_size>\r\n
+		i += Utils::intToString(chunk_size).size() + 2 + chunk_size; // intToString(chunk_size).size() + 2 because of the <chunk_size>\r\n
 	}
 }
 
@@ -306,7 +309,7 @@ Request::setEnconding(void) {
 	}
 	
 	this->chunked = false;
-	if (this->headerMap["Transfer-Encoding"].compare("chunked\r\n") == 0)
+	if (this->headerMap["Transfer-Encoding"].compare("chunked") == 0)
 	{
 		this->chunked = true;
 		MLOG(this->chunked);
@@ -316,7 +319,7 @@ Request::setEnconding(void) {
 void
 Request::setConnection(void) {
 	if (this->headerMap.find("Connection") != this->headerMap.end())
-		if (this->headerMap["Connection"].compare("close\r\n") == 0)
+		if (this->headerMap["Connection"].compare("close") == 0)
 			this->keep_alive = false;
 }
 

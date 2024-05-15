@@ -11,9 +11,9 @@
 
 * Make it possible to upload files
 
-* Only send the response from the CGI when EOF is found, and send EOF to the CGI after the request body is sent
+* Make it possible to set the cgi extension in the config file instead of just using ".cgi"
 
-* Maybe its best to create a custom exception to receive the status code to send error responses back to the client
+* Maybe our root needs to work like alias in nginx according to the subject
 
 ===========
  Checks/tests:

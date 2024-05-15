@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/14 15:29:48 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 12:37:30 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ Http::receiveFromClient(int socket, Request& request) {
 			break;
 		request.receiveData(std::string(buf), bytes);
 	}
-	Http::requestParser(request);
 }
 
 // TODO: change the exception to send an error page
@@ -79,6 +78,7 @@ Http::BuildResponse(Request& request) {
 	bool is_redirect = false;
 	t_location* best_location;
 	
+	Http::requestParser(request);
 	request.setBody();
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
