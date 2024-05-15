@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Http.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/15 12:37:30 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 15:09:13 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,6 @@ Http::receiveFromClient(int socket, Request& request) {
 	}
 }
 
-// TODO: change the exception to send an error page
 void
 Http::requestParser(Request& request) {
 	GPS;
@@ -57,19 +56,19 @@ Http::requestParser(Request& request) {
 
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
-			throw std::runtime_error("Error: Invalid HTTP request method");
+			throw Http::HttpErrorException(501);
 		request.setMethod(token);
-	} else throw std::runtime_error("Error: Can't read the method in the HTTP request line");
+	} else throw Http::HttpErrorException(400);
 
 	if (ss >> token) {
 		request.setURI(token); // Parses the URI and sets it
-	} else throw std::runtime_error("Error: Can't read URI in HTTP request line");
+	} else throw Http::HttpErrorException(400);
 
 	if (ss >> token) {
 		if (token != "HTTP/1.1")
-			throw std::runtime_error("Error: Invalid HTTP version");
+			throw Http::HttpErrorException(505);
 		request.setHttpVersion(token);
-	} else throw std::runtime_error("Error: Can't read the version in HTTP request line");
+	} else throw Http::HttpErrorException(400);
 }
 
 Response*
@@ -118,7 +117,8 @@ Http::BuildResponse(Request& request) {
 
 Response*
 Http::handleMethod(Request& request) {
-	int status_code = 404;
+	GPS;
+	int status_code = 501;
 	t_location* location = request.location;
 	std::string content, type;
 
@@ -275,7 +275,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 
 int
 Http::deleteMethod(const std::string& file_path, const std::vector<std::string>& methods) {
-	MLOG("~~~~~~~~\n   DEL\n~~~~~~~~");
+	MLOG("~~~~~~~~\n   DELETE\n~~~~~~~~");
 
 	if (std::find(methods.begin(), methods.end(), "DELETE") == methods.end())
 		throw Http::HttpErrorException(405);
@@ -284,9 +284,11 @@ Http::deleteMethod(const std::string& file_path, const std::vector<std::string>&
 	if (flag == 0)
 		throw Http::HttpErrorException(400);
 	
-	//std::filesystem::remove(file_path);
+	if (std::remove(file_path.c_str()) != 0) {
+        throw Http::HttpErrorException(500);
+    }
 	
-	return (400);
+	return (200);
 }
 
 int

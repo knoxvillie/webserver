@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/08 10:59:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 15:25:49 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ class Response {
 
 		void buildHeader();
 		void buildHeaderMap();
-		bool findErrorPage(void);
+		bool findErrorPage(int status_code);
 	
 	public:
 		Response(void);
@@ -44,7 +44,6 @@ class Response {
 
 		~Response(void);
 
-		void findErrorPage(int&);
 		//static void doResponse(const std::string&, int, int&);
 
 		std::string to_string(void) const;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 15:36:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 14:13:02 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,8 @@ CgiHandler::buildEnv(Request& request)
 	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
 	env["SERVER_PROTOCOL"] = "";
-	env["CONTENT_TYPE"] = ""; // TODO: this
-	env["CONTENT_LENGTH"] = "";  // TODO: //in case of GET requests, no need to handle, get from POST requests
+	env["CONTENT_TYPE"] = request.getContentType();
+	env["CONTENT_LENGTH"] = request.getContentLength();
 	env["PATH_INFO"] = request.getPathInfo();
 	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 

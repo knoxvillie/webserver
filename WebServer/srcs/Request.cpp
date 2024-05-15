@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/15 12:34:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 14:12:15 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -326,4 +326,11 @@ Request::setConnection(void) {
 void
 Request::setToClose(void) {
 	this->keep_alive = false;
+}
+
+std::string
+Request::getContentType(void) {
+	if (this->headerMap.find("Content-type") != this->headerMap.end())
+		return (this->headerMap["Content-type"]);
+	return "";
 }
