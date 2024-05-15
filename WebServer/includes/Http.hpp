@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Http.hpp                                    :+:      :+:    :+:   */
+/*   Http.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/26 11:50:54 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/01 16:24:59 by kfaustin         ###   ########.fr       */
+/*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
+/*   Updated: 2024/05/14 14:19:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,48 +15,53 @@
 #ifndef HTTP_HPP
 # define HTTP_HPP
 
-#define BUFFER_SIZE 4096
-
 #include "webserv.hpp"
 #include "Server.hpp"
+#include "CgiHandler.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 
 class Http {
 	
 	private:
 		Http(void);
-
-		int _client;
-		Server* _server;
-		std::string _decodedURI;
-
-		std::string http_version;
-		t_request request;
-
-	public:
-		Http(int, Server*);
 		~Http();
 
-		//	Request
-		void requestFromClient(void);
-		void requestParser(void);
-		//	Response
-		std::string directoryListing(void);
-		void responseSend(void);
-		void generateErrorResponse(std::ostringstream&, int);
-		
-		int getMethod(const std::vector<std::string>&, std::string& content);
-		int postMethod(const std::vector<std::string>&);
-		int deleteMethod(const t_location *location);
-		void setHeaderAndBody(void);
-		void fillHeaderMap(void);
-		void ParseURL(void);
-		void decodeURI(void);
+	public:
 
-		// Getters
-		std::string getMethodType();
-		std::string getHeader();
-		std::string getBody();
-		std::string getURI();
+		//	Request
+		static void receiveFromClient(int socket, Request& request);
+		static void requestParser(Request& request);
+
+		//	Response
+		static std::string directoryListing(Request& request);
+		static Response* BuildResponse(Request& request);
+		static Response* doDirectoryResponse(Request& request, bool is_redirect);
+
+		static Response* handleMethod(Request& request);
+		static int getMethod(const std::string& file_path, const std::vector<std::string>&, std::string& content);
+		static int postMethod(const std::string& file_path, const std::vector<std::string>&, const std::string& body);
+		static int deleteMethod(const std::string& file_path, const std::vector<std::string>&);
+		static int handleUpload(const Request& request);
+
+		//static void decodeURI(void);
+
+		class HttpErrorException : public std::exception {
+		
+			private:
+				int http_error;
+				const std::string msg;
+				const char* message;
+			
+			public:
+				virtual const char* what() const throw();
+				int getErrorCode() const;
+				
+				HttpErrorException();
+				HttpErrorException(int code);
+				~HttpErrorException() throw();
+		};
+
 };
 
 #endif

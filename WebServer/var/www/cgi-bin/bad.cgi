@@ -1,6 +1,4 @@
-#!/usr/bin python3
-
-# import cgi
+#!/usr/bin/env python3
 
 print("Content-type: text/plain\r\n")
 print("\r\n")

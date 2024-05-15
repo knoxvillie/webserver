@@ -6,110 +6,144 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/18 12:03:35 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/09 15:36:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiHandler.hpp"
 
-std::map<std::string, std::string> CgiHandler::extensionToInterpreter;
-
-void 
-CgiHandler::initMap(void) {
-	// Supported scripting languages:
-	extensionToInterpreter[".py"] = "/usr/bin/python3";
-	extensionToInterpreter[".php"] = "/usr/bin/php";		
-	extensionToInterpreter[".pl"] = "/usr/bin/perl";
-}
-
-CgiHandler::CgiHandler(const t_request& request) : _request(request) {
-	std::string file = this->_request.file_path;
-	_extension = file.substr(file.find_last_of('.'), std::string::npos);
-
-	try {
-		_interpreter = (extensionToInterpreter.at(_extension)).c_str();
-	} catch (std::out_of_range& e) { // if at() doesnt exist in map
-		MLOG("NO CGI FOUND FOR THAT extension!");
-		_interpreter = NULL;
-	}
-}
-
+CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
  
-void
+/* void
 CgiHandler::setEnvVariables(const std::map<std::string, std::string>& header) {
 	std::map<std::string, std::string>::const_iterator it;
     for (it = header.begin(); it != header.end(); it++)
 		*_envp = (it->first + "=" + it->second).c_str();
+} */
+
+
+// TODO: test this
+const std::string
+CgiHandler::getPathTranslated(Request& request) {
+	// Add root to the path_info
+	std::string root_path;
+	
+	root_path = (request.server->getBestLocation("/"))->root;
+	
+	return (root_path + request.getPathInfo());
 }
 
-
-// TODO: Check if this is still needed
-void
-CgiHandler::getQueryString(void) {
-	std::string url = _request.unparsed_url;
-
-	if (url.find("?"))
-		QUERY_STRING = url.substr(url.find("?") + 1);
-}
-
-// TODO: Check if this is still needed
-// Path info might need to be root + request.path_info
-void
-CgiHandler::getPathInfo(void) {
-	std::string url = _request.url;
-	int len = _extension.length();
-	size_t pos, i;
-
-	i = 0;
-	do {
-		pos = url.find(_extension, i);
-		i = pos;
-		std::string current_file = url.substr(url.find("/", pos)); 
-		/* 
-		 Should it be len here ? or check until the next "/"?
-		 it will cause errors if there is a dir that contains _extension
-		 but doesn't end with it. (e.g. thisisa.pydirectory)
-		*/
-		if (isDirectory(current_file))
-			continue;
-		else {
-			PATH_INFO = url.substr(pos + len); // Could be std::string::npos
-			break;
-		}
-
-	} while (pos != std::string::npos && (pos != (url.length() - len)));
-}
-
-
-std::map<std::string, std::string> CgiHandler::buildEnv() 
+char **
+CgiHandler::buildEnv(Request& request)
 {
 	std::map<std::string, std::string> env;
-	std::string uri = this->_request.url;
+	std::string uri = request.getURI();
 
 	env["AUTH_TYPE"] = ""; //Not used in our webserver, no authentication protocol needs to be implemented
-	env["REQUEST_METHOD"] = this->_request.method;
-	env["QUERY_STRING"] = this->QUERY_STRING; // call getQueryString before;
-	env["REQUEST_URI"] = this->_request.url; // should this be unparsed_url ?
+	env["REQUEST_METHOD"] = request.getMethod();
+	env["QUERY_STRING"] = request.getQueryString(); // call getQueryString before;
+	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
 	env["SERVER_PROTOCOL"] = "";
-	env["CONTENT_TYPE"] = "";
-	env["CONTENT_LENGTH"] = ""; //in case of GET requests, no need to handle, get from POST requests
-	// TODO: ADD PATH_TRANLATED
+	env["CONTENT_TYPE"] = ""; // TODO: this
+	env["CONTENT_LENGTH"] = "";  // TODO: //in case of GET requests, no need to handle, get from POST requests
+	env["PATH_INFO"] = request.getPathInfo();
+	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
-	return (env);
+	char** envp = new char*[env.size() + 1]; 
+
+	std::map<std::string, std::string>::const_iterator it;
+	int i = 0;
+    for (it = env.begin(); it != env.end(); it++) {
+		std::string line = (it->first + "=" + it->second).c_str();
+		envp[i] = new char[line.size() + 1];
+		std::strcpy(envp[i], line.c_str()); // strcpy also copies the terminating '\0'
+		++i;
+	}
+	envp[i] = NULL;
+
+	return envp;
 }
 
+Response*
+CgiHandler::executeCgi(Request& request) {
+
+	if (!isExecutable((request.getFilePath()).c_str()))
+		return (new Response(403, request.server)); // Might be 404
+
+	int pipe_to_parent[2];
+	int pipe_to_child[2];
+	
+	// Cant use pipe2, how do we make it nonblocking ?
+	pipe(pipe_to_parent); // Write on pipe[1] read on pipe[0]
+	pipe(pipe_to_child);
+	// Might need to use fcntl for non blocking fds
+
+	std::string response;
+
+	MLOG("EXECVE ARGS:\n");
+	MLOG((request.getFilePath()).c_str());
+
+	pid_t pid = fork();
+	if (!pid) { // Child Process
+		close(pipe_to_child[1]);
+		dup2(pipe_to_child[0], STDIN_FILENO);
+		close(pipe_to_child[0]);
+		
+		close(pipe_to_parent[0]);
+		dup2(pipe_to_parent[1], STDOUT_FILENO);
+		close(pipe_to_parent[1]);
+		
+		char* filename = const_cast<char *>((request.getFilePath()).c_str());
+		char* argv[] = {filename, filename, NULL};
+		// argv[0] is not reachable by execve when using filename in the first argument
+		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
+		char** envp = CgiHandler::buildEnv(request);
+		
+		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
+		if (execve(filename, argv, envp) != 0) {
+			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
+			free_env(envp);
+			exit(1);
+		}
+		
+	} else {
+		close(pipe_to_child[0]);
+		close(pipe_to_parent[1]);
+		
+		CgiHandler::writeToCgi(pipe_to_child[1], request.getBody());
+		close(pipe_to_child[1]); // This sends EOF to child (?)
+		
+		response = readFromCgi(pipe_to_parent[0]);
+		MLOG("\nCgi output: \n" + response);
+		// TODO: Test if we only send the response from the CGI when EOF is found
+		close(pipe_to_parent[0]);
+	}
+	//request.setToClose();
+	return (new Response(response));
+}
+
+// TODO: test
 void
-CgiHandler::executeCgi() {
-
-	if (_interpreter == NULL)
-		return;
-
-	// pid_t = fork()
-
-	// dup2 and what not
-
-	// execve(_interpreter, _request.file_path, _envp)
+CgiHandler::writeToCgi(int fd, const std::string& content) {
+	if (write(fd, content.c_str(), content.size()) < 0)
+		MLOG("ERROR: sendToCgi() failed.");
 }
 
+// TODO: test
+std::string
+CgiHandler::readFromCgi(int& fd) {
+	char buf[BUFFER_SIZE] = {0};
+	std::string result;
+	int bytes = 0;
+
+	while ((bytes = read(fd, buf, BUFFER_SIZE)) != 0) {
+		MLOG("LOOP\n");
+		if (bytes < 0)
+			throw std::runtime_error("Error: failed to read from cgi pipe.");
+		
+		result.append(std::string(buf));
+	}
+	return result;
+}

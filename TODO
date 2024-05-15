@@ -1,8 +1,28 @@
 
-* Complete ServerConfig class
+===========
+ Functionalities:
+===========
 
-* Change some functions that need the directives listed to use the static variable in the ServerConfig class
+* Handle chunked requests (Check if it already works)
 
-* Make it so the TcpServer Class is initialized with a ServerConfig class object
+* Check listen with multiple ports
 
-* A lot more...
+* server_names
+
+* Make it possible to upload files
+
+* Make it possible to set the cgi extension in the config file instead of just using ".cgi"
+
+* Maybe our root needs to work like alias in nginx according to the subject
+
+===========
+ Checks/tests:
+===========
+
+* Check almost all throws we do to see if we should handle the error in another way
+especially in the HTTP class.
+
+* Check if there really is a need to have the whole program inside a try catch
+
+* Tests with bigger/more complex CGI scrips
+

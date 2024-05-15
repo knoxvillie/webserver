@@ -6,39 +6,28 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:12 by diogmart          #+#    #+#             */
-/*   Updated: 2024/04/16 15:14:12 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/02 16:06:39 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "webserv.hpp"
+#include "Server.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 
-class CgiHandler {
+class CgiHandler { // Should this be static ?
 
 	private:
-		static std::map<std::string, std::string> extensionToInterpreter;
-
-		t_request _request;
-
-		std::string PATH_INFO;
-		std::string QUERY_STRING;
-
-		std::string _extension;
-		const char *_interpreter; // Pass the interpreter string into this pointer
-		const char *_envp[]; // where to store the env variables
-		
-		std::map<std::string, std::string> buildEnv();
-		void setEnvVariables(const std::map<std::string, std::string>& header);
-		void executeCgi(void);
-		void getQueryString(void);
-		void getPathInfo(void);
-		
-
-	public:
-		CgiHandler(const std::string& file_name, const std::string& extension);	 // Prob. not needed
-		CgiHandler(const t_request& request);
+		CgiHandler();
 		~CgiHandler();
 
-		static void initMap(void);
+		static char **buildEnv(Request& request);
+		static const std::string getPathTranslated(Request& request);
+		static void writeToCgi(int fd, const std::string& content);
+		static std::string readFromCgi(int& fd);
+
+	public:
+		static Response* executeCgi(Request& request);
 };
