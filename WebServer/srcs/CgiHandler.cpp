@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 15:36:24 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/15 14:07:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ CgiHandler::buildEnv(Request& request)
 
 	env["AUTH_TYPE"] = ""; //Not used in our webserver, no authentication protocol needs to be implemented
 	env["REQUEST_METHOD"] = request.getMethod();
-	env["QUERY_STRING"] = request.getQueryString(); // call getQueryString before;
+	env["QUERY_STRING"] = request.getQueryString();
 	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
 	env["SERVER_PROTOCOL"] = "";

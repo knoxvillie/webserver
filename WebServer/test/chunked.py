@@ -5,11 +5,11 @@ import socket
 HOST = "0.0.0.0"  # The server's hostname or IP address
 PORT = 8080  # The port used by the server
 
-request1 = """POST /upload HTTP/1.1\r\nTransfer-Encoding: chunked\r\nAccept: */*\r\nContent-Type: text/plain\r\nUser-Agent: ur mom\r\n\r\n7\r\nhello\r\n"""
+request1 = """POST /upload HTTP/1.1\r\nTransfer-Encoding: chunked\r\nAccept: */*\r\nContent-Type: text/plain\r\nUser-Agent: ur mom\r\n\r\n5\r\nhello\r\n"""
 
-request2 = """8\r\n world\r\n"""
+request2 = """6\r\n world\r\n"""
 
-request3 = """16\r\n, how are you?\r\n"""
+request3 = """E\r\n, how are you?\r\n""" # size in hex
 
 request4 = "0\r\n"
 
