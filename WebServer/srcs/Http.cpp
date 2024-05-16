@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Http.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/15 15:09:13 by pealexan         ###   ########.fr       */
+/*   Updated: 2024/05/16 15:55:52 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,9 @@ Http::receiveFromClient(int socket, Request& request) {
 	int bytes;
 
 	while (!request.isFinished()) {
-		bytes = recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT);
-		MLOG("bytes: " << bytes << "\n");
+		memset(buf, 0, BUFFER_SIZE);
+		bytes = recv(socket, buf, BUFFER_SIZE, 0);
+		MLOG("bytes: " << bytes << "\nBUF: \'" <<  buf << "\'");
 		if (bytes < 0)
 			break;
 		request.receiveData(std::string(buf), bytes);
