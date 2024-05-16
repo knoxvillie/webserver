@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 16:01:53 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/16 16:06:50 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,22 +75,16 @@ Request::receiveChunked(const std::string& buf, int bytes) {
 		this->finished = true;
 
 	for (int i = 0; i < bytes;) {
-		MLOG("BUFSIZE: " << buf.size())
-		MLOG("BYTES: " << bytes);
-		MLOG("IDX: " << i);
-		
-		if (i > (int)buf.length()) {
+
+		if (i > (int)buf.length())
 			break;
-		}
 
 		// the chunk always starts with the size of the chunk in hex
 		unsigned long chunk_size = std::strtoul(buf.substr(i, buf.find("\r\n", i)).c_str(), NULL, 16); // converts hex to decimal already
-		MLOG("CSIZE: " << chunk_size);
 
 		// the data starts after the \r\n, and ends before the final /r/n
 		std::string treated_data = buf.substr(buf.find("\r\n", i) +2, chunk_size); //FIXME: chunk_size might be bigger than the rest of the data left in the chunk
 		this->body.append(treated_data);
-		MLOG("CDATA: " << treated_data);
 
 		// intToString(chunk_size).size() + 2 because of the <chunk_size>\r\n and another +2 for the \r\n that mark the end of the chunk
 		i += Utils::intToString(chunk_size).size() + chunk_size + 4;
