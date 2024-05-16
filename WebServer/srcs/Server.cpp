@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 15:07:49 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/16 13:44:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,7 @@ Server::startServerSocket(void) {
 	if (this->server_sock < 0)
 		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
 
+	// TODO: check if the SOCK_NONBLOCK flag on socket is enough to not do this
 	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
 		throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
 
