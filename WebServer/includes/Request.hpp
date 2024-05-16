@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 14:54:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/16 16:01:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ class Request {
 		bool isToClose(void) const;
 		const std::string& getQueryString(void) const;
 		const std::string& getPathInfo(void) const;
+		std::string getContentType(void);
 		
 	//	Setters	//
 		void setHeader(void);

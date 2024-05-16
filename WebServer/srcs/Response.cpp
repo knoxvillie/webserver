@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/09 15:30:54 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/16 16:03:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ Response::Response(int statusCode, const std::string& content, const std::string
 Response::Response(int errorCode, Server* arg) : status_code(errorCode), server(arg) {
 	this->contentType = "text/html";
 	
-	if (!findErrorPage()) {
+	if (!findErrorPage(errorCode)) {
 		Utils::createStyleIfNotExists();
 		this->body = Utils::createGenericErrorPage(this->status_code, Response::getStatusMessage(this->status_code));
 	}
@@ -89,16 +89,16 @@ Response::to_string(void) const {
 }
 
 bool
-Response::findErrorPage(void) {
+Response::findErrorPage(int errorCode) {
 	// Find the error page corresponding to the status code
 	std::map<int, std::string>::const_iterator it;
-	it = this->server->getErrorMap().find(status_code);
+	it = this->server->getErrorMap().find(errorCode);
 
 	// There isn't an error page defined for the specif error
 	if (it == this->server->getErrorMap().end())
 		return false;
 
-	std::string error_path(this->server->getErrorMap()[status_code]);
+	std::string error_path(this->server->getErrorMap()[errorCode]);
 	std::string path(Global::pwd + error_path);
 	path = path.substr(0, path.find(';'));
 
