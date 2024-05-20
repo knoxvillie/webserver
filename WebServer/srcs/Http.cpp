@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 11:04:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 15:14:27 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,15 +36,13 @@ Http::receiveFromClient(int socket, Request& request) {
 	char buf[BUFFER_SIZE] = {0};
 	int bytes;
 
-	while (!request.isFinished()) {
-		memset(buf, 0, BUFFER_SIZE);
-		bytes = recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT);
-		MLOG("bytes: " << bytes << "\nBUF: \'" <<  buf << "\'");
+	memset(buf, 0, BUFFER_SIZE);
+	bytes = recv(socket, buf, BUFFER_SIZE, 0);
+	MLOG("bytes: " << bytes);
 		
-		if (bytes < 0)
-			break;
-		request.receiveData(std::string(buf), bytes);
-	}
+	request.receiveData(std::string(buf), bytes);
+	if (bytes < 0)
+		return;
 }
 
 void
@@ -56,9 +54,10 @@ Http::requestParser(Request& request) {
 	if (request.getFull().empty())
 		return;
 
+	MLOG("STREAM: " << ss.str());
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
-			throw Http::HttpErrorException(501);
+			throw Http::HttpErrorException(405);
 		request.setMethod(token);
 	} else throw Http::HttpErrorException(400);
 
@@ -81,10 +80,11 @@ Http::BuildResponse(Request& request) {
 	
 	Http::requestParser(request);
 	request.setBody();
+	MLOG("Request: " << request.getFull());
+	
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request.getURI());
 	request.location = best_location;
-
 	//Location not found, generate a 404 Not Found response
 	if (best_location == NULL) {
 		return (new Response(404, request.server));
@@ -124,6 +124,8 @@ Http::handleMethod(Request& request) {
 	t_location* location = request.location;
 	std::string content, type;
 
+	MLOG("METHOD: " << request.getMethod());
+
 	// The url is requesting a file
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
@@ -131,7 +133,7 @@ Http::handleMethod(Request& request) {
 		/* if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
 		else */
-			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 	}
 	else if (request.getMethod() == "DELETE")
 		status_code = Http::deleteMethod(request.getFilePath(), location->allow_methods);
@@ -148,7 +150,6 @@ Http::handleMethod(Request& request) {
 
 Response*
 Http::doDirectoryResponse(Request& request, bool is_redirect) {
-	int statusCode;
 	struct stat buf;
 	t_location* location = request.location;
 	std::string content;
@@ -157,8 +158,7 @@ Http::doDirectoryResponse(Request& request, bool is_redirect) {
 	if (stat(location->index.c_str(), &buf) == 0) {
 		// Index exists so must be sent.
 		request.setFilePath(location->index);
-		statusCode = getMethod(request.getFilePath(), location->allow_methods, content);
-		return (new Response(statusCode, content, "text/html"));
+		return Http::handleMethod(request);
 	}
 	// If auto_index off and the index doesn't exist -> forbidden request
 	else if (!location->auto_index)
@@ -248,7 +248,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 	if (flag == 0)
 		throw Http::HttpErrorException(400);
 
-	int statusCode = flag == -1 ? 201 : 200;
+	int statusCode = (flag == -1) ? 201 : 200;
 
 	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Open file in append mode, create one if it doesn't exist
 
@@ -265,6 +265,8 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 	}
 
 	const std::string output = body;
+	if (output.empty())
+		return 204;
 	MLOG("Output: " + output);
 	
 	out_file.write(output.c_str(), output.size());

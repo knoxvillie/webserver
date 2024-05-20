@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/20 11:04:45 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 14:23:49 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,13 @@ Request::~Request(void) {}
 void
 Request::receiveData(const std::string& buf, int bytes) {
 
-	if (bytes <= 0) { // this indicates that the client has close the connection gracefully
+	if (bytes == 0) { // this indicates that the client has close the connection gracefully
+		this->setToClose();
 		this->finished = true;
 		return;
 	}
+	if (bytes == -1)
+		return;
 
 	this->full.append(buf); // append the new data to the request
 
@@ -44,10 +47,17 @@ Request::receiveData(const std::string& buf, int bytes) {
 		// Get the size of the body content in this buffer, to compare with content length
 		int body_bytes = this->full.substr(this->full.find("\r\n\r\n") + 4).size();
 		
-		if (this->isChunked())
-			this->receiveChunked(this->full.substr(this->full.find("\r\n\r\n") + 4), body_bytes);
+		if (this->isChunked()) {
+			this->receiveChunked(this->full.substr(this->full.find("\r\n\r\n") + 4));
+			return;
+		}
 		else
 			this->bytes_read -= (bytes - body_bytes); // Only need to do this once, when the header is found
+
+		if (this->content_length == -1 || this->content_length == 0) // The header is read so if there is no content length the request should be complete
+			this->finished = true;
+
+		MLOG("================================================\nHEADER IS FILLED\n================================================");
 
 		return;
 	}
@@ -55,7 +65,7 @@ Request::receiveData(const std::string& buf, int bytes) {
 	if (this->header.empty()) return; // The full header hasn't been read yet
 	
 	if (this->isChunked()) { // Handle chunked requests
-		this->receiveChunked(buf, bytes);
+		this->receiveChunked(buf); // FIXME: This doesn't work when the buffer doesnt include the full chunk
 		return;
 	}
 
@@ -67,27 +77,34 @@ Request::receiveData(const std::string& buf, int bytes) {
 
 // TODO: test
 void
-Request::receiveChunked(const std::string& buf, int bytes) {
+Request::receiveChunked(const std::string& buf) {
 	MLOG("CHUNKED REQUEST\n");
 	GPS;
 
-	if (buf.find("0\r\n") != std::string::npos)
-		this->finished = true;
+	// Note: No data that belongs to the header will be sent here because of the receiveData() function
+	//		 so we only need to handle the body portion
 
-	for (int i = 0; i < bytes;) {
+	this->chunkbuf.append(buf);
 
-		if (i > (int)buf.length())
+	while (!this->chunkbuf.empty()) {
+		
+		if (this->chunkbuf.find("0\r\n") != std::string::npos) // Terminating empty chunk has been found
+			this->finished = true;
+		
+		// the chunk always starts with the size of the chunk in hex
+		unsigned long chunk_size = std::strtoul(this->chunkbuf.substr(0, this->chunkbuf.find("\r\n")).c_str(), NULL, 16); // converts hex to decimal already
+		if (chunk_size <= 0)
 			break;
 
-		// the chunk always starts with the size of the chunk in hex
-		unsigned long chunk_size = std::strtoul(buf.substr(i, buf.find("\r\n", i)).c_str(), NULL, 16); // converts hex to decimal already
+		unsigned long total_chunksize = Utils::intToString(chunk_size).size() + chunk_size + 4;
+		if (total_chunksize > this->chunkbuf.size()) // The chunk is not completed yet
+			break;	
 
-		// the data starts after the \r\n, and ends before the final /r/n
-		std::string treated_data = buf.substr(buf.find("\r\n", i) +2, chunk_size); //FIXME: chunk_size might be bigger than the rest of the data left in the chunk
-		this->body.append(treated_data);
-
-		// intToString(chunk_size).size() + 2 because of the <chunk_size>\r\n and another +2 for the \r\n that mark the end of the chunk
-		i += Utils::intToString(chunk_size).size() + chunk_size + 4;
+		// Create a substring from the end of <size>/r/n up to <size> bytes. e.g. from "10/r/nABCDEFGHIJ\r\n" extract "ABCDEFGHIJ"
+		std::string chunk = this->chunkbuf.substr(Utils::intToString(chunk_size).size() + 2, chunk_size); // Chunk_size + 1 since last is excluded ??
+		MLOG("CHUNK: " << chunk);
+		this->body.append(chunk);
+		this->chunkbuf.erase(0, total_chunksize);
 	}
 }
 
@@ -177,7 +194,6 @@ Request::fillHeaderMap(void) {
 	std::string line;
 	std::string header(this->header);
 
-	GPS;
 	while ((pos = header.find("\r\n")) != std::string::npos) {
 		line = header.substr(0, pos);
 		header.erase(0, pos + 2);
@@ -255,7 +271,6 @@ Request::isToClose(void) const {
 
 bool
 Request::isChunked(void) const {
-	GPS;
 	return this->chunked;
 }
 
@@ -280,8 +295,8 @@ void
 Request::setBody(void) {
 	if (this->isChunked())
 		return;
-	if (!full.empty())
-		this->body = full.substr(full.find("\r\n\r\n") + 4, std::string::npos);
+	if (!full.empty() && (full.find("\r\n\r\n") + 4) != std::string::npos)
+		this->body = full.substr(full.find("\r\n\r\n") + 4);
 }
 
 void
@@ -307,7 +322,6 @@ Request::setURI(const std::string& uri) {
 
 void
 Request::setContentLength(void) {
-	GPS;
 	content_length = -1;
 	if (this->headerMap.find("Content-length") != this->headerMap.end())
 		content_length = std::atoi(this->headerMap["Content-length"].c_str());
@@ -315,7 +329,6 @@ Request::setContentLength(void) {
 
 void
 Request::setEnconding(void) {
-	GPS;
 	// Transfer-Encoding tells us if the request is chunked or not
 	if (this->headerMap.find("Transfer-Encoding") == this->headerMap.end()) {
 		this->chunked = false;
@@ -332,7 +345,6 @@ Request::setEnconding(void) {
 
 void
 Request::setConnection(void) {
-	GPS;
 	if (this->headerMap.find("Connection") != this->headerMap.end())
 		if (this->headerMap["Connection"].compare("close") == 0)
 			this->keep_alive = false;

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 16:01:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 14:21:10 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ class Request {
 		int content_length;
 		int bytes_read;
 
+		std::string chunkbuf;
+
 		// CGI
 		bool cgi;
 		std::string path_info;
@@ -64,7 +66,7 @@ class Request {
 
 		//void decodeURI(void);
 		void receiveData(const std::string& buf, int bytes);
-		void receiveChunked(const std::string& buf, int bytes);
+		void receiveChunked(const std::string& buf);
 
 	//	Getters	//
 		const std::string& getFull(void) const;

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/16 12:41:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 15:25:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 12:23:01 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
 		close(sockfd);
 		exit(1);
 	}
+	sleep(1);
 	
 	if (argc < 2) {
 		cout << ANSI_COLOR_YELLOW << "WARNING: no arguments, sending \"default request\"" << ANSI_COLOR_RESET << endl;
@@ -86,6 +87,7 @@ int main(int argc, char** argv) {
 				close(sockfd);
 				exit(1);
 			}
+			sleep(1);
 		}
 	}
 
@@ -100,6 +102,7 @@ int main(int argc, char** argv) {
 			close(sockfd);
 			exit(1);
 		}
+		sleep(1);
 		cout << "Line: " << output;
 		cout << ANSI_COLOR_GREEN << "Chunk sent!" << ANSI_COLOR_RESET << endl;
 	}

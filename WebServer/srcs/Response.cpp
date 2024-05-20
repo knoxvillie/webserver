@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 10:34:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 14:35:36 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,15 +94,19 @@ Response::findErrorPage(int errorCode) {
 	std::map<int, std::string>::const_iterator it;
 	it = this->server->getErrorMap().find(errorCode);
 
-	MLOG(it->second);
 	// There isn't an error page defined for the specif error
 	if (it == this->server->getErrorMap().end())
 		return false;
 
-	std::string error_path(this->server->getErrorMap()[errorCode]);
+		
+	std::string error_path = this->server->getErrorMap()[errorCode];
 	std::string path(Global::pwd + error_path);
 	path = path.substr(0, path.find(';'));
 
+	MLOG("error path :" + error_path + "path :" + path);
+	if (isDirectory(path))
+		return false;
+	
 	// Open the error page
 	std::ifstream file(path.c_str());
 	if (file.is_open()) {
@@ -112,9 +116,13 @@ Response::findErrorPage(int errorCode) {
 		this->body = buffer.str();
 		file.close();
 		// Generate the HTTP response with the content of the error page
-	} else return false;
-	
-	return true;
+		return true;
+	}
+	else 
+	{
+		MLOG("Could not open error page file: " + path);
+		return false;		
+	}
 }
 
 void

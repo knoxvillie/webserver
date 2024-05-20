@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 14:07:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 14:54:08 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void
 Cluster::serversLoop(std::vector<Server>& servers) {
 	GPS;
 	bool new_connection = true;
-	int epoll_fd, num_ready_events, client_sock;
+	int epoll_fd, num_ready_events;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 	std::map<int, Request*> requests;
 	
@@ -70,23 +70,27 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 			std::cout << "EVENT < 0" << std::endl;
 
 		for (int i = 0; i < num_ready_events; i++) {
-			client_sock = event_buffer[i].data.fd;
+			int client_sock = event_buffer[i].data.fd;
 
 			// client_sock is in Cluster::serverSockets, so it's a new connection
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
 				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
 				
+				// Set socket as non-blocking
+				if (fcntl(client_sock, F_SETFL, O_NONBLOCK) < 0)
+					throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
+				
 				event_buffer[i].data.fd = client_sock;
-				event_buffer[i].events = EPOLLIN | EPOLLOUT | EPOLLET; // EPOLLET = Edge Triggered mode 
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0) // Added EPOLLIN separately so it stays in level triggered mode
+				event_buffer[i].events = EPOLLIN | EPOLLOUT;// | EPOLLET; // EPOLLET = Edge Triggered mode 
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");	
 				new_connection = false;
 			}
 			else {
 				
 				if (event_buffer[i].events & EPOLLERR) {
-					MLOG("EPOLLERR is present\n");
+					//MLOG("EPOLLERR is present\n");
 					if (requests.find(client_sock) != requests.end()) { // There is an allocated request for this socket
 						delete requests[client_sock];
 						requests.erase(client_sock);
@@ -114,16 +118,19 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
 						requests[client_sock] = cl_request;
-					}
+					} else if (requests[client_sock]->isFinished()) continue;
+
 					Http::receiveFromClient(client_sock, *requests[client_sock]);
 				}
 				
 				if (event_buffer[i].events & EPOLLOUT) {
-				    MLOG("EPOLLOUT is present\n");
 					// EPOLLOUT event means that the socket is ready for writing
 					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
+					
+					// If the request isn't finished don't send a response
+					if (!(requests[client_sock]->isFinished())) continue;
 
-					MLOG("IN\n");
+				    MLOG("EPOLLOUT is present\n");
 					Response* response;
 					try { // This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR

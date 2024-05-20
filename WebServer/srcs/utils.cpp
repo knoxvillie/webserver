@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/03 10:15:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 14:29:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,13 +205,13 @@ namespace Utils {
 			   "<head>\n"
 			   "    <meta charset=\"UTF-8\">\n"
 			   "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			   "    <title>" << status_code << "- " << message << "</title>\n"
+			   "    <title>" << status_code << " - " << message << "</title>\n"
 			   "    <link rel=\"stylesheet\" href=\"/css/styles.css" << "\">\n"
 			   "</head>\n"
 			   "<body>\n"
 			   "<div class=\"container\">\n"
 			   "    <h1>Error " << status_code << "</h1>\n"
-			   "    <p>Error Page.</p>\n"
+			   "    <p>" << message << "</p>\n"
 			   "    <a href=\"/\">Go back to home page</a>\n"
 			   "</div>\n"
 			   "</body>\n"
