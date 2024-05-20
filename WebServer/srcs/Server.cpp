@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 12:08:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 15:26:44 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,7 +237,7 @@ Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
 	struct stat buf;
 
 	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples Root paths");
+		throw std::runtime_error("Error: Multiple Root paths");
 	std::string root((vec[0].substr(0, vec[0].find(';'))));
 	std::string path(Global::pwd + root);
 
@@ -251,8 +251,8 @@ Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
 	std::string index(vec[0].substr(0, vec[0].find(';')));
-	std::string complement = ((location.location_name == "/") ? "" : "/");
-	std::string path(location.root + location.location_name + complement + index);
+	std::string complement = ((*(location.root).rbegin() == '/') ? "" : "/");
+	std::string path(location.root + complement + index);
 	location.index = path;
 }
 
@@ -391,7 +391,7 @@ Server::getBestLocation(const std::string& name) {
 
 std::string
 Server::getListen(void) const {
-	return ("MUDAR DEPOIS");
+	return ("MUDAR DEPOIS"); // TODO: MUDAR DEPOIS
 }
 
 void *

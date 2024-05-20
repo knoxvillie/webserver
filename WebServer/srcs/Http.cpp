@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 15:14:27 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 15:38:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,10 @@ Http::BuildResponse(Request& request) {
 	if (best_location == NULL) {
 		return (new Response(404, request.server));
 	}
-	request.setFilePath(best_location->root + request.getURI());
+
+	std::string locationURI = request.getURI();
+	request.setFilePath(best_location->root + locationURI.substr(locationURI.find(best_location->location_name) + best_location->location_name.size())); // FIXME: it should be every part of the uri except the root of the location
+	MLOG("FILE PATH: " << request.getFilePath());
 	// Checking Location Client Max Body Size.
 	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
 		return (new Response(403, request.server));
