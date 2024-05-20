@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/16 15:55:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 11:04:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,9 @@ Http::receiveFromClient(int socket, Request& request) {
 
 	while (!request.isFinished()) {
 		memset(buf, 0, BUFFER_SIZE);
-		bytes = recv(socket, buf, BUFFER_SIZE, 0);
+		bytes = recv(socket, buf, BUFFER_SIZE, MSG_DONTWAIT);
 		MLOG("bytes: " << bytes << "\nBUF: \'" <<  buf << "\'");
+		
 		if (bytes < 0)
 			break;
 		request.receiveData(std::string(buf), bytes);

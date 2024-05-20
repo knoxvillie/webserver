@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/16 16:03:54 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 10:34:50 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ Response::findErrorPage(int errorCode) {
 	std::map<int, std::string>::const_iterator it;
 	it = this->server->getErrorMap().find(errorCode);
 
+	MLOG(it->second);
 	// There isn't an error page defined for the specif error
 	if (it == this->server->getErrorMap().end())
 		return false;

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 16:06:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/20 11:04:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,20 +34,20 @@ Request::receiveData(const std::string& buf, int bytes) {
 		this->finished = true;
 		return;
 	}
-	
-	this->full.append(buf); // append the new data to the request
-	int header_bytes = 0;
 
-	if ((buf.find("\r\n\r\n") != std::string::npos) && this->header.empty()) { // End of the header. only enter when header is empty
+	this->full.append(buf); // append the new data to the request
+
+	if ((this->full.find("\r\n\r\n") != std::string::npos) && this->header.empty()) { // End of the header. only enter when header is empty
 		this->setHeader();
 		this->fillHeaderMap();
-		
-		header_bytes = (buf.substr(0, buf.find("\r\n\r\n") + 5)).size(); // 5 because last is excluded
 
+		// Get the size of the body content in this buffer, to compare with content length
+		int body_bytes = this->full.substr(this->full.find("\r\n\r\n") + 4).size();
+		
 		if (this->isChunked())
-			this->receiveChunked(buf.substr(buf.find("\r\n\r\n") + 4), bytes - header_bytes);
+			this->receiveChunked(this->full.substr(this->full.find("\r\n\r\n") + 4), body_bytes);
 		else
-			this->bytes_read -= header_bytes; // Only need to do this once, when the header is found
+			this->bytes_read -= (bytes - body_bytes); // Only need to do this once, when the header is found
 
 		return;
 	}
@@ -60,8 +60,8 @@ Request::receiveData(const std::string& buf, int bytes) {
 	}
 
 	this->bytes_read += bytes; // The content length is only for the body. so subtract header bytes when header is found
-
-	if ((content_length != -1) && (this->bytes_read >= this->content_length))
+	
+	if ((this->content_length != -1) && (this->bytes_read >= this->content_length))
 		this->finished = true;
 }
 
@@ -162,6 +162,7 @@ Request::decodeURI(void) {
 //	Setters	//
 void
 Request::setHeader(void) {
+	GPS;
 	std::string& full_request = this->full;
 
 	if (!full_request.empty())
@@ -254,6 +255,7 @@ Request::isToClose(void) const {
 
 bool
 Request::isChunked(void) const {
+	GPS;
 	return this->chunked;
 }
 
@@ -305,6 +307,7 @@ Request::setURI(const std::string& uri) {
 
 void
 Request::setContentLength(void) {
+	GPS;
 	content_length = -1;
 	if (this->headerMap.find("Content-length") != this->headerMap.end())
 		content_length = std::atoi(this->headerMap["Content-length"].c_str());
@@ -312,6 +315,7 @@ Request::setContentLength(void) {
 
 void
 Request::setEnconding(void) {
+	GPS;
 	// Transfer-Encoding tells us if the request is chunked or not
 	if (this->headerMap.find("Transfer-Encoding") == this->headerMap.end()) {
 		this->chunked = false;
@@ -328,6 +332,7 @@ Request::setEnconding(void) {
 
 void
 Request::setConnection(void) {
+	GPS;
 	if (this->headerMap.find("Connection") != this->headerMap.end())
 		if (this->headerMap["Connection"].compare("close") == 0)
 			this->keep_alive = false;
