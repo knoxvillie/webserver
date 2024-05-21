@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 15:54:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:27:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ CgiHandler::getPathTranslated(Request& request) {
 	// Add root to the path_info
 	std::string root_path;
 	
-	root_path = (request.server->getBestLocation("/"))->root;
+	root_path = (request.server->getBestRedir("/"))->root;
 	
 	return (root_path + request.getPathInfo());
 }
@@ -44,7 +44,7 @@ CgiHandler::buildEnv(Request& request)
 	env["REQUEST_METHOD"] = request.getMethod();
 	env["QUERY_STRING"] = request.getQueryString();
 	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
-	env["SCRIPT_NAME"] = uri.substr(uri.rfind('/') + 1, uri.size());
+	env["SCRIPT_NAME"] = request.location->cgi_pass;
 	env["SERVER_PROTOCOL"] = "";
 	env["CONTENT_TYPE"] = request.getContentType();
 	env["CONTENT_LENGTH"] = request.getContentLength();
@@ -69,7 +69,9 @@ CgiHandler::buildEnv(Request& request)
 Response*
 CgiHandler::executeCgi(Request& request) {
 
-	if (!isExecutable((request.getFilePath()).c_str()))
+	std::string script_name = request.location->cgi_pass;
+
+	if (!isExecutable(script_name.c_str()))
 		return (new Response(403, request.server)); // Might be 404
 
 	int pipe_to_parent[2];
@@ -83,7 +85,7 @@ CgiHandler::executeCgi(Request& request) {
 	std::string response;
 
 	MLOG("EXECVE ARGS:\n");
-	MLOG((request.getFilePath()).c_str());
+	MLOG(script_name);
 
 	pid_t pid = fork();
 	if (!pid) { // Child Process
@@ -95,14 +97,15 @@ CgiHandler::executeCgi(Request& request) {
 		dup2(pipe_to_parent[1], STDOUT_FILENO);
 		close(pipe_to_parent[1]);
 		
+		char* script = const_cast<char *>(script_name.c_str());
 		char* filename = const_cast<char *>((request.getFilePath()).c_str());
-		char* argv[] = {filename, filename, NULL};
+		char* argv[] = {filename, filename, NULL}; // TODO: might be script instead of filename in argv[1]
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
 		char** envp = CgiHandler::buildEnv(request);
 		
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
-		if (execve(filename, argv, envp) != 0) {
+		if (execve(script, argv, envp) != 0) {
 			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
 			free_env(envp);
 			exit(1);

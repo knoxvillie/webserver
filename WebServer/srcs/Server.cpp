@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 11:49:13 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:20:40 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,6 +308,21 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 }
 
 // TODO: make it so you can choose the extension to be treated as cgi
+
+/*
+	NOTES:
+		- CGI scrips should not be executed has we have them now, we should have a location
+		with a name like ".php" and a directive "cgi_pass" that takes a script as an argument
+		and execute that script for all requests that fall into that location (in this example all requests that ask for a file with .php)
+
+	- We should have a directory that stores all our CGIs
+
+	Steps to achieve this:
+	- Check the location for cgi_pass and store the name of the script
+	- Save the location name if it's an extention and compare the requests before searching for an extention
+	- ...
+*/
+
 void
 Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
@@ -328,7 +343,7 @@ Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
 	location.redirect_is_extern = false;
 	location.redirect = "false";
 	// Need to check if the location is root, so, root must never redirect.
-	if (location.location_name == "/" ||  vec[0] == "false;")
+	if (location.location_name == "/" || vec[0] == "false;")
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
@@ -373,7 +388,31 @@ Server::getPort(void) const {
 }
 
 t_location*
-Server::getBestLocation(const std::string& name) {
+Server::getBestLocation(Request& request) {
+	t_location *bestMatch = NULL;
+	size_t bestMatchLen = 0;
+	std::string name = request.getURI();
+
+	for (size_t i = 0; i < this->locations.size(); i++) {
+		std::string locationName = this->locations[i].location_name;
+
+		if (locationName[0] == '.' && (request.getExtension() == locationName)) { // Means that the location is a cgi location
+			request.setCGI();
+			return (&this->locations[i]);
+		}
+		if (name.find(locationName) == 0) { // Check if locationName is a prefix
+			if (bestMatchLen < locationName.length()) {
+				bestMatch = &this->locations[i];
+				bestMatchLen = locationName.length();
+			}
+		}
+	}
+	MLOG("Location: " << bestMatch->location_name);
+	return bestMatch;
+}
+
+t_location*
+Server::getBestRedir(const std::string& name) {
 	t_location *bestMatch = NULL;
 	size_t bestMatchLen = 0;
 
@@ -387,7 +426,6 @@ Server::getBestLocation(const std::string& name) {
 			}
 		}
 	}
-	MLOG("Location: " << bestMatch->location_name);
 	return bestMatch;
 }
 

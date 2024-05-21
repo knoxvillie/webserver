@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/20 15:36:09 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:15:28 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,9 +145,12 @@ Request::ParseURL(void) {
 		MLOG("PATH INFO: " + this->path_info + "\n\n");
 	}
 	
-	if (extension == ".cgi") this->cgi = true;
+	if (!extension.empty())
+		this->extension = extension;
+	else
+		this->extension = "";
 
-	MLOG("CGI: " << this->cgi << "\n\n");
+	MLOG("Extension: " << this->extension << "\n\n");
 	
 	this->uri = url.substr(0, (url.find(extension) + extension.length()));
 	MLOG("PARSED URL: " + this->uri + "\n\n");
@@ -247,6 +250,11 @@ Request::getHttpVersion(void) const {
 const std::string&
 Request::getURI(void) const {
 	return this->uri;
+}
+
+const std::string&
+Request::getExtension(void) const {
+	return this->extension;
 }
 
 const std::string&
@@ -353,6 +361,11 @@ Request::setConnection(void) {
 void
 Request::setToClose(void) {
 	this->keep_alive = false;
+}
+
+void
+Request::setCGI(void) {
+	this->cgi = true;
 }
 
 std::string
