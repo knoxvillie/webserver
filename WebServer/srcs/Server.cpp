@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 15:26:44 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 11:49:13 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -307,6 +307,7 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 	location.allow_methods = temp;
 }
 
+// TODO: make it so you can choose the extension to be treated as cgi
 void
 Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
@@ -386,6 +387,7 @@ Server::getBestLocation(const std::string& name) {
 			}
 		}
 	}
+	MLOG("Location: " << bestMatch->location_name);
 	return bestMatch;
 }
 

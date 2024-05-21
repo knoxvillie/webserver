@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/20 14:29:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 11:35:58 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ namespace Utils {
 
 	bool
 	isDirectory(const std::string& str) {
-		return (str[str.size() - 1] == '/');
+		return (*(str.rbegin()) == '/');
 	}
 
 	int
