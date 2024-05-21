@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/20 14:21:10 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:16:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Request {
 		std::string method; // GET POST DELETE
 		std::string uri;
 		std::string file_path;
+		std::string extension; // file extension
 		int content_length;
 		int bytes_read;
 
@@ -76,6 +77,7 @@ class Request {
 		const std::string& getHttpVersion(void) const;
 		const std::string& getMethod(void) const;
 		const std::string& getURI(void) const;
+		const std::string& getExtension(void) const;
 		const std::string& getFilePath(void) const;
 		int getContentLength(void) const;
 		bool isCGI(void) const;
@@ -95,6 +97,7 @@ class Request {
 		void setFilePath(const std::string& file_path);
 		void setURI(const std::string& uri);
 		void setToClose(void);
+		void setCGI(void);
 };
 
 #endif //REQUEST_HPP

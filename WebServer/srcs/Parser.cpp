@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kfaustin <kfaustin@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/24 13:59:48 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/04/24 13:59:51 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/21 12:50:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 					is_location_closed = false;
 					// URI - Uniform Resource Identifier
 					std::string uri(vec[0]);
-					// After parsingLocationBlock the line must be -> location /* { or location /* {}
+					// After parsingLocationBlock the line must be -> location /* { or location /* {} (instead of /* can also be .*)
 					(ss >> token); (ss >> token);
 					// Location is empty
 					if (token == "{}") {
@@ -198,8 +198,11 @@ parsingLocationBlock(std::vector<std::string>& vec) {
 		throw std::runtime_error("ERROR - Parser: Invalid Location syntax, after URI is expected '{' or '{}' in: " + vec[1]);
 	--end;
 	// Location has only 1 URI, the URI must starts and ends with '/'
-	if ((*end)[0] != '/' && (*end)[(*end).size() - 1] != '/')
-		throw std::runtime_error("ERROR - Parser: Invalid URI syntax. URI must start and end with '/' in " + vec[1]);
+	if ((*end)[0] != '/' || (*end)[(*end).size() - 1] != '/') {
+		// Location can also be an extension, starting with "." and containing up to 4 characters (5 with the dot)
+		if (end->size() <= 1 || end->size() > 5 || (*end)[0] != '.' )
+			throw std::runtime_error("ERROR - Parser: Invalid URI syntax. URI must start and end with '/' in " + vec[1]);
+	}
 }
 
 static void

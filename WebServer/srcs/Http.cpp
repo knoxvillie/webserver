@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 11:44:37 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:23:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,31 +83,30 @@ Http::BuildResponse(Request& request) {
 	MLOG("Request: " << request.getFull());
 	
 	// Find the location corresponding to the URL
-	best_location = request.server->getBestLocation(request.getURI());
+	best_location = request.server->getBestLocation(request);
 	request.location = best_location;
-	//Location not found, generate a 404 Not Found response
-	if (best_location == NULL) {
+	// Location not found, generate a 404 Not Found response
+	if (best_location == NULL)
 		return (new Response(404, request.server));
-	}
+	// Checking Location Client Max Body Size.
+	else if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
+		return (new Response(403, request.server));
+	// Handle Cgi Requests
+	else if (request.isCGI())
+		return (CgiHandler::executeCgi(request));
 
 	std::string URI = request.getURI(), loc_name = best_location->location_name;
 	std::string relative_filepath = URI.substr(URI.find(loc_name) + (loc_name.size() - 1)); // -1 because of '/'
 	request.setFilePath(best_location->root + relative_filepath);
 	
-	// Checking Location Client Max Body Size.
-	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
-		return (new Response(403, request.server));
-	// Handle Cgi Requests
-	else if (request.isCGI())
-		return (CgiHandler::executeCgi(request));
 	// Handle redirect
-	else if (best_location->redirect != "false") {
+	if (best_location->redirect != "false") {
 		is_redirect = true;
 		request.setToClose();
 		if (best_location->redirect_is_extern)
 			return (new Response(302, best_location->redirect, "text/html"));
 		else {
-			best_location = request.server->getBestLocation(best_location->redirect);
+			best_location = request.server->getBestRedir(best_location->redirect);
 			// Location not found to redirect.
 			if (best_location == NULL)
 				return (new Response(404, request.server));

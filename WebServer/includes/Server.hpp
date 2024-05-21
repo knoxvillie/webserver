@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 11:12:59 by kfaustin         ###   ########.fr       */
+/*   Updated: 2024/05/21 13:39:09 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 
 #include "webserv.hpp"
 #include "Parser.hpp"
+#include "Request.hpp"
 
-
+class Request;
 
 class Server {
 	private:
@@ -57,7 +58,8 @@ class Server {
 		std::map<int, std::string> getErrorMap(void) const;
 		std::string getHost(void) const;
 		std::vector<uint16_t> getPort(void) const;
-		t_location* getBestLocation(const std::string&);
+		t_location* getBestLocation(Request&);
+		t_location* getBestRedir(const std::string&);
 		std::string getListen(void) const;
 		void * getDirectiveFromLocation(std::vector<t_location>&, const std::string&, const std::string&);
 
