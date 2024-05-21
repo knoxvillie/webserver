@@ -356,9 +356,14 @@ Http::handleUpload(const Request& request) {
 			{
 				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
 
-				std::string filepath =  (request.server->getBestRedir("/"))->root + "/upload/" + filename;
+                        std::string upload_dir = (request.server->getBestRedir("/"))->root + "/upload";
+                        if (!Utils::createDirectory(upload_dir)) {
+                            MLOG("Could not create upload directory!");
+                            throw Http::HttpErrorException(500);
+                        }
 
-				MLOG("FILEPATH: " << filepath);
+                        std::string filepath = upload_dir + "/" + filename;
+                        MLOG("FILEPATH: " << filepath);
 
 				std::ofstream outfile(filepath.c_str(), std::ios::binary);
 				if (outfile.is_open())
