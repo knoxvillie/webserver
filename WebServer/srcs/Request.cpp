@@ -370,7 +370,7 @@ Request::setCGI(void) {
 
 std::string
 Request::getContentType(void) {
-	if (this->headerMap.find("Content-type") != this->headerMap.end())
-		return (this->headerMap["Content-type"]);
+	if (this->headerMap.find("Content-Type") != this->headerMap.end())
+		return (this->headerMap["Content-Type"]);
 	return "";
 }

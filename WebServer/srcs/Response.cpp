@@ -62,9 +62,9 @@ Response::buildHeaderMap() {
 	MLOG("DATE: " << headerMap["Date"] << "\n");
 	headerMap["Content-length"] = Utils::intToString(this->body.size());
 	if (this->contentType.empty())
-		headerMap["Content-type"] = this->contentType; // something
+		headerMap["Content-Type"] = this->contentType; // something
 	else
-		headerMap["Content-type"] = "";
+		headerMap["Content-Type"] = "";
 	headerMap["Cache-control"] = "no-cache, private";
 	headerMap["Server"] = "";
 	if (this->status_code == 302) {

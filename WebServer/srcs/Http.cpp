@@ -80,7 +80,7 @@ Http::BuildResponse(Request& request) {
 	
 	Http::requestParser(request);
 	request.setBody();
-	MLOG("Request: " << request.getFull());
+	//MLOG("Request: " << request.getFull());
 	
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request);
@@ -133,7 +133,7 @@ Http::handleMethod(Request& request) {
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST") {
-		if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+		if (((request.getHeaderMap().find("Content-Type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
 		else
 			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
@@ -304,7 +304,7 @@ Http::handleUpload(const Request& request) {
 	MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
 	std::string content_type, boundary, body, part, line;
 
-	content_type = (request.getHeaderMap().find("Content-type"))->second;
+	content_type = (request.getHeaderMap().find("Content-Type"))->second;
 	std::string::size_type boundary_pos = content_type.find("boundary=");
 	
 	if (boundary_pos == std::string::npos)
@@ -321,8 +321,8 @@ Http::handleUpload(const Request& request) {
 
 	MLOG("Boundary: " << boundary << "\n");
 
-
 	body = request.getBody();
+
 	std::string::size_type i = 0;
 	std::string delimiter = "--" + boundary;
 	std::string end_boundary = delimiter + "--";
@@ -330,7 +330,7 @@ Http::handleUpload(const Request& request) {
 	while ((i = body.find(delimiter, i)) != std::string::npos)
 	{
 		i += delimiter.size();
-		if (body.substr(i + 2) == "--")
+		if (body.substr(i, 2) == "--")
 			break;
 		i += 2;
 
@@ -339,9 +339,10 @@ Http::handleUpload(const Request& request) {
 			break;
 		part = body.substr(i, partEnd - i);
 
-		std::string::size_type headerEnd = body.find(delimiter, i);
+		MLOG("PART: " << part);
+		std::string::size_type headerEnd = part.find("\r\n\r\n");
 		if (headerEnd == std::string::npos)
-			continue;
+			throw Http::HttpErrorException(400);
 
 		std::string partHeader = part.substr(0, headerEnd);
 		std::string partBody = part.substr(headerEnd + 4);
@@ -355,13 +356,17 @@ Http::handleUpload(const Request& request) {
 			{
 				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
 
-				std::string filepath = (request.server->getBestLocation("/"))->root + filename;
+				std::string filepath =  (request.server->getBestRedir("/"))->root + "/upload/" + filename;
+
+				MLOG("FILEPATH: " << filepath);
 
 				std::ofstream outfile(filepath.c_str(), std::ios::binary);
 				if (outfile.is_open())
 				{
 					outfile.write(partBody.c_str(), partBody.size());
 					outfile.close();
+					MLOG("File uploaded!");
+					return 200;
 				}
 				else
 				{

@@ -35,7 +35,7 @@ content_length = len(html.encode('utf-8'))
 
 # Print HTTP header
 print("HTTP/1.1 200 OK")
-print("Content-type: text/html")
+print("Content-Type: text/html")
 print("Connection: keep-alive")
 print("Content-length: {}".format(content_length))
 print("\r")
