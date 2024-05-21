@@ -347,7 +347,7 @@ int Http::handleUpload(const Request& request) {
                         std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
 
                         std::string upload_dir = (request.server->getBestRedir("/"))->root + "/upload";
-                        if (!createDirectory(upload_dir)) {
+                        if (!Utils::createDirectory(upload_dir)) {
                             MLOG("Could not create upload directory!");
                             throw Http::HttpErrorException(500);
                         }
