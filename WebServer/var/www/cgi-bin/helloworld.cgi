@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import time
+
+time.sleep(5)
 print("HTTP/1.1 200 OK\r")
 print("Content-type: text/html\r")
 print("Connection: keep-alive\r")

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/20 14:54:08 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 14:45:22 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	int epoll_fd, num_ready_events;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 	std::map<int, Request*> requests;
+	std::map<int, Request*> cgi_requests;
 	
 	event.events = EPOLLIN; // The server sockets only need to be monitored for read calls
 	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
@@ -115,11 +116,17 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				
 				if (event_buffer[i].events & EPOLLIN) { // Not closing these sockets yet
 				    MLOG("EPOLLIN is present\n");
+					
+					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
+						CgiHandler::readFromCgi(client_sock);
+						continue;
+					}
+					
 					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
-						requests[client_sock] = cl_request;
+						requests[client_sock] = cl_request;	
 					} else if (requests[client_sock]->isFinished()) continue;
-
+					
 					Http::receiveFromClient(client_sock, *requests[client_sock]);
 				}
 				
@@ -135,6 +142,26 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					try { // This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
 						response = Http::BuildResponse(*requests[client_sock]);
+						
+						if (requests[client_sock]->isCGI() && (response == NULL)) {
+							struct epoll_event pipe_event;
+        					// Add the pipe_to_parent[0] to epoll (to read from CGI)
+							pipe_event.events = EPOLLIN;
+        					pipe_event.data.fd = requests[client_sock]->cgi_pipes[0];
+							if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[0], &pipe_event) < 0)
+								throw std::runtime_error("Error: epoll_ctl failed");
+							// Add the pipe_to_child[1] to epoll (to write to CGI)
+							pipe_event.events = EPOLLOUT;
+							pipe_event.data.fd = requests[client_sock]->cgi_pipes[1];
+							if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[1], &pipe_event) < 0)
+								throw std::runtime_error("Error: epoll_ctl failed");
+							
+							cgi_requests[requests[client_sock]->cgi_pipes[0]] = requests[client_sock];
+							cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
+							// Might need to do more stuff idk
+							continue;
+						}
+
 					} catch (const Http::HttpErrorException& e) {
 						e.what();
 						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);	

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 13:16:38 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 14:56:18 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,11 @@ class Request {
 
 		t_location *location;
 		Server *server;
+
+		int cgi_pipes[2]; // Write on pipe[1] read on pipe[0]
+		int cgi_bytes;
+		bool cgi_finished;
+		std::string cgiBuf;
 
 		//void decodeURI(void);
 		void receiveData(const std::string& buf, int bytes);
