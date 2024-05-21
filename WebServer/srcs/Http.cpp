@@ -306,30 +306,82 @@ Http::handleUpload(const Request& request) {
 	std::string content_type, boundary, body, part, line;
 
 	content_type = (request.getHeaderMap().find("Content-type"))->second;
-	boundary = content_type.substr(content_type.find("bondary=") + 9);
-	boundary = boundary.substr(0, boundary.find(";"));
+	std::string::size_type boundary_pos = content_type.find("boundary=");
+	
+	if (boundary_pos == std::string::npos)
+	{
+		MLOG("No boundary found in content-type\n");
+		throw Http::HttpErrorException(400);
+	}
+	
+	boundary = content_type.substr(boundary_pos + 9);
+	if (boundary.find(";") != std::string::npos)
+	{
+		boundary = boundary.substr(0, boundary.find(";"));
+	}
 
 	MLOG("Boundary: " << boundary << "\n");
 
+
 	body = request.getBody();
-	for (int i = 0; i < body.size();) {
-		// Get each part
-		int partStart = body.find(boundary, i) + boundary.size();	
-		int partEnd = body.find(boundary, partStart);
-		part = body.substr(partStart, partEnd - partStart); // Note: might need to add 1
-		i = partEnd;	// Place i at the end of the part found
-		
-		// Separate header and body of the current part
-		std::string partHeader = part.substr(0, part.find("\r\n\r\n"));
-		std::string partBody = part.substr(part.find("\r\n\r\n") + 4);
-		
-		// Get the filename from the header
-		int pos = partHeader.find("filename=") + 10; // 10 because 9 is for filename=, and 1 extra for the " after
-		std::string filename = (pos != std::string::npos) ? partHeader.substr(pos, partHeader.find("\"", pos)) : "default";
-		
-		// Create the file and send the body there
-		 
+	std::string::size_type i = 0;
+	std::string delimiter = "--" + boundary;
+	std::string end_boundary = delimiter + "--";
+	
+	while ((i = body.find(delimiter, i)) != std::string::npos)
+	{
+		i += delimiter.size();
+		if (body.substr(i + 2) == "--")
+			break;
+		i += 2;
+
+		std::string::size_type partEnd = body.find(delimiter, i);
+		if (partEnd == std::string::npos)
+			break;
+		part = body.substr(i, partEnd - i);
+
+		std::string::size_type headerEnd = body.find(delimiter, i);
+		if (headerEnd == std::string::npos)
+			continue;
+
+		std::string partHeader = part.substr(0, headerEnd);
+		std::string partBody = part.substr(headerEnd + 4);
+
+		std::string::size_type filename_pos = partHeader.find("filename=\"");
+		if (filename_pos != std::string::npos)
+		{
+			filename_pos += 10;
+			std::string::size_type filename_end = partHeader.find("\"", filename_pos);
+			if (filename_end != std::string::npos)
+			{
+				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
+
+				std::ofstream outfile(filename.c_str(), std::ios::binary);
+				if (outfile.is_open())
+				{
+					outfile.write(partBody.c_str(), partBody.size());
+					outfile.close();
+				}
+				else
+				{
+					MLOG("Could not open " << filename << " for writing!");
+					throw Http::HttpErrorException(500);
+				}					
+			}
+			else
+			{
+				MLOG("Invalid filename format in header!");
+				throw Http::HttpErrorException(400);
+			}
+		}
+		else
+		{
+			MLOG("Filename not found on the request!");
+			throw Http::HttpErrorException(400);
+		}
+	i = partEnd;
 	}
+	return (200);
 }
 
 
