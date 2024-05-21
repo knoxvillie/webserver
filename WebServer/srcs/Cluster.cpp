@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 14:45:22 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/21 15:10:15 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,11 +118,13 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				    MLOG("EPOLLIN is present\n");
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
-						CgiHandler::readFromCgi(client_sock);
+						// TODO: checks
+						CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
 						continue;
 					}
 					
-					if (requests.find(client_sock) == requests.end()) { // No previous request for this client_sock
+					// If there are no previous request for this client_sock create a new one
+					if (requests.find(client_sock) == requests.end()) {
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
 						requests[client_sock] = cl_request;	
 					} else if (requests[client_sock]->isFinished()) continue;
