@@ -298,63 +298,53 @@ Http::deleteMethod(const std::string& file_path, const std::vector<std::string>&
 	return (200);
 }
 
-int
-Http::handleUpload(const Request& request) {
-	GPS;
-	MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
-	std::string content_type, boundary, body, part, line;
+int Http::handleUpload(const Request& request) {
+    GPS;
+    MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
 
-	content_type = (request.getHeaderMap().find("Content-Type"))->second;
-	std::string::size_type boundary_pos = content_type.find("boundary=");
-	
-	if (boundary_pos == std::string::npos)
-	{
-		MLOG("No boundary found in content-type\n");
-		throw Http::HttpErrorException(400);
-	}
-	
-	boundary = content_type.substr(boundary_pos + 9);
-	if (boundary.find(";") != std::string::npos)
-	{
-		boundary = boundary.substr(0, boundary.find(";"));
-	}
+    const size_t MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
+    std::string content_type, boundary, part;
 
-	MLOG("Boundary: " << boundary << "\n");
+    content_type = (request.getHeaderMap().find("Content-Type"))->second;
+    std::string::size_type boundary_pos = content_type.find("boundary=");
+    if (boundary_pos == std::string::npos) {
+        MLOG("No boundary found in content-type\n");
+        throw Http::HttpErrorException(400);
+    }
+    
+    boundary = content_type.substr(boundary_pos + 9);
+    if (boundary.find(";") != std::string::npos) {
+        boundary = boundary.substr(0, boundary.find(";"));
+    }
+    MLOG("Boundary: " << boundary << "\n");
 
-	body = request.getBody();
+    std::string delimiter = "--" + boundary;
+    std::string end_boundary = delimiter + "--";
+    
+    size_t total_size = 0;
 
-	std::string::size_type i = 0;
-	std::string delimiter = "--" + boundary;
-	std::string end_boundary = delimiter + "--";
-	
-	while ((i = body.find(delimiter, i)) != std::string::npos)
-	{
-		i += delimiter.size();
-		if (body.substr(i, 2) == "--")
-			break;
-		i += 2;
+    std::stringstream body_stream(request.getBody());
+    std::string line;
+    std::string partHeader;
+    std::string partBody;
+    bool inHeader = true;
 
-		std::string::size_type partEnd = body.find(delimiter, i);
-		if (partEnd == std::string::npos)
-			break;
-		part = body.substr(i, partEnd - i);
+    while (std::getline(body_stream, line)) {
+        total_size += line.size();
+        if (total_size > MAX_UPLOAD_SIZE) {
+            MLOG("Upload size exceeds the maximum limit\n");
+            throw Http::HttpErrorException(413); // 413 Payload Too Large
+        }
 
-		MLOG("PART: " << part);
-		std::string::size_type headerEnd = part.find("\r\n\r\n");
-		if (headerEnd == std::string::npos)
-			throw Http::HttpErrorException(400);
-
-		std::string partHeader = part.substr(0, headerEnd);
-		std::string partBody = part.substr(headerEnd + 4);
-
-		std::string::size_type filename_pos = partHeader.find("filename=\"");
-		if (filename_pos != std::string::npos)
-		{
-			filename_pos += 10;
-			std::string::size_type filename_end = partHeader.find("\"", filename_pos);
-			if (filename_end != std::string::npos)
-			{
-				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
+        if (line == delimiter || line == end_boundary) {
+            if (!partBody.empty() && !partHeader.empty()) {
+                // Process the previous part
+                std::string::size_type filename_pos = partHeader.find("filename=\"");
+                if (filename_pos != std::string::npos) {
+                    filename_pos += 10;
+                    std::string::size_type filename_end = partHeader.find("\"", filename_pos);
+                    if (filename_end != std::string::npos) {
+                        std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
 
                         std::string upload_dir = (request.server->getBestRedir("/"))->root + "/upload";
                         if (!Utils::createDirectory(upload_dir)) {
@@ -365,34 +355,38 @@ Http::handleUpload(const Request& request) {
                         std::string filepath = upload_dir + "/" + filename;
                         MLOG("FILEPATH: " << filepath);
 
-				std::ofstream outfile(filepath.c_str(), std::ios::binary);
-				if (outfile.is_open())
-				{
-					outfile.write(partBody.c_str(), partBody.size());
-					outfile.close();
-					MLOG("File uploaded!");
-					return 200;
-				}
-				else
-				{
-					MLOG("Could not open " << filename << " for writing!");
-					throw Http::HttpErrorException(500);
-				}					
-			}
-			else
-			{
-				MLOG("Invalid filename format in header!");
-				throw Http::HttpErrorException(400);
-			}
-		}
-		else
-		{
-			MLOG("Filename not found on the request!");
-			throw Http::HttpErrorException(400);
-		}
-		i = partEnd;
-	}
-	return (200);
+                        std::ofstream outfile(filepath.c_str(), std::ios::binary);
+                        if (outfile.is_open()) {
+                            outfile.write(partBody.c_str(), partBody.size());
+                            outfile.close();
+                            MLOG("File uploaded!");
+                        } else {
+                            MLOG("Could not open " << filename << " for writing!");
+                            throw Http::HttpErrorException(500);
+                        }
+                    } else {
+                        MLOG("Invalid filename format in header!");
+                        throw Http::HttpErrorException(400);
+                    }
+                } else {
+                    MLOG("Filename not found on the request!");
+                    throw Http::HttpErrorException(400);
+                }
+                partBody.clear();
+                partHeader.clear();
+            }
+            inHeader = true;
+        } else if (line == "\r" && inHeader) {
+            inHeader = false;
+        } else {
+            if (inHeader) {
+                partHeader += line + "\n";
+            } else {
+                partBody += line + "\n";
+            }
+        }
+    }
+    return 200;
 }
 
 
