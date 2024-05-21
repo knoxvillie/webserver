@@ -134,10 +134,10 @@ Http::handleMethod(Request& request) {
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST") {
-		/* if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+		if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
-		else */
-		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+		else
+			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 	}
 	else if (request.getMethod() == "DELETE")
 		status_code = Http::deleteMethod(request.getFilePath(), location->allow_methods);
@@ -301,16 +301,15 @@ Http::deleteMethod(const std::string& file_path, const std::vector<std::string>&
 
 int
 Http::handleUpload(const Request& request) {
+	GPS;
 	MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
-	(void)request;
-	return 0;
-/* 	std::string content_type, boundary, body, part, line;
+	std::string content_type, boundary, body, part, line;
 
 	content_type = (request.getHeaderMap().find("Content-type"))->second;
 	boundary = content_type.substr(content_type.find("bondary=") + 9);
 	boundary = boundary.substr(0, boundary.find(";"));
 
-	MLOG(".|. Boundary: " << boundary << " .|.\n");
+	MLOG("Boundary: " << boundary << "\n");
 
 	body = request.getBody();
 	for (int i = 0; i < body.size();) {
@@ -330,7 +329,7 @@ Http::handleUpload(const Request& request) {
 		
 		// Create the file and send the body there
 		 
-	}*/
+	}
 }
 
 
