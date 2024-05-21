@@ -356,7 +356,9 @@ Http::handleUpload(const Request& request) {
 			{
 				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
 
-				std::ofstream outfile(filename.c_str(), std::ios::binary);
+				std::string filepath = (request.server->getBestLocation("/"))->root + filename;
+
+				std::ofstream outfile(filepath.c_str(), std::ios::binary);
 				if (outfile.is_open())
 				{
 					outfile.write(partBody.c_str(), partBody.size());
@@ -379,7 +381,7 @@ Http::handleUpload(const Request& request) {
 			MLOG("Filename not found on the request!");
 			throw Http::HttpErrorException(400);
 		}
-	i = partEnd;
+		i = partEnd;
 	}
 	return (200);
 }
