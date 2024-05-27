@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 15:10:15 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/27 11:58:31 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,8 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
 						// TODO: checks
-						CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
+						if (!cgi_requests[client_sock]->cgi_finished)
+							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
 						continue;
 					}
 					
@@ -133,6 +134,16 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				}
 				
 				if (event_buffer[i].events & EPOLLOUT) {
+					Response* response;
+					
+					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
+						// TODO: checks
+						CgiHandler::writeToCgi(client_sock, *cgi_requests[client_sock]);
+						if (cgi_requests[client_sock]->cgi_finished)
+							//response = ;		
+						continue;
+					}
+					
 					// EPOLLOUT event means that the socket is ready for writing
 					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
 					
@@ -140,8 +151,9 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					if (!(requests[client_sock]->isFinished())) continue;
 
 				    MLOG("EPOLLOUT is present\n");
-					Response* response;
-					try { // This try catch is just to help in the methods and what not where returning is not as pratical
+					
+					try { 
+					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
 						response = Http::BuildResponse(*requests[client_sock]);
 						
@@ -160,7 +172,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 							
 							cgi_requests[requests[client_sock]->cgi_pipes[0]] = requests[client_sock];
 							cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
-							// Might need to do more stuff idk
+							// TODO: Might need to do more stuff idk
 							continue;
 						}
 
