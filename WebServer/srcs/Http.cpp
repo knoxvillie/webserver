@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/28 12:44:01 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 16:33:59 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@ Http::receiveFromClient(int socket, Request& request) {
 	MLOG("bytes: " << bytes);
 		
 	request.receiveData(std::string(buf), bytes);
+	if (bytes == 0)
+		throw Http::HttpConnectionException("Error - Connection closed before request was finished");
 	if (bytes < 0)
 		return;
 }
@@ -387,10 +389,20 @@ Http::HttpErrorException::HttpErrorException(int error) : http_error(error), msg
 
 Http::HttpErrorException::~HttpErrorException() throw() {}
 
-const char* Http::HttpErrorException::what() const throw() {
+const char*
+Http::HttpErrorException::what() const throw() {
 	return message;
 }
 
-int Http::HttpErrorException::getErrorCode() const {
+int
+Http::HttpErrorException::getErrorCode() const {
         return this->http_error;
 }
+
+
+Http::HttpConnectionException::HttpConnectionException(std::string msg) : message(msg.c_str()) {}
+Http::HttpConnectionException::~HttpConnectionException() throw() {}
+const char* Http::HttpConnectionException::what() const throw() {
+	return message;
+}
+	

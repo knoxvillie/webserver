@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 15:37:33 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 16:48:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,20 +119,17 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
 						// TODO: checks
-						child_status = waitpid(cgi_requests[client_sock]->pid,  &child_status, WNOHANG);
-						if (WIFEXITED(child_status))
-							MLOG("Child exited with status" << WIFEXITED(child_status));
-						
+						child_status = waitpid(cgi_requests[client_sock]->pid,  &child_status, WNOHANG);			
 						if (!cgi_requests[client_sock]->cgi_finished) {
 							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
 						}
+						
+						if (child_status == cgi_requests[client_sock]->pid)
+							cgi_requests[client_sock]->cgi_finished = true;
 
 						if (cgi_requests[client_sock]->cgi_finished || (child_status == -1)) {
 							cgi_requests[client_sock]->cgi_finished = true;
-							cgi_requests.erase(client_sock);
-							if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL) < 0)
-								throw std::runtime_error("Error: epoll_ctl failed");
-							close(client_sock);
+							Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
 						}
 						continue;
 					}
@@ -141,9 +138,24 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					if (requests.find(client_sock) == requests.end()) {
 						Request *cl_request = new Request(Cluster::sockToServer[client_sock]);
 						requests[client_sock] = cl_request;	
-					} else if (requests[client_sock]->isFinished()) continue;
+					} //else if (requests[client_sock]->isFinished()) continue;
 					
-					Http::receiveFromClient(client_sock, *requests[client_sock]);
+					try {
+						Http::receiveFromClient(client_sock, *requests[client_sock]);
+					} catch (Http::HttpConnectionException& e) {
+						e.what();
+						// Close CGI requests
+						std::map<int, Request*>::const_iterator it;
+						do {
+							it = find_by_value(cgi_requests, requests[client_sock]);
+							if (it != cgi_requests.end())
+								Cluster::closeCgiConnection(epoll_fd, it->first, cgi_requests);
+						} while (it != cgi_requests.end());
+
+						Cluster::closeConnection(epoll_fd, client_sock);
+						delete requests[client_sock];
+						requests.erase(client_sock);
+					}
 				}
 				
 				if (event_buffer[i].events & EPOLLOUT) {
@@ -153,10 +165,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 						// Only the pipe to child will get here, since we only monitor for EPOLLOUT there 
 						CgiHandler::writeToCgi(client_sock, *cgi_requests[client_sock]);
 						// Write to CGI once
-						cgi_requests.erase(client_sock);
-						if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL) < 0)
-							throw std::runtime_error("Error: epoll_ctl failed");
-						close(client_sock);
+						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
 						continue;
 					}
 					
@@ -164,7 +173,8 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
 					// If the request isn't finished don't send a response
 					if (!(requests[client_sock]->isFinished())) continue;
-				    //MLOG("EPOLLOUT is present\n");
+				    
+					//MLOG("EPOLLOUT is present\n");
 					
 					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
@@ -209,7 +219,6 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 							}
 						}
 
-
 					} catch (const Http::HttpErrorException& e) {
 						e.what();
 						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);	
@@ -240,6 +249,13 @@ Cluster::deleteRequests(std::map<int, Request*>& requests) {
 	for (it = requests.begin(); it != requests.end(); it++) {
 		delete (it->second);
 	}
+}
+
+void
+Cluster::closeCgiConnection(int epoll_fd, int fd, std::map<int, Request*>& cgi_requests) {
+	cgi_requests.erase(fd);
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+	close(fd);
 }
 
 void
