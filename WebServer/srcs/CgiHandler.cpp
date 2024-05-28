@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 12:08:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:47:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ CgiHandler::executeCgi(Request& request) {
 	std::string script_name = request.location->cgi_pass;
 
 	if (!isExecutable(script_name.c_str()))
-		return (new Response(403, request.server)); // Might be 404
+		throw Http::HttpErrorException(403); // Might be 404
 
 	int pipe_to_parent[2];
 	int pipe_to_child[2];
@@ -106,12 +106,16 @@ CgiHandler::executeCgi(Request& request) {
 		
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(script, argv, envp) != 0) {
-			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n"); // Kills the child process
+			std::ofstream out("log");
+			out << "ERROR: execve() failed! errno = " << strerror(errno) << "\n";
+			out.close();
 			free_env(envp);
 			exit(1);
 		}
 		
 	} else {
+		request.pid = pid;
+		
 		close(pipe_to_child[0]);
 		close(pipe_to_parent[1]);
 		
@@ -120,16 +124,7 @@ CgiHandler::executeCgi(Request& request) {
 
 		request.cgi_pipes[0] = pipe_to_parent[0];
 		request.cgi_pipes[1] = pipe_to_child[1];
-		
-/* 		CgiHandler::writeToCgi(pipe_to_child[1], request.getBody());
-		close(pipe_to_child[1]); // This sends EOF to child (?)
-
-		response = readFromCgi(pipe_to_parent[0]);
-		MLOG("\nCgi output: \n" + response);
-		// TODO: Test if we only send the response from the CGI when EOF is found
-		close(pipe_to_parent[0]); */
 	}
-	//request.setToClose();
 	request.cgi_finished = false;
 	return (NULL);
 }
@@ -155,7 +150,7 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 	
 	if (bytes < 0)
 		return;
-
+	
 	if (bytes == 0) { // this indicates that the cgi has closed the pipe
 		// fd will be closed in cluster
 		request.cgi_finished = true;

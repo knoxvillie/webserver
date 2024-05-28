@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:12 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 14:50:11 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:40:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "Http.hpp"
 
 class CgiHandler { // Should this be static ?
 

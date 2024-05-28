@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 12:51:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:42:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ Cluster::startServers(std::vector<Server>& servers) {
 		Cluster::serverSockets.push_back(server_sock);
 		Cluster::sockToServer[server_sock] = &(servers[i]);
 	}
-	//CgiHandler::initMap();
+
 	Cluster::serversLoop(servers);
 }
 
@@ -43,7 +43,7 @@ void
 Cluster::serversLoop(std::vector<Server>& servers) {
 	GPS;
 	bool new_connection = true;
-	int epoll_fd, num_ready_events;
+	int epoll_fd, num_ready_events, child_status = 0;
 	struct epoll_event event, event_buffer[MAX_EVENTS];
 	std::map<int, Request*> requests;
 	std::map<int, Request*> cgi_requests;
@@ -119,12 +119,24 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
 						// TODO: checks
-						if (!cgi_requests[client_sock]->cgi_finished)
-							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
-						else {
+						child_status = waitpid(cgi_requests[client_sock]->pid,  &child_status, WNOHANG);
+						if (WIFEXITED(child_status))
+							MLOG("Child exited with status" << WIFEXITED(child_status));
+						
+						if (child_status == 0) continue;
+						
+						if (cgi_requests[client_sock]->cgi_finished || (child_status == -1)) {
+							cgi_requests[client_sock]->cgi_finished = true;
 							cgi_requests.erase(client_sock);
+							if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL) < 0)
+								throw std::runtime_error("Error: epoll_ctl failed");
 							close(client_sock);
 						}
+						
+						if (!cgi_requests[client_sock]->cgi_finished) {
+							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
+						}
+
 						continue;
 					}
 					
@@ -138,39 +150,43 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 				}
 				
 				if (event_buffer[i].events & EPOLLOUT) {
-					Response* response;
+					Response* response = NULL;
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
 						// Only the pipe to child will get here, since we only monitor for EPOLLOUT there 
 						CgiHandler::writeToCgi(client_sock, *cgi_requests[client_sock]);
 						// Write to CGI once
 						cgi_requests.erase(client_sock);
+						if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_sock, NULL) < 0)
+							throw std::runtime_error("Error: epoll_ctl failed");
 						close(client_sock);
 						continue;
 					}
 					
 					// EPOLLOUT event means that the socket is ready for writing
 					if (requests.find(client_sock) == requests.end()) continue; // No previous request for this client_sock
-					
 					// If the request isn't finished don't send a response
 					if (!(requests[client_sock]->isFinished())) continue;
-
 				    //MLOG("EPOLLOUT is present\n");
 					
 					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
 					try { 
 						// If the request is not a CGI
-						if (!requests[client_sock]->isCGI()) 
+						if (!requests[client_sock]->isCGI())
 							response = Http::BuildResponse(*requests[client_sock]);
 						
 						// Can't put else here because it need to enter BuildResponse() the first cycle and also into this if
-						if (requests[client_sock]->isCGI()) {
+						if (requests[client_sock]->isCGI() && (response == NULL)) {
+							if (child_status < 0)
+								throw Http::HttpErrorException(500);
 							// The request is a cgi
 							if (requests[client_sock]->cgi_finished) {
 								// CGI is finished so send the response
 								response = new Response(requests[client_sock]->cgiBuf);
-							} else if (requests[client_sock] == (find_by_value(cgi_requests, requests[client_sock]))->second)
+
+							} else if ((find_by_value(cgi_requests, requests[client_sock]) != cgi_requests.end())
+								&& (requests[client_sock] == (find_by_value(cgi_requests, requests[client_sock]))->second))
 								// This means we found the request in cgi_requests, meaning we already executed the CGI but its not finished yet
 								continue;
 							else {
@@ -190,7 +206,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 								
 								cgi_requests[requests[client_sock]->cgi_pipes[0]] = requests[client_sock];
 								cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
-								// TODO: Might need to do more stuff idk
+								
 								continue;
 							}
 						}

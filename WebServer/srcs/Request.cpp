@@ -6,16 +6,16 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 13:15:28 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:40:38 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-Request::Request(Server* arg) : bytes_read(0), finished(false), keep_alive(true), chunked(false), server(arg) {}
+Request::Request(Server* arg) : bytes_read(0), cgi(false), finished(false), keep_alive(true), chunked(false), server(arg), cgi_finished(false) {}
 
 // TODO
-Request::Request(const std::string& request) : full(request), bytes_read(0), finished(false), keep_alive(true), chunked(false) {
+Request::Request(const std::string& request) : full(request), bytes_read(0), cgi(false), finished(false), keep_alive(true), chunked(false), cgi_finished(false) {
 	// this is wrong, the request should be initialized with the default constructor and then
 	// data should be added and parsed when its done receiving data
 	setHeader();
@@ -65,7 +65,7 @@ Request::receiveData(const std::string& buf, int bytes) {
 	if (this->header.empty()) return; // The full header hasn't been read yet
 	
 	if (this->isChunked()) { // Handle chunked requests
-		this->receiveChunked(buf); // FIXME: This doesn't work when the buffer doesnt include the full chunk
+		this->receiveChunked(buf);
 		return;
 	}
 

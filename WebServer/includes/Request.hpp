@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/27 11:50:18 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:13:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ class Request {
 		int cgi_bytes;
 		bool cgi_finished;
 		std::string cgiBuf;
+		pid_t pid;
 
 		//void decodeURI(void);
 		void receiveData(const std::string& buf, int bytes);

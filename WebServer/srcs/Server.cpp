@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 13:20:40 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:47:03 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -407,7 +407,8 @@ Server::getBestLocation(Request& request) {
 			}
 		}
 	}
-	MLOG("Location: " << bestMatch->location_name);
+	if (bestMatch != NULL)
+		MLOG("Location: " << bestMatch->location_name);
 	return bestMatch;
 }
 

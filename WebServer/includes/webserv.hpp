@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 12:40:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:11:49 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <ctime>
 #include <filesystem>
+#include <sys/wait.h>
 
 // ========================
 // 		Macros and struct

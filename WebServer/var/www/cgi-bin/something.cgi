@@ -6,3 +6,5 @@ print "Connection: keep-alive\r\n";
 print "Content-length: 24\r\n";
 print "\r\n";
 print "Hello world! FROM PERL!!\r\n";
+
+exit;
