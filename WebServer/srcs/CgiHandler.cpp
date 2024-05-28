@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 14:47:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 16:01:30 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,9 +106,7 @@ CgiHandler::executeCgi(Request& request) {
 		
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(script, argv, envp) != 0) {
-			std::ofstream out("log");
-			out << "ERROR: execve() failed! errno = " << strerror(errno) << "\n";
-			out.close();
+			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n");
 			free_env(envp);
 			exit(1);
 		}
