@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 14:42:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 15:37:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,8 +123,10 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 						if (WIFEXITED(child_status))
 							MLOG("Child exited with status" << WIFEXITED(child_status));
 						
-						if (child_status == 0) continue;
-						
+						if (!cgi_requests[client_sock]->cgi_finished) {
+							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
+						}
+
 						if (cgi_requests[client_sock]->cgi_finished || (child_status == -1)) {
 							cgi_requests[client_sock]->cgi_finished = true;
 							cgi_requests.erase(client_sock);
@@ -132,11 +134,6 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 								throw std::runtime_error("Error: epoll_ctl failed");
 							close(client_sock);
 						}
-						
-						if (!cgi_requests[client_sock]->cgi_finished) {
-							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
-						}
-
 						continue;
 					}
 					
@@ -184,6 +181,7 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 							if (requests[client_sock]->cgi_finished) {
 								// CGI is finished so send the response
 								response = new Response(requests[client_sock]->cgiBuf);
+								MLOG(requests[client_sock]->cgiBuf);
 
 							} else if ((find_by_value(cgi_requests, requests[client_sock]) != cgi_requests.end())
 								&& (requests[client_sock] == (find_by_value(cgi_requests, requests[client_sock]))->second))
