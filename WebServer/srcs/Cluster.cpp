@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/27 11:58:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:51:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,6 +121,10 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 						// TODO: checks
 						if (!cgi_requests[client_sock]->cgi_finished)
 							CgiHandler::readFromCgi(client_sock, *cgi_requests[client_sock]);
+						else {
+							cgi_requests.erase(client_sock);
+							close(client_sock);
+						}
 						continue;
 					}
 					
@@ -137,10 +141,11 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					Response* response;
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) { // in this case client_sock is a fd
-						// TODO: checks
+						// Only the pipe to child will get here, since we only monitor for EPOLLOUT there 
 						CgiHandler::writeToCgi(client_sock, *cgi_requests[client_sock]);
-						if (cgi_requests[client_sock]->cgi_finished)
-							//response = ;		
+						// Write to CGI once
+						cgi_requests.erase(client_sock);
+						close(client_sock);
 						continue;
 					}
 					
@@ -150,31 +155,46 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 					// If the request isn't finished don't send a response
 					if (!(requests[client_sock]->isFinished())) continue;
 
-				    MLOG("EPOLLOUT is present\n");
+				    //MLOG("EPOLLOUT is present\n");
 					
-					try { 
 					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
-						response = Http::BuildResponse(*requests[client_sock]);
+					try { 
+						// If the request is not a CGI
+						if (!requests[client_sock]->isCGI()) 
+							response = Http::BuildResponse(*requests[client_sock]);
 						
-						if (requests[client_sock]->isCGI() && (response == NULL)) {
-							struct epoll_event pipe_event;
-        					// Add the pipe_to_parent[0] to epoll (to read from CGI)
-							pipe_event.events = EPOLLIN;
-        					pipe_event.data.fd = requests[client_sock]->cgi_pipes[0];
-							if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[0], &pipe_event) < 0)
-								throw std::runtime_error("Error: epoll_ctl failed");
-							// Add the pipe_to_child[1] to epoll (to write to CGI)
-							pipe_event.events = EPOLLOUT;
-							pipe_event.data.fd = requests[client_sock]->cgi_pipes[1];
-							if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[1], &pipe_event) < 0)
-								throw std::runtime_error("Error: epoll_ctl failed");
-							
-							cgi_requests[requests[client_sock]->cgi_pipes[0]] = requests[client_sock];
-							cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
-							// TODO: Might need to do more stuff idk
-							continue;
+						// Can't put else here because it need to enter BuildResponse() the first cycle and also into this if
+						if (requests[client_sock]->isCGI()) {
+							// The request is a cgi
+							if (requests[client_sock]->cgi_finished) {
+								// CGI is finished so send the response
+								response = new Response(requests[client_sock]->cgiBuf);
+							} else if (requests[client_sock] == (find_by_value(cgi_requests, requests[client_sock]))->second)
+								// This means we found the request in cgi_requests, meaning we already executed the CGI but its not finished yet
+								continue;
+							else {
+								// This mean that its the first time the CGI request is passing through the loop
+								// After executing Http::BuildResponse()
+								struct epoll_event pipe_event;
+        						// Add the pipe_to_parent[0] to epoll (to read from CGI)
+								pipe_event.events = EPOLLIN;
+        						pipe_event.data.fd = requests[client_sock]->cgi_pipes[0];
+								if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[0], &pipe_event) < 0)
+									throw std::runtime_error("Error: epoll_ctl failed");
+								// Add the pipe_to_child[1] to epoll (to write to CGI)
+								pipe_event.events = EPOLLOUT;
+								pipe_event.data.fd = requests[client_sock]->cgi_pipes[1];
+								if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, requests[client_sock]->cgi_pipes[1], &pipe_event) < 0)
+									throw std::runtime_error("Error: epoll_ctl failed");
+								
+								cgi_requests[requests[client_sock]->cgi_pipes[0]] = requests[client_sock];
+								cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
+								// TODO: Might need to do more stuff idk
+								continue;
+							}
 						}
+
 
 					} catch (const Http::HttpErrorException& e) {
 						e.what();

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 15:04:07 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:08:51 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,8 @@ CgiHandler::executeCgi(Request& request) {
 // TODO: test
 void
 CgiHandler::writeToCgi(int fd, Request& request) {
-	//if (write(fd, content.c_str(), content.size()) < 0)
+	std::string content = request.getBody();
+	if (write(fd, content.c_str(), content.size()) < 0)
 		MLOG("ERROR: sendToCgi() failed.");
 }
 
@@ -156,7 +157,7 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 		return;
 
 	if (bytes == 0) { // this indicates that the cgi has closed the pipe
-		close(fd);
+		// fd will be closed in cluster
 		request.cgi_finished = true;
 		return;
 	}
@@ -165,7 +166,8 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 	// The size of the body of the response
 	request.cgi_bytes = (request.cgiBuf).substr((request.cgiBuf).find("\r\n\r\n") + 4).size();
 
-	int content_length = -1, pos = (request.cgiBuf).find("Content-length: ");
+	int content_length = -1;
+	size_t pos = (request.cgiBuf).find("Content-length: ");
 	
 	if (pos != std::string::npos) {
 		std::string line = (request.cgiBuf).substr(0, (request.cgiBuf).find("\r\n", pos)); // everything until the end of the line containing "Content-length: "
@@ -173,7 +175,7 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 	}
 
 	if ((content_length != -1) && request.cgi_bytes >= content_length) {
-		close(fd);
+		// fd will be closed in cluster
 		request.cgi_finished = true;
 		return;
 	}

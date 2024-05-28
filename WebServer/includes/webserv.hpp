@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/21 13:01:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:40:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,5 +178,15 @@ void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
 		std::cout << std::endl;
 	}
 }
+
+template<typename K, typename V>
+typename std::map<K, V>::const_iterator find_by_value(std::map<K, V>& map, const V& value) {
+	for (typename std::map<K, V>::const_iterator it = map.begin(); it != map.end(); it++) {
+		if (it->second == value)
+			return (it);
+	}
+	return (map.end());
+}
+
 
 #endif
