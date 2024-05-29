@@ -3,7 +3,7 @@
  Functionalities:
 ===========
 
-* Handle chunked requests (Check if it already works)
+* Make some sort of timeout feature
 
 * Check listen with multiple ports
 
@@ -11,16 +11,12 @@
 
 * Make it possible to upload files
 
-* Make it possible to set the cgi extension in the config file instead of just using ".cgi"
-
-* Maybe our root needs to work like alias in nginx according to the subject
-
 ===========
  Checks/tests:
 ===========
 
-* Check almost all throws we do to see if we should handle the error in another way
-especially in the HTTP class.
+* Make it so if when we create a server it throws an error we still create the 
+other servers in the config file
 
 * Check if there really is a need to have the whole program inside a try catch
 
