@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/29 10:20:01 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 12:15:11 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,10 @@ Request::receiveData(const std::string& buf, int bytes) {
 			this->receiveChunked(this->full.substr(this->full.find("\r\n\r\n") + 4));
 			return;
 		}
-		else
+		else {
+			this->bytes_read += bytes;
 			this->bytes_read -= (bytes - body_bytes); // Only need to do this once, when the header is found
+		}
 
 		if (this->content_length == -1 || this->content_length == 0) // The header is read so if there is no content length the request should be complete
 			this->finished = true;
@@ -70,6 +72,9 @@ Request::receiveData(const std::string& buf, int bytes) {
 	}
 
 	this->bytes_read += bytes; // The content length is only for the body. so subtract header bytes when header is found
+	MLOG("BYTES READ: " << bytes_read);
+	MLOG("FULL SIZE: " << full.size())
+	MLOG("HEADER SIZE: " << header.size());
 	
 	if ((this->content_length != -1) && (this->bytes_read >= this->content_length))
 		this->finished = true;
@@ -330,8 +335,9 @@ Request::setURI(const std::string& uri) {
 void
 Request::setContentLength(void) {
 	content_length = -1;
-	if (this->headerMap.find("Content-length") != this->headerMap.end())
-		content_length = std::atoi(this->headerMap["Content-length"].c_str());
+	if (this->headerMap.find("Content-Length") != this->headerMap.end())
+		content_length = std::atoi(this->headerMap["Content-Length"].c_str());
+	MLOG("CONTENT LENGTH = " << content_length);
 }
 
 void
@@ -369,7 +375,7 @@ Request::setCGI(void) {
 
 std::string
 Request::getContentType(void) {
-	if (this->headerMap.find("Content-type") != this->headerMap.end())
-		return (this->headerMap["Content-type"]);
+	if (this->headerMap.find("Content-Type") != this->headerMap.end())
+		return (this->headerMap["Content-Type"]);
 	return "";
 }

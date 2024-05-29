@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/29 10:20:20 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 12:16:26 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Http::receiveFromClient(int socket, Request& request) {
 	bytes = recv(socket, buf, BUFFER_SIZE, 0);
 	MLOG("bytes: " << bytes);
 		
-	request.receiveData(std::string(buf), bytes);
+	request.receiveData(std::string(buf, bytes), bytes);
 	if (bytes == 0)
 		throw Http::HttpConnectionException("Error - Connection closed before request was finished");
 	if (bytes < 0)
@@ -372,9 +372,10 @@ Http::handleUpload(const Request& request) {
 				if (outfile.is_open())
 				{
 					outfile.write(partBody.c_str(), partBody.size());
+					outfile.write("\0", 1);
 					outfile.close();
 					MLOG("File uploaded!");
-					return 200;
+					return 201;
 				}
 				else
 				{
@@ -395,7 +396,7 @@ Http::handleUpload(const Request& request) {
 		}
 		i = partEnd;
 	}
-	return (200);
+	return (201);
 }
 
 
