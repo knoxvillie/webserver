@@ -39,6 +39,7 @@ namespace Utils {
 	void createStyleIfNotExists(void);
 	const std::string createGenericErrorPage(int status_code, const std::string& message);
 	void createListingPage(std::stringstream&, const std::string&);
+	bool createDirectory(const std::string& path);
 }
 
 #endif
