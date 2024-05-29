@@ -158,10 +158,10 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 	request.cgi_bytes = (request.cgiBuf).substr((request.cgiBuf).find("\r\n\r\n") + 4).size();
 
 	int content_length = -1;
-	size_t pos = (request.cgiBuf).find("Content-length: ");
+	size_t pos = (request.cgiBuf).find("Content-Length: ");
 	
 	if (pos != std::string::npos) {
-		std::string line = (request.cgiBuf).substr(0, (request.cgiBuf).find("\r\n", pos)); // everything until the end of the line containing "Content-length: "
+		std::string line = (request.cgiBuf).substr(0, (request.cgiBuf).find("\r\n", pos)); // everything until the end of the line containing "Content-Length: "
 		content_length = std::atoi(line.substr(pos + 17).c_str());
 	}
 

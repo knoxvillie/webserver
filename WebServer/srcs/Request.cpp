@@ -330,8 +330,8 @@ Request::setURI(const std::string& uri) {
 void
 Request::setContentLength(void) {
 	content_length = -1;
-	if (this->headerMap.find("Content-length") != this->headerMap.end())
-		content_length = std::atoi(this->headerMap["Content-length"].c_str());
+	if (this->headerMap.find("Content-Length") != this->headerMap.end())
+		content_length = std::atoi(this->headerMap["Content-Length"].c_str());
 }
 
 void
@@ -369,7 +369,7 @@ Request::setCGI(void) {
 
 std::string
 Request::getContentType(void) {
-	if (this->headerMap.find("Content-type") != this->headerMap.end())
-		return (this->headerMap["Content-type"]);
+	if (this->headerMap.find("Content-Type") != this->headerMap.end())
+		return (this->headerMap["Content-Type"]);
 	return "";
 }
