@@ -243,6 +243,21 @@ namespace Utils {
 			 << "<h2>Listing of " << path << "</h2>"
 			 << "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
 	}
+
+	bool 
+	createDirectory(const std::string& path) {
+    struct stat st;
+	if (stat(path.c_str(), &st) != 0) {
+        // Directory does not exist, create it
+		if (mkdir(path.c_str(), 0755) != 0) {
+			return false;
+        }
+    } else if (!S_ISDIR(st.st_mode)) {
+        // Path exists but is not a directory
+		return false;
+    }
+    return true;
+	}
 }
 
 bool isDirectory(const std::string& path) {
@@ -294,3 +309,4 @@ bool isExecutable(const std::string& filepath) {
 
 	return ((fileInfo.st_mode & S_IXUSR) ? true : false);
 }
+
