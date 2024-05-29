@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/29 12:15:11 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 12:17:57 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,7 +337,6 @@ Request::setContentLength(void) {
 	content_length = -1;
 	if (this->headerMap.find("Content-Length") != this->headerMap.end())
 		content_length = std::atoi(this->headerMap["Content-Length"].c_str());
-	MLOG("CONTENT LENGTH = " << content_length);
 }
 
 void
