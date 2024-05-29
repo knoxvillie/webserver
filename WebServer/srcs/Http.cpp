@@ -124,7 +124,7 @@ Http::BuildResponse(Request& request) {
 
 Response*
 Http::handleMethod(Request& request) {
-	GPS;
+GPS;
 	int status_code = 501;
 	t_location* location = request.location;
 	std::string content, type;
@@ -135,10 +135,10 @@ Http::handleMethod(Request& request) {
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST") {
-		/* if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+		if (((request.getHeaderMap().find("Content-Type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
-		else */
-		status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
+		else
+			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 	}
 	else if (request.getMethod() == "DELETE")
 		status_code = Http::deleteMethod(request.getFilePath(), location->allow_methods);
