@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/28 16:33:59 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 10:20:20 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,6 @@ Http::handleMethod(Request& request) {
 	else
 		type = "text/html";
 
-	// TODO: Check if when its an error, it always calls the Response error constructor
 	return (new Response(status_code, content, type));
 }
 

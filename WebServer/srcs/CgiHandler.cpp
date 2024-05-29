@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 16:01:30 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 10:18:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ CgiHandler::executeCgi(Request& request) {
 		
 		char* script = const_cast<char *>(script_name.c_str());
 		char* filename = const_cast<char *>((request.getFilePath()).c_str());
-		char* argv[] = {NULL, filename, NULL}; // TODO: might be script instead of filename in argv[1]
+		char* argv[] = {NULL, filename, NULL};
 		// argv[0] is not reachable by execve when using filename in the first argument
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
 		char** envp = CgiHandler::buildEnv(request);
@@ -127,7 +127,6 @@ CgiHandler::executeCgi(Request& request) {
 	return (NULL);
 }
 
-// TODO: test
 void
 CgiHandler::writeToCgi(int fd, Request& request) {
 	std::string content = request.getBody();
@@ -135,7 +134,6 @@ CgiHandler::writeToCgi(int fd, Request& request) {
 		MLOG("ERROR: sendToCgi() failed.");
 }
 
-// TODO: test
 void
 CgiHandler::readFromCgi(int fd, Request& request) {
 	GPS;

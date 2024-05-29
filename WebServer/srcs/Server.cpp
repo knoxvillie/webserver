@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/28 13:47:03 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/29 10:20:37 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,8 +306,6 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 		throw std::runtime_error("Error: Location allow_methods has duplicated methods");
 	location.allow_methods = temp;
 }
-
-// TODO: make it so you can choose the extension to be treated as cgi
 
 /*
 	NOTES:
