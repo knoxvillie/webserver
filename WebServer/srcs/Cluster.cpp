@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/29 11:45:50 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:00:21 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ std::map<int, Server*> Cluster::sockToServer;
 void
 Cluster::startServers(std::vector<Server>& servers) {
 	GPS;
-	// TODO: put a try catch here to start all the servers without errors
+	
 	for (size_t i = 0; i < servers.size(); i++) {
 		int server_sock = servers[i].getSocket();
 		Cluster::serverSockets.push_back(server_sock);
@@ -97,7 +97,12 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 						delete requests[client_sock];
 						requests.erase(client_sock);
 					}
-					Cluster::closeConnection(epoll_fd, client_sock);
+
+					if (cgi_requests.find(client_sock) != cgi_requests.end())
+						// This function already removes the request from cgi_requests
+						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
+					else
+						Cluster::closeConnection(epoll_fd, client_sock);
 					// TODO: Check if the requests is deleted correcly
 					// TODO: Check if we should send some error response to the client
 					continue;
@@ -109,7 +114,12 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 						delete requests[client_sock];
 						requests.erase(client_sock);
 					}
-					Cluster::closeConnection(epoll_fd, client_sock);
+					
+					if (cgi_requests.find(client_sock) != cgi_requests.end())
+						// This function already removes the request from cgi_requests
+						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
+					else
+						Cluster::closeConnection(epoll_fd, client_sock);
 					// TODO: Check if the requests is deleted correcly
 					// TODO: Check if we should send some error response to the client
 					continue;

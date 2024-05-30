@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/24 13:59:48 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 12:50:42 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:00:54 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ Parser::parsingConfigFile(const std::string &config_file) {
 			if (!is_location_closed)
 				throw std::runtime_error("ERROR - Parser: Location block isn't closed");
 			// The object is created, then push back creates a copy, then the temporary server object is destructed
-			_servers.push_back(Server(_directives, _locations));
+			_servers.push_back(Server(_directives, _locations)); // TODO: put a try catch here to start all the servers without errors
 			_directives.clear(); _locations.clear();
 		}
 	} else
