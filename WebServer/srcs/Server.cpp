@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/30 12:51:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:34:43 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,14 +144,14 @@ Server::startServerSocket(void) {
 }
 
 int
-Server::acceptConnection(void) const {
+Server::acceptConnection(int socket) const {
 	GPS;
 	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
 
 	std::memset(&client_address, 0, sizeof(client_address));
-	client_sock = accept(this->server_sockets[0], (sockaddr*)&client_address, (socklen_t*)&client_address_len);
+	client_sock = accept(socket, (sockaddr*)&client_address, (socklen_t*)&client_address_len);
 	if (client_sock < 0)
 		throw std::runtime_error("Error: Client socket failed");
 	return (client_sock);
@@ -175,8 +175,8 @@ Server::checkHost(std::vector<std::string>& vec) {
 	// Redirection to "0.0.0.0" if needed.
 	//if (host == "127.0.0.1") host = "0.0.0.0";
 
-	//this->server_address.sin_addr.s_addr = INADDR_ANY;
-	this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
+	this->server_address.sin_addr.s_addr = htonl(Utils::ipParserHtonl(this->s_host));
+	//this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
 	// IPV4 only
 	this->server_address.sin_family = AF_INET;
 }

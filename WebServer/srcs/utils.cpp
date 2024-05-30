@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 11:35:58 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:42:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,7 @@ namespace Utils {
 			std::cout << ANSI_COLOR_CYAN << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
 			std::cout << "\n-=-=-=-=-=-=-=-=-=-= "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
 				ANSI_COLOR_YELLOW << serverList[i].getHost() << ANSI_COLOR_RED << ":" << ANSI_COLOR_YELLOW << "[ " <<
-				Utils::serverPortToString(serverList[i].getPort()) << "]" << ANSI_COLOR_GREEN << " - Socket: " << ANSI_COLOR_YELLOW <<
-				serverList[i].getSockets()[0] << ANSI_COLOR_CYAN << " =-=-=-=-=-=-=-=-=-\n";
+				Utils::serverPortToString(serverList[i].getPort()) << "]" << ANSI_COLOR_CYAN << " -=-=-=-=-=-=-=-=-=-\n";
 			std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n" << ANSI_COLOR_RESET;
 			printMapVec(serverList[i].getServer());
 			printMapMapVec(serverList[i].getLocationMap());
@@ -103,9 +102,9 @@ namespace Utils {
 
 			if (*endptr != '\0')
 				throw std::runtime_error("ERROR - Server: IP address conversion failed: " + ip_address);
-			if (octet < 0 || octet > 255)
+			if (octet < 0)
 				throw std::runtime_error("ERROR - Server: Invalid IP address, octet out of range: " + ip_address);
-			bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
+			bytes |= static_cast<uint32_t>(octet % 255) << ((3 - i) * 8);
 		}
 		return (bytes);
 	}

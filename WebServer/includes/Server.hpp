@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:27:55 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/21 13:39:09 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:02:48 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ class Server {
 		void applyServerDirectives(void);
 		void validateServerDirectives(void);
 		void startServerSocket(void);
-		int acceptConnection(void) const;
+		int acceptConnection(int socket) const;
 
 		//	Getters
 		std::map<std::string, std::vector<std::string> > &getServer(void);

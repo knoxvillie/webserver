@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/30 12:57:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:03:08 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ Cluster::serversLoop(void) {
 
 			// client_sock is in Cluster::serverSockets, so it's a new connection
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
-				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection();
+				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection(client_sock);
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
 				
 				// Set socket as non-blocking
