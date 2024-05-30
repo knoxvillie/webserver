@@ -106,37 +106,41 @@ Server::validateServerDirectives(void) {
 void
 Server::startServerSocket(void) {
 	GPS;
-	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (this->server_sock < 0)
-		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
-
-	// TODO: check if the SOCK_NONBLOCK flag on socket is enough to not do this
-	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
-		throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
-
-	// the SO_REUSEADDR option is set on the socket to allow binding to multiple ports. Then, the bind() function is called for each port in the ports vector, binding the socket to each port. Finally, the server listens for incoming connections on all specified ports.
-	MLOG("TAMANHO PORT:" << Utils::intToString(int(this->s_port.size())));
-	if (this->s_port.size() >= 1) {
-		int optval = 1;
-
-		if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
-			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
-	}
 	for (size_t i = 0; i < this->s_port.size(); i++) {
-		this->server_address.sin_port = htons(this->s_port[i]);
-		// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
+		int server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-		// REMOVE std::strerror(errno)
-		if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0) {
-			close(this->server_sock);
+		if (server_sock < 0)
+			throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
+
+		if (fcntl(server_sock, F_SETFL, O_NONBLOCK) < 0) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking");
+		}
+
+		// ! BE SURE IF IT'S ALLOWED
+		int optval = 1;
+		if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
+		}
+
+		this->server_address.sin_port = htons(this->s_port[i]);
+
+		if ((bind(server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address))) < 0) {
+			close (server_sock);
 			throw std::runtime_error(std::string("ERROR - Server: Couldn't bind socket: ") + Utils::intToString((int)this->s_port[i]) + " Why? " + std::strerror(errno));
 		}
-		MLOG("BIND OK PORT: " + Utils::intToString((int)this->s_port[i]));
 
+		if (listen(server_sock, SOMAXCONN) < 0) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: Couldn't listen on port " + Utils::intToString((int)this->s_port[i]));
+		}
+
+		this->server_sockets.push_back(server_sock);
+
+		MLOG("Server listening on port: " + Utils::intToString((int)this->s_port[i]));
 	}
-	if (listen(this->server_sock, SOMAXCONN) < 0)
-		throw std::runtime_error("Error: Couldn't listen.");
 }
 
 int
@@ -147,7 +151,7 @@ Server::acceptConnection(void) const {
 	socklen_t client_address_len = sizeof(client_address);
 
 	std::memset(&client_address, 0, sizeof(client_address));
-	client_sock = accept(this->server_sock, (sockaddr*)&client_address, (socklen_t*)&client_address_len);
+	client_sock = accept(this->server_sockets[0], (sockaddr*)&client_address, (socklen_t*)&client_address_len);
 	if (client_sock < 0)
 		throw std::runtime_error("Error: Client socket failed");
 	return (client_sock);
@@ -365,9 +369,9 @@ Server::getLocationMap(void) {
 	return (_locationDirectives);
 }
 
-int
-Server::getSocket(void) const {
-	return (this->server_sock);
+std::vector<int>
+Server::getSockets(void) const {
+	return (this->server_sockets);
 }
 
 std::map<int, std::string>

@@ -134,7 +134,7 @@ struct t_request {
 	
 	std::string path_info;			// PATH_INFO env varible for CGI
 	std::string query_string;		// QUERY_STRING env variable for CGI
-	bool isCGI;						// Whether or not the file requested is a CGI
+	bool isCGI;						// Whether the file requested is a CGI
 };
 
 // ======================
@@ -148,13 +148,13 @@ std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
 bool isStringUnsignedInt(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
-std::string intToString(int number);
-std::string getValueFromEnv(char** env, const std::string&);
-void signal_handler(int signum);
-bool isDirectory(const std::string& path);
+std::string intToString(int);
+std::string getValueFromEnv(char**, const std::string&);
+void signal_handler(int);
+bool isDirectory(const std::string&);
 const std::string getCurrentDate(void);
-void free_env(char** env);
-bool isExecutable(const std::string& filepath);
+void free_env(char**);
+bool isExecutable(const std::string&);
 
 
 // ======================
