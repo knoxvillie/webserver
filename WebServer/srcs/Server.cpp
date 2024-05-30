@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/30 11:58:05 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:51:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,15 +108,15 @@ Server::startServerSocket(void) {
 	GPS;
 
 	for (size_t i = 0; i < this->s_port.size(); i++) {
-		int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+		int server_sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
 		if (server_sock < 0)
 			throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
 
-		if (fcntl(server_sock, F_SETFL, O_NONBLOCK) < 0) {
+/* 		if (fcntl(server_sock, F_SETFL, O_NONBLOCK) < 0) {
 			close (server_sock);
 			throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking");
-		}
+		} */
 
 		// ! BE SURE IF IT'S ALLOWED
 		int optval = 1;
@@ -139,7 +139,7 @@ Server::startServerSocket(void) {
 
 		this->server_sockets.push_back(server_sock);
 
-		MLOG("Server listening on port: " + Utils::intToString((int)this->s_port[i]));
+		MLOG("Server " << this->s_host << " listening on port: " + Utils::intToString((int)this->s_port[i]));
 	}
 }
 

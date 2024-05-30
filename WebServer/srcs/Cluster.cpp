@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/30 12:00:21 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:57:04 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,18 @@ std::map<int, Server*> Cluster::sockToServer;
 void
 Cluster::startServers(std::vector<Server>& servers) {
 	GPS;
-	
+	std::vector<int> server_socks;
+
 	for (size_t i = 0; i < servers.size(); i++) {
-		int server_sock = servers[i].getSocket();
-		Cluster::serverSockets.push_back(server_sock);
-		Cluster::sockToServer[server_sock] = &(servers[i]);
+		server_socks = servers[i].getSockets();
+		
+		for (size_t j = 0; j < server_socks.size(); j++) {
+			Cluster::serverSockets.push_back(server_socks[j]);
+			Cluster::sockToServer[server_socks[j]] = &(servers[i]);
+		}
 	}
 
-	Cluster::serversLoop(servers);
+	Cluster::serversLoop();
 }
 
 /*
@@ -41,7 +45,7 @@ Cluster::startServers(std::vector<Server>& servers) {
 */
 
 void
-Cluster::serversLoop(std::vector<Server>& servers) {
+Cluster::serversLoop(void) {
 	GPS;
 	bool new_connection = true;
 	int epoll_fd, num_ready_events, child_status = 0;
@@ -50,13 +54,13 @@ Cluster::serversLoop(std::vector<Server>& servers) {
 	std::map<int, Request*> cgi_requests;
 	
 	event.events = EPOLLIN; // The server sockets only need to be monitored for read calls
-	epoll_fd = epoll_create((int)servers.size()); // Expected number of fd, 0 to set to standard
+	epoll_fd = epoll_create((int)Cluster::serverSockets.size()); // Expected number of fd, 0 to set to standard
 	
 	if (epoll_fd < 0)
 		throw std::runtime_error("Error: Creating epoll instance");
-	for (size_t i = 0; i < servers.size(); i++) {
-		event.data.fd = servers[i].getSocket();
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, servers[i].getSocket(), &event) < 0) {
+	for (size_t i = 0; i < Cluster::serverSockets.size(); i++) {
+		event.data.fd = Cluster::serverSockets[i];
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, Cluster::serverSockets[i], &event) < 0) {
 			std::cerr << "Error adding socket to epoll: " << strerror(errno) << std::endl;
 			throw std::runtime_error("Error: epoll_ctl_add failed");
 		}
