@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/29 12:16:26 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:59:26 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ Http::requestParser(Request& request) {
 	if (request.getFull().empty())
 		return;
 
-	MLOG("STREAM: " << ss.str());
+	//MLOG("STREAM: " << ss.str());
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
 			throw Http::HttpErrorException(405);
@@ -82,7 +82,7 @@ Http::BuildResponse(Request& request) {
 	
 	Http::requestParser(request);
 	request.setBody();
-	MLOG("Request: " << request.getFull());
+	//MLOG("Request: " << request.getFull());
 	
 	// Find the location corresponding to the URL
 	best_location = request.server->getBestLocation(request);
@@ -271,7 +271,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 	const std::string output = body;
 	if (output.empty())
 		return 204;
-	MLOG("Output: " + output);
+	//MLOG("Output: " + output);
 	
 	out_file.write(output.c_str(), output.size());
 	out_file.write("\n", 1);	

@@ -15,7 +15,7 @@ RM = rm -rf
 AR = ar -rcs
 
 #_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_ FLAGS _/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_
-CPPFLAGS	= -Wall -Wextra -Werror -std=c++98 -g -DDEBUG
+CPPFLAGS	= -Wall -Wextra -Werror -std=c++98 -g #-DDEBUG
 MK		= --no-print-directory
 
 #_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_ FOLDERS _/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_/=\_
