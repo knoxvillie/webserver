@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/28 14:11:49 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:47:29 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,8 @@ class FuncLogger;
 #endif
 
 #define BUFFER_SIZE 4096
+
+#define TIMEOUT 5
 
 class FuncLogger {
 	private:
