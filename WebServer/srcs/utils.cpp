@@ -64,7 +64,7 @@ namespace Utils {
 			std::cout << "\n-=-=-=-=-=-=-=-=-=-= "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
 				ANSI_COLOR_YELLOW << serverList[i].getHost() << ANSI_COLOR_RED << ":" << ANSI_COLOR_YELLOW << "[ " <<
 				Utils::serverPortToString(serverList[i].getPort()) << "]" << ANSI_COLOR_GREEN << " - Socket: " << ANSI_COLOR_YELLOW <<
-				serverList[i].getSocket() << ANSI_COLOR_CYAN << " =-=-=-=-=-=-=-=-=-\n";
+				serverList[i].getSockets()[0] << ANSI_COLOR_CYAN << " =-=-=-=-=-=-=-=-=-\n";
 			std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n" << ANSI_COLOR_RESET;
 			printMapVec(serverList[i].getServer());
 			printMapMapVec(serverList[i].getLocationMap());
@@ -145,7 +145,7 @@ namespace Utils {
 		// Path doesn't exist
 		if (stat(path.c_str(), &fileInfo) != 0)
 			return (-1);
-		//Se o arquivo for regular, isso significa que não é um diretório, dispositivo especial ou link simbólico, e a função retorna 1.
+		// Regular file, not a directory, special device or symbolic link.
 		return (((fileInfo.st_mode & S_IFMT) == S_IFREG) ? 1 : 0);
 	}
 
@@ -273,7 +273,8 @@ bool isDirectory(const std::string& path) {
 
 const std::string getCurrentDate(void) {
 	const char *days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-	const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+							 "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 	time_t now = time(NULL);
 	struct tm* gmTime = gmtime(&now); // returns time in GMT

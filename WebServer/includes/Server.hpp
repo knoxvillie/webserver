@@ -29,7 +29,7 @@ class Server {
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > _locationDirectives;
 
 		//	Server
-		int server_sock;
+		std::vector<int> server_sockets;
 		struct sockaddr_in server_address;
 
 		// Server config
@@ -54,7 +54,7 @@ class Server {
 		//	Getters
 		std::map<std::string, std::vector<std::string> > &getServer(void);
 		std::map<std::string, std::map<std::string, std::vector<std::string> > > &getLocationMap(void);
-		int getSocket(void) const;
+		std::vector<int> getSockets(void) const;
 		std::map<int, std::string> getErrorMap(void) const;
 		std::string getHost(void) const;
 		std::vector<uint16_t> getPort(void) const;
