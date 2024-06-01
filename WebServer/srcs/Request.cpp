@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 12:53:34 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 13:34:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ Request::ParseURL(void) {
 
 	pos = url.find(".");
 	if (pos == std::string::npos) {
-		this->path_info = "/";
+		this->path_info = "";
 		if ((pos = url.find("?")) && pos != std::string::npos) { // if there is a query_string it will be ignored but store it anyway
 			this->query_string = url.substr(pos + 1);
 			this->uri = url.substr(0, pos);

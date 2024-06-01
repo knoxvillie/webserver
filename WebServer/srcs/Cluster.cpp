@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 12:52:07 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 13:42:06 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,10 +104,11 @@ Cluster::serversLoop(void) {
 						requests.erase(client_sock);
 					}
 
-					if (cgi_requests.find(client_sock) != cgi_requests.end())
+					if (cgi_requests.find(client_sock) != cgi_requests.end()) {
 						// This function already removes the request from cgi_requests
+						cgi_requests[client_sock]->cgi_finished = true;
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
-					else {
+					} else {
 						Cluster::closeConnection(epoll_fd, client_sock);
 						last_activity.erase(client_sock);
 					}
@@ -121,10 +122,11 @@ Cluster::serversLoop(void) {
 						requests.erase(client_sock);
 					}
 					
-					if (cgi_requests.find(client_sock) != cgi_requests.end())
+					if (cgi_requests.find(client_sock) != cgi_requests.end()) {
 						// This function already removes the request from cgi_requests
+						cgi_requests[client_sock]->cgi_finished = true;
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
-					else {
+					} else {
 						Cluster::closeConnection(epoll_fd, client_sock);
 						last_activity.erase(client_sock);
 					}
@@ -194,7 +196,7 @@ Cluster::serversLoop(void) {
 					// If the request isn't finished don't send a response
 					if (!(requests[client_sock]->isFinished())) continue;
 				    
-					MLOG("EPOLLOUT is present\n");
+					//MLOG("EPOLLOUT is present\n");
 					
 					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
@@ -217,7 +219,7 @@ Cluster::serversLoop(void) {
 								&& (requests[client_sock] == (find_by_value(cgi_requests, requests[client_sock]))->second))
 								// This means we found the request in cgi_requests, meaning we already executed the CGI but its not finished yet
 								continue;
-							else {
+							else if (find_by_value(cgi_requests, requests[client_sock]) == cgi_requests.end()) {
 								// This mean that its the first time the CGI request is passing through the loop
 								// After executing Http::BuildResponse()
 								struct epoll_event pipe_event;
@@ -236,12 +238,14 @@ Cluster::serversLoop(void) {
 								cgi_requests[requests[client_sock]->cgi_pipes[1]] = requests[client_sock];
 								
 								continue;
-							}
+							} else
+								throw Http::HttpErrorException(500);
 						}
 
 					} catch (const Http::HttpErrorException& e) {
-						e.what();
-						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);	
+						std::cerr << e.what() << std::endl;
+						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);
+						requests[client_sock]->setToClose();
 					}
 					response->sendToClient(client_sock);
 					delete response;

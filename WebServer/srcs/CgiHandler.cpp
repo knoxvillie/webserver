@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/29 10:18:45 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 13:37:19 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,9 @@ CgiHandler::buildEnv(Request& request)
 	env["QUERY_STRING"] = request.getQueryString();
 	env["REQUEST_URI"] = uri; // should this be unparsed_url ?
 	env["SCRIPT_NAME"] = request.location->cgi_pass;
-	env["SERVER_PROTOCOL"] = "";
+	env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env["CONTENT_TYPE"] = request.getContentType();
-	env["CONTENT_LENGTH"] = request.getContentLength();
+	env["CONTENT_LENGTH"] = (request.getContentLength() == -1) ? '0' : request.getContentLength();
 	env["PATH_INFO"] = request.getPathInfo();
 	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
@@ -104,6 +104,8 @@ CgiHandler::executeCgi(Request& request) {
 		// but according to the subject: "Your program should call the CGI with the file requested as first argument."
 		char** envp = CgiHandler::buildEnv(request);
 		
+		chdir(request.location->root.c_str());
+
 		// SCRIPT NEEDS TO HAVE EXEC PERMISSIONS
 		if (execve(script, argv, envp) != 0) {
 			MLOG("ERROR: execve() failed! errno = " << strerror(errno) << "\n");
