@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/16 12:41:52 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/20 12:23:01 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:23:11 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
 	string output = header.str();
 	if (send(sockfd, output.c_str(), output.size(), MSG_DONTWAIT) < 0) {
-		cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed because of \'" << strerror(errno) << "\'" << ANSI_COLOR_RESET << endl;
+		cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed." << ANSI_COLOR_RESET << endl;
 		close(sockfd);
 		exit(1);
 	}
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 			cout << "Line: " << output;
 			cout << ANSI_COLOR_GREEN << "Chunk sent!" << ANSI_COLOR_RESET << endl;
 			if (send(sockfd, output.c_str(), output.size(), 0) < 0) {
-				cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed because of \'" << strerror(errno) << "\'" << ANSI_COLOR_RESET << endl;
+				cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed." << ANSI_COLOR_RESET << endl;
 				close(sockfd);
 				exit(1);
 			}
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 		output += "\r\n";
 
 		if (send(sockfd, output.c_str(), output.size(), 0) < 0) {
-			cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed because of \'" << strerror(errno) << "\'" << ANSI_COLOR_RESET << endl;
+			cerr << ANSI_COLOR_RED << "ERROR: sending to server " << address << ":" << port << " failed." << ANSI_COLOR_RESET << endl;
 			close(sockfd);
 			exit(1);
 		}

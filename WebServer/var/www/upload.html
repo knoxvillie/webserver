@@ -23,12 +23,12 @@
                 const formData = new FormData();
                 formData.append('file', file);
 
-                fetch('http://localhost:8080/upload', {
+                fetch('http://127.0.0.1:8080/upload', {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
-                    if (response.ok) {
+                    if (response.ok || response.status === 201) {
                         document.getElementById('uploadResult').innerText = 'File uploaded successfully.';
                     } else {
                         document.getElementById('uploadResult').innerText = 'Failed to upload file.';

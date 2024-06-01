@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 13:37:19 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:21:17 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,8 +132,10 @@ CgiHandler::executeCgi(Request& request) {
 void
 CgiHandler::writeToCgi(int fd, Request& request) {
 	std::string content = request.getBody();
-	if (write(fd, content.c_str(), content.size()) < 0)
+	if (write(fd, content.c_str(), content.size()) < 0) {
+		request.setToClose();
 		MLOG("ERROR: sendToCgi() failed.");
+	}
 }
 
 void
@@ -146,8 +148,10 @@ CgiHandler::readFromCgi(int fd, Request& request) {
 	bytes = read(fd, buf, BUFFER_SIZE);
 	MLOG("bytes: " << bytes);
 	
-	if (bytes < 0)
+	if (bytes < 0) {
+		request.setToClose();
 		return;
+	}
 	
 	if (bytes == 0) { // this indicates that the cgi has closed the pipe
 		// fd will be closed in cluster

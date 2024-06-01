@@ -26,6 +26,7 @@ if name:
 else:
     html += "<h2>Hello, Anonymous!</h2>"
 
+html += "<h3>PWD:" + os.getcwd() + "</h3>"
 html += """
 </body>
 </html>

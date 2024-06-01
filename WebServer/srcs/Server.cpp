@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/30 13:34:43 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 15:10:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,13 +117,12 @@ Server::startServerSocket(void) {
 			close (server_sock);
 			throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking");
 		} */
-
-		// ! BE SURE IF IT'S ALLOWED
+/* 
 		int optval = 1;
 		if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
 			close (server_sock);
 			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
-		}
+		} */
 
 		this->server_address.sin_port = htons(this->s_port[i]);
 
@@ -277,17 +276,24 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& locati
 		throw std::runtime_error("Error: Invalid number of arguments location client_max_body_size");
 	size_t size = vec[0].size();
 
-	if (vec[0][size - 2] != 'M')
+	if ((vec[0][size - 2] != 'M') && (vec[0][size - 2] != 'B'))
 		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
 	for (size_t i = 0; i < size - 2; i++) {
 		if (!std::isdigit(vec[0][i]))
 			throw std::runtime_error("Error: invalid argument " + vec[0]);
 	}
-	long value = std::atol(vec[0].substr(0, vec[0].find('M')).c_str());
-	if (value < 1 || value > 10)
-		throw std::runtime_error("Error: Client Max Body Size out of bound");
-	// (2^10 * 10^3) ~ (2^10 + 2^10) : bytes
-	location.CMaxBodySize = (1024 * 1000) * value;
+	if (vec[0].find('M') != std::string::npos) {
+		long value = std::atol(vec[0].substr(0, vec[0].find('M')).c_str());
+		if (value < 1 || value > 10)
+			throw std::runtime_error("Error: Client Max Body Size out of bound");
+		// (2^10 * 10^3) ~ (2^10 + 2^10) : bytes
+		location.CMaxBodySize = (1024 * 1000) * value;
+	} else {
+		long value = std::atol(vec[0].substr(0, vec[0].find('B')).c_str());
+		if (value < 1 || value > 100000)
+			throw std::runtime_error("Error: Client Max Body Size out of bound");
+		location.CMaxBodySize = value;
+	}
 }
 
 void
@@ -432,10 +438,10 @@ Server::getBestRedir(const std::string& name) {
 	return bestMatch;
 }
 
-std::string
+/* std::string
 Server::getListen(void) const {
 	return ("MUDAR DEPOIS"); // TODO: MUDAR DEPOIS
-}
+} */
 
 void *
 Server::getDirectiveFromLocation(std::vector<t_location> &locations, const std::string& location_name, const std::string& directive) {

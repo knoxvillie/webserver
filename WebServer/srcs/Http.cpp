@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/30 13:59:26 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:55:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ Http::receiveFromClient(int socket, Request& request) {
 		
 	request.receiveData(std::string(buf, bytes), bytes);
 	if (bytes == 0)
-		throw Http::HttpConnectionException("Error - Connection closed before request was finished");
+		throw Http::HttpConnectionException("Error - Connection closed before request was finished\n");
 	if (bytes < 0)
 		return;
 }
@@ -92,7 +92,7 @@ Http::BuildResponse(Request& request) {
 		return (new Response(404, request.server));
 	// Checking Location Client Max Body Size.
 	else if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
-		return (new Response(403, request.server));
+		return (new Response(413, request.server));
 	// Handle Cgi Requests
 	else if (request.isCGI())
 		return (CgiHandler::executeCgi(request));
@@ -372,7 +372,6 @@ Http::handleUpload(const Request& request) {
 				if (outfile.is_open())
 				{
 					outfile.write(partBody.c_str(), partBody.size());
-					outfile.write("\0", 1);
 					outfile.close();
 					MLOG("File uploaded!");
 					return 201;
@@ -464,10 +463,14 @@ Http::HttpErrorException::getErrorCode() const {
         return this->http_error;
 }
 
+Http::HttpConnectionException::HttpConnectionException() : message("error") {}
 
 Http::HttpConnectionException::HttpConnectionException(std::string msg) : message(msg.c_str()) {}
+
 Http::HttpConnectionException::~HttpConnectionException() throw() {}
-const char* Http::HttpConnectionException::what() const throw() {
+
+const char*
+Http::HttpConnectionException::what() const throw() {
 	return message;
 }
 	

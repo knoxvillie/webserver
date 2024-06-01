@@ -18,7 +18,7 @@
         function deleteFile() {
             const filename = document.getElementById('filename').value;
             if (filename) {
-                fetch(`http://localhost:8080/upload/${filename}`, {
+                fetch(`http://127.0.0.1:8080/upload/${filename}`, {
                     method: 'DELETE'
                 })
                 .then(response => {

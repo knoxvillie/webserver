@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 13:42:06 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:41:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,7 @@ Cluster::serversLoop(void) {
 
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) {
 						// This function already removes the request from cgi_requests
+						cgi_requests[client_sock]->setToClose();
 						cgi_requests[client_sock]->cgi_finished = true;
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
 					} else {
@@ -124,6 +125,7 @@ Cluster::serversLoop(void) {
 					
 					if (cgi_requests.find(client_sock) != cgi_requests.end()) {
 						// This function already removes the request from cgi_requests
+						cgi_requests[client_sock]->setToClose();
 						cgi_requests[client_sock]->cgi_finished = true;
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
 					} else {
@@ -163,7 +165,7 @@ Cluster::serversLoop(void) {
 						Http::receiveFromClient(client_sock, *requests[client_sock]);
 						last_activity[client_sock] = time(NULL);
 					} catch (Http::HttpConnectionException& e) {
-						std::cerr << e.what() << std::endl;
+						//std::cerr << e.what() << std::endl;
 
 						// Close CGI requests
 						std::map<int, Request*>::const_iterator it;
@@ -245,9 +247,9 @@ Cluster::serversLoop(void) {
 					} catch (const Http::HttpErrorException& e) {
 						std::cerr << e.what() << std::endl;
 						response = new Response(e.getErrorCode(), Cluster::sockToServer[client_sock]);
-						requests[client_sock]->setToClose();
 					}
-					response->sendToClient(client_sock);
+					response->sendToClient(client_sock, *requests[client_sock]);
+					
 					delete response;
 					if (requests[client_sock]->isToClose()) {
 						Cluster::closeConnection(epoll_fd, client_sock);

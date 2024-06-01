@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 13:34:07 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:17:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,11 @@ Request::receiveData(const std::string& buf, int bytes) {
 		this->finished = true;
 		return;
 	}
-	if (bytes == -1)
+	if (bytes == -1) { // this means its an error
+		this->setToClose();
+		this->finished = true;
 		return;
+	}
 
 	this->full.append(buf); // append the new data to the request
 

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:08:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/28 16:28:40 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:40:24 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include "CgiHandler.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+
+class Request;
+class Response;
 
 class Http {
 	
@@ -70,6 +73,7 @@ class Http {
 			public:
 				virtual const char* what() const throw();
 	
+				HttpConnectionException();
 				HttpConnectionException(std::string msg);
 				~HttpConnectionException() throw();
 		};
