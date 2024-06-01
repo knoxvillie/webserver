@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
+/*   By: pealexan <pealexan@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/06/01 14:21:17 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 15:38:33 by pealexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ CgiHandler::buildEnv(Request& request)
 	env["SCRIPT_NAME"] = request.location->cgi_pass;
 	env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env["CONTENT_TYPE"] = request.getContentType();
-	env["CONTENT_LENGTH"] = (request.getContentLength() == -1) ? '0' : request.getContentLength();
+	env["CONTENT_LENGTH"] = (request.getContentLength() == -1) ? "0" : Utils::intToString(request.getContentLength());
 	env["PATH_INFO"] = request.getPathInfo();
 	env["PATH_TRANSLATED"] = CgiHandler::getPathTranslated(request);
 
