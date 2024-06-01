@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/06/01 15:10:25 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 15:18:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -479,7 +479,7 @@ defaultLocationConfig(int directive) {
 		case 2: return ("false;"); //Auto_index
 		case 3: return ("1M;"); //Client_max_body_size
 		case 4: return ("GET;"); // Allow_methods
-		case 5: return ("PLACEHOLDER;"); //Cgi_pass
+		case 5: return (";"); //Cgi_pass
 		case 6: return ("false;"); //Redirect
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}
