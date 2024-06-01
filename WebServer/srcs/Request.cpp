@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 10:35:43 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/29 12:17:57 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 12:53:34 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,9 @@ Request::receiveData(const std::string& buf, int bytes) {
 		}
 
 		if (this->content_length == -1 || this->content_length == 0) // The header is read so if there is no content length the request should be complete
+			this->finished = true;
+
+		if ((this->content_length != -1) && (this->bytes_read >= this->content_length))
 			this->finished = true;
 
 		MLOG("================================================\nHEADER IS FILLED\n================================================");

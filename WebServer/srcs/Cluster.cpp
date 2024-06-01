@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 11:10:26 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/30 14:52:47 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 12:52:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ Cluster::serversLoop(void) {
 
 			// client_sock is in Cluster::serverSockets, so it's a new connection
 			if (std::find(Cluster::serverSockets.begin(), Cluster::serverSockets.end(), client_sock) != Cluster::serverSockets.end()) {
-				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection(client_sock);
+				client_sock = Cluster::sockToServer[event_buffer[i].data.fd]->acceptConnection(event_buffer[i].data.fd);
 				Cluster::sockToServer[client_sock] = Cluster::sockToServer[event_buffer[i].data.fd];
 				
 				// Set socket as non-blocking
@@ -88,7 +88,7 @@ Cluster::serversLoop(void) {
 					throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
 				
 				event_buffer[i].data.fd = client_sock;
-				event_buffer[i].events = EPOLLIN | EPOLLOUT;// | EPOLLET; // EPOLLET = Edge Triggered mode 
+				event_buffer[i].events = EPOLLIN | EPOLLOUT;
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event_buffer[i]) < 0)
 					throw std::runtime_error("Error: epoll_ctl failed");
 				
@@ -107,8 +107,10 @@ Cluster::serversLoop(void) {
 					if (cgi_requests.find(client_sock) != cgi_requests.end())
 						// This function already removes the request from cgi_requests
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
-					else
+					else {
 						Cluster::closeConnection(epoll_fd, client_sock);
+						last_activity.erase(client_sock);
+					}
 					continue;
 				}
 				
@@ -122,8 +124,10 @@ Cluster::serversLoop(void) {
 					if (cgi_requests.find(client_sock) != cgi_requests.end())
 						// This function already removes the request from cgi_requests
 						Cluster::closeCgiConnection(epoll_fd, client_sock, cgi_requests);
-					else
+					else {
 						Cluster::closeConnection(epoll_fd, client_sock);
+						last_activity.erase(client_sock);
+					}
 					continue;
 				}
 				
@@ -157,7 +161,8 @@ Cluster::serversLoop(void) {
 						Http::receiveFromClient(client_sock, *requests[client_sock]);
 						last_activity[client_sock] = time(NULL);
 					} catch (Http::HttpConnectionException& e) {
-						e.what();
+						std::cerr << e.what() << std::endl;
+
 						// Close CGI requests
 						std::map<int, Request*>::const_iterator it;
 						do {
@@ -189,7 +194,7 @@ Cluster::serversLoop(void) {
 					// If the request isn't finished don't send a response
 					if (!(requests[client_sock]->isFinished())) continue;
 				    
-					//MLOG("EPOLLOUT is present\n");
+					MLOG("EPOLLOUT is present\n");
 					
 					// This try catch is just to help in the methods and what not where returning is not as pratical
 					//	DO NOT THROW AN EXCEPTION FOR EVERY HTTP ERROR
@@ -252,8 +257,9 @@ Cluster::serversLoop(void) {
 		}
 
 		std::map<int, time_t>::iterator it, last_it;
+		time_t current_time = time(NULL);
 		for (it = last_activity.begin(); it != last_activity.end();) {
-			if ((time(NULL) - it->second) >= TIMEOUT) {
+			if ((current_time - it->second) >= TIMEOUT) {
 				std::cout << ANSI_COLOR_YELLOW <<"\nConnection timed out, closing...\n" << ANSI_COLOR_RESET;
 				if (requests.find(it->first) != requests.end()) {
 					std::map<int, Request*>::const_iterator ut;
@@ -270,7 +276,8 @@ Cluster::serversLoop(void) {
 				last_it = it;
 				it++;
 				last_activity.erase(last_it);
-			}
+			} else
+				it++;
 		}
 	}
 	Cluster::deleteRequests(requests);
