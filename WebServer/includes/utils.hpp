@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 12:34:57 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:27:58 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:34:42 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ namespace Utils {
 	void createStyleIfNotExists(void);
 	const std::string createGenericErrorPage(int status_code, const std::string& message);
 	void createListingPage(std::stringstream&, const std::string&);
+	bool createDirectory(const std::string& path);
 }
 
 #endif

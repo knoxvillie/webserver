@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 09:57:34 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 16:01:51 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/28 14:13:45 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,11 @@ class Request {
 		std::string method; // GET POST DELETE
 		std::string uri;
 		std::string file_path;
+		std::string extension; // file extension
 		int content_length;
 		int bytes_read;
+
+		std::string chunkbuf;
 
 		// CGI
 		bool cgi;
@@ -62,9 +65,15 @@ class Request {
 		t_location *location;
 		Server *server;
 
+		int cgi_pipes[2]; // Write on pipe[1] read on pipe[0]
+		int cgi_bytes;
+		bool cgi_finished;
+		std::string cgiBuf;
+		pid_t pid;
+
 		//void decodeURI(void);
 		void receiveData(const std::string& buf, int bytes);
-		void receiveChunked(const std::string& buf, int bytes);
+		void receiveChunked(const std::string& buf);
 
 	//	Getters	//
 		const std::string& getFull(void) const;
@@ -74,6 +83,7 @@ class Request {
 		const std::string& getHttpVersion(void) const;
 		const std::string& getMethod(void) const;
 		const std::string& getURI(void) const;
+		const std::string& getExtension(void) const;
 		const std::string& getFilePath(void) const;
 		int getContentLength(void) const;
 		bool isCGI(void) const;
@@ -93,6 +103,7 @@ class Request {
 		void setFilePath(const std::string& file_path);
 		void setURI(const std::string& uri);
 		void setToClose(void);
+		void setCGI(void);
 };
 
 #endif //REQUEST_HPP

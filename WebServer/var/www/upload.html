@@ -1,15 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>File Upload Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Test</title>
 </head>
 <body>
-<h2>Upload a File</h2>
-<form action="YOUR_UPLOAD_ENDPOINT" method="post" enctype="multipart/form-data">
-  <input type="file" name="fileToUpload" id="fileToUpload">
-  <input type="submit" value="Upload File" name="submit">
-</form>
+    <h1>File Upload Test</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="fileInput">Select a file to upload:</label>
+        <input type="file" id="fileInput" name="file" required>
+        <button type="button" onclick="uploadFile()">Upload File</button>
+    </form>
+    <p id="uploadResult"></p>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('http://127.0.0.1:8080/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok || response.status === 201) {
+                        document.getElementById('uploadResult').innerText = 'File uploaded successfully.';
+                    } else {
+                        document.getElementById('uploadResult').innerText = 'Failed to upload file.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('uploadResult').innerText = 'Error uploading file.';
+                });
+            } else {
+                document.getElementById('uploadResult').innerText = 'Please select a file to upload.';
+            }
+        }
+    </script>
 </body>
 </html>

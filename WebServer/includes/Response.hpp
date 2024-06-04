@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 11:13:58 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/16 16:03:45 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:40:58 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,10 @@
 #include "webserv.hpp"
 #include "utils.hpp"
 #include "Server.hpp"
+#include "Http.hpp"
+#include "Request.hpp"
+
+class Request;
 
 class Response {
 	
@@ -47,7 +51,7 @@ class Response {
 		//static void doResponse(const std::string&, int, int&);
 
 		std::string to_string(void) const;
-		void sendToClient(int client_sock);
+		void sendToClient(int client_sock, Request& request);
 
 		// Here or in Http ?
 		static const std::string createResponse(int statusCode, const std::string& content);

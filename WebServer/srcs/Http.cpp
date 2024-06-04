@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 18:34:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/16 15:55:52 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:55:07 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,14 +36,15 @@ Http::receiveFromClient(int socket, Request& request) {
 	char buf[BUFFER_SIZE] = {0};
 	int bytes;
 
-	while (!request.isFinished()) {
-		memset(buf, 0, BUFFER_SIZE);
-		bytes = recv(socket, buf, BUFFER_SIZE, 0);
-		MLOG("bytes: " << bytes << "\nBUF: \'" <<  buf << "\'");
-		if (bytes < 0)
-			break;
-		request.receiveData(std::string(buf), bytes);
-	}
+	memset(buf, 0, BUFFER_SIZE);
+	bytes = recv(socket, buf, BUFFER_SIZE, 0);
+	MLOG("bytes: " << bytes);
+		
+	request.receiveData(std::string(buf, bytes), bytes);
+	if (bytes == 0)
+		throw Http::HttpConnectionException("Error - Connection closed before request was finished\n");
+	if (bytes < 0)
+		return;
 }
 
 void
@@ -55,9 +56,10 @@ Http::requestParser(Request& request) {
 	if (request.getFull().empty())
 		return;
 
+	//MLOG("STREAM: " << ss.str());
 	if (ss >> token) {
 		if (token != "GET" && token != "POST" && token != "DELETE")
-			throw Http::HttpErrorException(501);
+			throw Http::HttpErrorException(405);
 		request.setMethod(token);
 	} else throw Http::HttpErrorException(400);
 
@@ -80,29 +82,33 @@ Http::BuildResponse(Request& request) {
 	
 	Http::requestParser(request);
 	request.setBody();
+	//MLOG("Request: " << request.getFull());
+	
 	// Find the location corresponding to the URL
-	best_location = request.server->getBestLocation(request.getURI());
+	best_location = request.server->getBestLocation(request);
 	request.location = best_location;
-
-	//Location not found, generate a 404 Not Found response
-	if (best_location == NULL) {
+	// Location not found, generate a 404 Not Found response
+	if (best_location == NULL)
 		return (new Response(404, request.server));
-	}
-	request.setFilePath(best_location->root + request.getURI());
 	// Checking Location Client Max Body Size.
-	if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
-		return (new Response(403, request.server));
+	else if (size_t(best_location->CMaxBodySize) < (request.getBody()).size())
+		return (new Response(413, request.server));
 	// Handle Cgi Requests
 	else if (request.isCGI())
 		return (CgiHandler::executeCgi(request));
+
+	std::string URI = request.getURI(), loc_name = best_location->location_name;
+	std::string relative_filepath = URI.substr(URI.find(loc_name) + (loc_name.size() - 1)); // -1 because of '/'
+	request.setFilePath(best_location->root + relative_filepath);
+	
 	// Handle redirect
-	else if (best_location->redirect != "false") {
+	if (best_location->redirect != "false") {
 		is_redirect = true;
 		request.setToClose();
 		if (best_location->redirect_is_extern)
 			return (new Response(302, best_location->redirect, "text/html"));
 		else {
-			best_location = request.server->getBestLocation(best_location->redirect);
+			best_location = request.server->getBestRedir(best_location->redirect);
 			// Location not found to redirect.
 			if (best_location == NULL)
 				return (new Response(404, request.server));
@@ -118,18 +124,20 @@ Http::BuildResponse(Request& request) {
 
 Response*
 Http::handleMethod(Request& request) {
-	GPS;
+GPS;
 	int status_code = 501;
 	t_location* location = request.location;
 	std::string content, type;
+
+	MLOG("METHOD: " << request.getMethod());
 
 	// The url is requesting a file
 	if (request.getMethod() == "GET")
 		status_code = Http::getMethod(request.getFilePath(), location->allow_methods, content);
 	else if (request.getMethod() == "POST") {
-		/* if (((request.getHeaderMap().find("Content-type"))->second).find("multipart/form-data") != std::string::npos)
+		if (((request.getHeaderMap().find("Content-Type"))->second).find("multipart/form-data") != std::string::npos)
 			status_code = Http::handleUpload(request);	
-		else */
+		else
 			status_code = Http::postMethod(request.getFilePath(), location->allow_methods, request.getBody());
 	}
 	else if (request.getMethod() == "DELETE")
@@ -141,13 +149,11 @@ Http::handleMethod(Request& request) {
 	else
 		type = "text/html";
 
-	// TODO: Check if when its an error, it always calls the Response error constructor
 	return (new Response(status_code, content, type));
 }
 
 Response*
 Http::doDirectoryResponse(Request& request, bool is_redirect) {
-	int statusCode;
 	struct stat buf;
 	t_location* location = request.location;
 	std::string content;
@@ -156,8 +162,7 @@ Http::doDirectoryResponse(Request& request, bool is_redirect) {
 	if (stat(location->index.c_str(), &buf) == 0) {
 		// Index exists so must be sent.
 		request.setFilePath(location->index);
-		statusCode = getMethod(request.getFilePath(), location->allow_methods, content);
-		return (new Response(statusCode, content, "text/html"));
+		return Http::handleMethod(request);
 	}
 	// If auto_index off and the index doesn't exist -> forbidden request
 	else if (!location->auto_index)
@@ -247,7 +252,7 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 	if (flag == 0)
 		throw Http::HttpErrorException(400);
 
-	int statusCode = flag == -1 ? 201 : 200;
+	int statusCode = (flag == -1) ? 201 : 200;
 
 	std::ofstream out_file(file_path.c_str(), std::ofstream::app); // Open file in append mode, create one if it doesn't exist
 
@@ -264,7 +269,9 @@ Http::postMethod(const std::string& file_path, const std::vector<std::string>& m
 	}
 
 	const std::string output = body;
-	MLOG("Output: " + output);
+	if (output.empty())
+		return 204;
+	//MLOG("Output: " + output);
 	
 	out_file.write(output.c_str(), output.size());
 	out_file.write("\n", 1);	
@@ -294,36 +301,101 @@ Http::deleteMethod(const std::string& file_path, const std::vector<std::string>&
 
 int
 Http::handleUpload(const Request& request) {
+	GPS;
 	MLOG("~~~~~~~~\n   UPLOAD\n~~~~~~~~");
-	(void)request;
-	return 0;
-/* 	std::string content_type, boundary, body, part, line;
+	std::string content_type, boundary, body, part, line;
 
-	content_type = (request.getHeaderMap().find("Content-type"))->second;
-	boundary = content_type.substr(content_type.find("bondary=") + 9);
-	boundary = boundary.substr(0, boundary.find(";"));
+	content_type = (request.getHeaderMap().find("Content-Type"))->second;
+	std::string::size_type boundary_pos = content_type.find("boundary=");
+	
+	if (boundary_pos == std::string::npos)
+	{
+		MLOG("No boundary found in content-type\n");
+		throw Http::HttpErrorException(400);
+	}
+	
+	boundary = content_type.substr(boundary_pos + 9);
+	if (boundary.find(";") != std::string::npos)
+	{
+		boundary = boundary.substr(0, boundary.find(";"));
+	}
 
-	MLOG(".|. Boundary: " << boundary << " .|.\n");
+	MLOG("Boundary: " << boundary << "\n");
 
 	body = request.getBody();
-	for (int i = 0; i < body.size();) {
-		// Get each part
-		int partStart = body.find(boundary, i) + boundary.size();	
-		int partEnd = body.find(boundary, partStart);
-		part = body.substr(partStart, partEnd - partStart); // Note: might need to add 1
-		i = partEnd;	// Place i at the end of the part found
-		
-		// Separate header and body of the current part
-		std::string partHeader = part.substr(0, part.find("\r\n\r\n"));
-		std::string partBody = part.substr(part.find("\r\n\r\n") + 4);
-		
-		// Get the filename from the header
-		int pos = partHeader.find("filename=") + 10; // 10 because 9 is for filename=, and 1 extra for the " after
-		std::string filename = (pos != std::string::npos) ? partHeader.substr(pos, partHeader.find("\"", pos)) : "default";
-		
-		// Create the file and send the body there
-		 
-	}*/
+
+	std::string::size_type i = 0;
+	std::string delimiter = "--" + boundary;
+	std::string end_boundary = delimiter + "--";
+	
+	while ((i = body.find(delimiter, i)) != std::string::npos)
+	{
+		i += delimiter.size();
+		if (body.substr(i, 2) == "--")
+			break;
+		i += 2;
+
+		std::string::size_type partEnd = body.find(delimiter, i);
+		if (partEnd == std::string::npos)
+			break;
+		part = body.substr(i, partEnd - i);
+
+		MLOG("PART: " << part);
+		std::string::size_type headerEnd = part.find("\r\n\r\n");
+		if (headerEnd == std::string::npos)
+			throw Http::HttpErrorException(400);
+
+		std::string partHeader = part.substr(0, headerEnd);
+		std::string partBody = part.substr(headerEnd + 4);
+
+		std::string::size_type filename_pos = partHeader.find("filename=\"");
+		if (filename_pos != std::string::npos)
+		{
+			filename_pos += 10;
+			std::string::size_type filename_end = partHeader.find("\"", filename_pos);
+			if (filename_end != std::string::npos)
+			{
+				
+				std::string filename = partHeader.substr(filename_pos, (filename_end - filename_pos));
+
+				std::string upload_dir = (request.server->getBestRedir("/"))->root + "/upload";
+
+				if (!Utils::createDirectory(upload_dir)) {
+					MLOG("Could not create upload directory!");
+					throw Http::HttpErrorException(500);
+				}
+				std::string filepath = upload_dir + "/" + filename;
+
+				MLOG("FILEPATH: " << filepath);
+
+				std::ofstream outfile(filepath.c_str(), std::ios::binary);
+				if (outfile.is_open())
+				{
+					outfile.write(partBody.c_str(), partBody.size());
+					outfile.close();
+					MLOG("File uploaded!");
+					return 201;
+				}
+				else
+				{
+					MLOG("Could not open " << filename << " for writing!");
+					throw Http::HttpErrorException(500);
+				}					
+			}
+			else
+			{
+				MLOG("Invalid filename format in header!");
+				throw Http::HttpErrorException(400);
+			}
+		}
+		else
+		{
+			MLOG("Filename not found on the request!");
+			throw Http::HttpErrorException(400);
+		}
+		i = partEnd;
+	}
+	return (201);
 }
 
 
@@ -381,10 +453,24 @@ Http::HttpErrorException::HttpErrorException(int error) : http_error(error), msg
 
 Http::HttpErrorException::~HttpErrorException() throw() {}
 
-const char* Http::HttpErrorException::what() const throw() {
+const char*
+Http::HttpErrorException::what() const throw() {
 	return message;
 }
 
-int Http::HttpErrorException::getErrorCode() const {
+int
+Http::HttpErrorException::getErrorCode() const {
         return this->http_error;
 }
+
+Http::HttpConnectionException::HttpConnectionException() : message("error") {}
+
+Http::HttpConnectionException::HttpConnectionException(std::string msg) : message(msg.c_str()) {}
+
+Http::HttpConnectionException::~HttpConnectionException() throw() {}
+
+const char*
+Http::HttpConnectionException::what() const throw() {
+	return message;
+}
+	

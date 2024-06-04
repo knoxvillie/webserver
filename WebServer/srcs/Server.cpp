@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:30:41 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/16 13:44:04 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 15:18:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,48 +106,51 @@ Server::validateServerDirectives(void) {
 void
 Server::startServerSocket(void) {
 	GPS;
-	this->server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (this->server_sock < 0)
-		throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
-
-	// TODO: check if the SOCK_NONBLOCK flag on socket is enough to not do this
-	if (fcntl(this->server_sock, F_SETFL, O_NONBLOCK) < 0)
-		throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking.");
-
-	// the SO_REUSEADDR option is set on the socket to allow binding to multiple ports. Then, the bind() function is called for each port in the ports vector, binding the socket to each port. Finally, the server listens for incoming connections on all specified ports.
-	MLOG("TAMANHO PORT:" << Utils::intToString(int(this->s_port.size())));
-	if (this->s_port.size() >= 1) {
-		int optval = 1;
-
-		if (setsockopt(this->server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)))
-			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
-	}
 	for (size_t i = 0; i < this->s_port.size(); i++) {
-		this->server_address.sin_port = htons(this->s_port[i]);
-		// The len parameter specifies the size of the address structure passed as the second argument (sockaddr* addr).
+		int server_sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
-		// REMOVE std::strerror(errno)
-		if (bind(this->server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address)) < 0) {
-			close(this->server_sock);
+		if (server_sock < 0)
+			throw std::runtime_error("ERROR - Server: Couldn't create the server socket");
+
+/* 		if (fcntl(server_sock, F_SETFL, O_NONBLOCK) < 0) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: failed to set socket as nonblocking");
+		} */
+/* 
+		int optval = 1;
+		if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: Couldn't allow the socket to binding to multiples ports");
+		} */
+
+		this->server_address.sin_port = htons(this->s_port[i]);
+
+		if ((bind(server_sock, (sockaddr *)(&this->server_address), sizeof(this->server_address))) < 0) {
+			close (server_sock);
 			throw std::runtime_error(std::string("ERROR - Server: Couldn't bind socket: ") + Utils::intToString((int)this->s_port[i]) + " Why? " + std::strerror(errno));
 		}
-		MLOG("BIND OK PORT: " + Utils::intToString((int)this->s_port[i]));
 
+		if (listen(server_sock, SOMAXCONN) < 0) {
+			close (server_sock);
+			throw std::runtime_error("ERROR - Server: Couldn't listen on port " + Utils::intToString((int)this->s_port[i]));
+		}
+
+		this->server_sockets.push_back(server_sock);
+
+		MLOG("Server " << this->s_host << " listening on port: " + Utils::intToString((int)this->s_port[i]));
 	}
-	if (listen(this->server_sock, SOMAXCONN) < 0)
-		throw std::runtime_error("Error: Couldn't listen.");
 }
 
 int
-Server::acceptConnection(void) const {
+Server::acceptConnection(int socket) const {
 	GPS;
 	int client_sock;
 	struct sockaddr_in client_address;
 	socklen_t client_address_len = sizeof(client_address);
 
 	std::memset(&client_address, 0, sizeof(client_address));
-	client_sock = accept(this->server_sock, (sockaddr*)&client_address, (socklen_t*)&client_address_len);
+	client_sock = accept(socket, (sockaddr*)&client_address, (socklen_t*)&client_address_len);
 	if (client_sock < 0)
 		throw std::runtime_error("Error: Client socket failed");
 	return (client_sock);
@@ -171,8 +174,8 @@ Server::checkHost(std::vector<std::string>& vec) {
 	// Redirection to "0.0.0.0" if needed.
 	//if (host == "127.0.0.1") host = "0.0.0.0";
 
-	//this->server_address.sin_addr.s_addr = INADDR_ANY;
-	this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
+	this->server_address.sin_addr.s_addr = htonl(Utils::ipParserHtonl(this->s_host));
+	//this->server_address.sin_addr.s_addr = Utils::ipParserHtonl(this->s_host);
 	// IPV4 only
 	this->server_address.sin_family = AF_INET;
 }
@@ -237,7 +240,7 @@ Server::checkRoot(std::vector<std::string>& vec, t_location& location) {
 	struct stat buf;
 
 	if (vec.size() != 1)
-		throw std::runtime_error("Error: Multiples Root paths");
+		throw std::runtime_error("Error: Multiple Root paths");
 	std::string root((vec[0].substr(0, vec[0].find(';'))));
 	std::string path(Global::pwd + root);
 
@@ -251,8 +254,8 @@ Server::checkIndex(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
 		throw std::runtime_error("Error: Location has multiples index values");
 	std::string index(vec[0].substr(0, vec[0].find(';')));
-	std::string complement = ((location.location_name == "/") ? "" : "/");
-	std::string path(location.root + location.location_name + complement + index);
+	std::string complement = ((*(location.root).rbegin() == '/') ? "" : "/");
+	std::string path(location.root + complement + index);
 	location.index = path;
 }
 
@@ -273,17 +276,24 @@ Server::checkClientMaxBodySize(std::vector<std::string>& vec, t_location& locati
 		throw std::runtime_error("Error: Invalid number of arguments location client_max_body_size");
 	size_t size = vec[0].size();
 
-	if (vec[0][size - 2] != 'M')
+	if ((vec[0][size - 2] != 'M') && (vec[0][size - 2] != 'B'))
 		throw std::runtime_error("Error: Missing type value on location client_max_body_size");
 	for (size_t i = 0; i < size - 2; i++) {
 		if (!std::isdigit(vec[0][i]))
 			throw std::runtime_error("Error: invalid argument " + vec[0]);
 	}
-	long value = std::atol(vec[0].substr(0, vec[0].find('M')).c_str());
-	if (value < 1 || value > 10)
-		throw std::runtime_error("Error: Client Max Body Size out of bound");
-	// (2^10 * 10^3) ~ (2^10 + 2^10) : bytes
-	location.CMaxBodySize = (1024 * 1000) * value;
+	if (vec[0].find('M') != std::string::npos) {
+		long value = std::atol(vec[0].substr(0, vec[0].find('M')).c_str());
+		if (value < 1 || value > 10)
+			throw std::runtime_error("Error: Client Max Body Size out of bound");
+		// (2^10 * 10^3) ~ (2^10 + 2^10) : bytes
+		location.CMaxBodySize = (1024 * 1000) * value;
+	} else {
+		long value = std::atol(vec[0].substr(0, vec[0].find('B')).c_str());
+		if (value < 1 || value > 100000)
+			throw std::runtime_error("Error: Client Max Body Size out of bound");
+		location.CMaxBodySize = value;
+	}
 }
 
 void
@@ -307,6 +317,20 @@ Server::checkAllowMethods(std::vector<std::string>& vec, t_location& location) {
 	location.allow_methods = temp;
 }
 
+/*
+	NOTES:
+		- CGI scrips should not be executed has we have them now, we should have a location
+		with a name like ".php" and a directive "cgi_pass" that takes a script as an argument
+		and execute that script for all requests that fall into that location (in this example all requests that ask for a file with .php)
+
+	- We should have a directory that stores all our CGIs
+
+	Steps to achieve this:
+	- Check the location for cgi_pass and store the name of the script
+	- Save the location name if it's an extention and compare the requests before searching for an extention
+	- ...
+*/
+
 void
 Server::checkCgi(std::vector<std::string>& vec, t_location& location) {
 	if (vec.size() != 1)
@@ -327,7 +351,7 @@ Server::checkRedirect(std::vector<std::string>& vec, t_location& location) {
 	location.redirect_is_extern = false;
 	location.redirect = "false";
 	// Need to check if the location is root, so, root must never redirect.
-	if (location.location_name == "/" ||  vec[0] == "false;")
+	if (location.location_name == "/" || vec[0] == "false;")
 		return ;
 	// Everything that doesn't start with http:// or https:// is treated as location.
 	// 404 is returned if url is not found in locations.
@@ -351,9 +375,9 @@ Server::getLocationMap(void) {
 	return (_locationDirectives);
 }
 
-int
-Server::getSocket(void) const {
-	return (this->server_sock);
+std::vector<int>
+Server::getSockets(void) const {
+	return (this->server_sockets);
 }
 
 std::map<int, std::string>
@@ -372,7 +396,32 @@ Server::getPort(void) const {
 }
 
 t_location*
-Server::getBestLocation(const std::string& name) {
+Server::getBestLocation(Request& request) {
+	t_location *bestMatch = NULL;
+	size_t bestMatchLen = 0;
+	std::string name = request.getURI();
+
+	for (size_t i = 0; i < this->locations.size(); i++) {
+		std::string locationName = this->locations[i].location_name;
+
+		if (locationName[0] == '.' && (request.getExtension() == locationName)) { // Means that the location is a cgi location
+			request.setCGI();
+			return (&this->locations[i]);
+		}
+		if (name.find(locationName) == 0) { // Check if locationName is a prefix
+			if (bestMatchLen < locationName.length()) {
+				bestMatch = &this->locations[i];
+				bestMatchLen = locationName.length();
+			}
+		}
+	}
+	if (bestMatch != NULL)
+		MLOG("Location: " << bestMatch->location_name);
+	return bestMatch;
+}
+
+t_location*
+Server::getBestRedir(const std::string& name) {
 	t_location *bestMatch = NULL;
 	size_t bestMatchLen = 0;
 
@@ -389,10 +438,10 @@ Server::getBestLocation(const std::string& name) {
 	return bestMatch;
 }
 
-std::string
+/* std::string
 Server::getListen(void) const {
-	return ("MUDAR DEPOIS");
-}
+	return ("MUDAR DEPOIS"); // TODO: MUDAR DEPOIS
+} */
 
 void *
 Server::getDirectiveFromLocation(std::vector<t_location> &locations, const std::string& location_name, const std::string& directive) {
@@ -430,7 +479,7 @@ defaultLocationConfig(int directive) {
 		case 2: return ("false;"); //Auto_index
 		case 3: return ("1M;"); //Client_max_body_size
 		case 4: return ("GET;"); // Allow_methods
-		case 5: return ("PLACEHOLDER;"); //Cgi_pass
+		case 5: return (";"); //Cgi_pass
 		case 6: return ("false;"); //Redirect
 		default: throw std::runtime_error("Server.cpp defaultLocationConfig Methods");
 	}

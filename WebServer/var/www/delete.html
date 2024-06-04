@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Deletion Test</title>
+</head>
+<body>
+    <h1>File Deletion Test</h1>
+    <form id="deleteForm">
+        <label for="filename">Enter the filename to delete:</label>
+        <input type="text" id="filename" name="filename" required>
+        <button type="button" onclick="deleteFile()">Delete File</button>
+    </form>
+    <p id="result"></p>
+
+    <script>
+        function deleteFile() {
+            const filename = document.getElementById('filename').value;
+            if (filename) {
+                fetch(`http://127.0.0.1:8080/upload/${filename}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('result').innerText = 'File deleted successfully.';
+                    } else {
+                        document.getElementById('result').innerText = 'Failed to delete file.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerText = 'Error deleting file.';
+                });
+            } else {
+                document.getElementById('result').innerText = 'Please enter a filename.';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 15:03:53 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/03 10:15:31 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:50:25 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,7 @@ namespace Utils {
 			std::cout << ANSI_COLOR_CYAN << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
 			std::cout << "\n-=-=-=-=-=-=-=-=-=-= "<< ANSI_COLOR_GREEN << "Server " << i + 1 << " - " <<
 				ANSI_COLOR_YELLOW << serverList[i].getHost() << ANSI_COLOR_RED << ":" << ANSI_COLOR_YELLOW << "[ " <<
-				Utils::serverPortToString(serverList[i].getPort()) << "]" << ANSI_COLOR_GREEN << " - Socket: " << ANSI_COLOR_YELLOW <<
-				serverList[i].getSocket() << ANSI_COLOR_CYAN << " =-=-=-=-=-=-=-=-=-\n";
+				Utils::serverPortToString(serverList[i].getPort()) << "]" << ANSI_COLOR_CYAN << " -=-=-=-=-=-=-=-=-=-\n";
 			std::cout << "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n" << ANSI_COLOR_RESET;
 			printMapVec(serverList[i].getServer());
 			printMapMapVec(serverList[i].getLocationMap());
@@ -103,9 +102,9 @@ namespace Utils {
 
 			if (*endptr != '\0')
 				throw std::runtime_error("ERROR - Server: IP address conversion failed: " + ip_address);
-			if (octet < 0 || octet > 255)
+			if (octet < 0)
 				throw std::runtime_error("ERROR - Server: Invalid IP address, octet out of range: " + ip_address);
-			bytes |= static_cast<uint32_t>(octet) << ((3 - i) * 8);
+			bytes |= static_cast<uint32_t>(octet % 255) << ((3 - i) * 8);
 		}
 		return (bytes);
 	}
@@ -135,7 +134,7 @@ namespace Utils {
 
 	bool
 	isDirectory(const std::string& str) {
-		return (str[str.size() - 1] == '/');
+		return (*(str.rbegin()) == '/');
 	}
 
 	int
@@ -145,7 +144,7 @@ namespace Utils {
 		// Path doesn't exist
 		if (stat(path.c_str(), &fileInfo) != 0)
 			return (-1);
-		//Se o arquivo for regular, isso significa que não é um diretório, dispositivo especial ou link simbólico, e a função retorna 1.
+		// Regular file, not a directory, special device or symbolic link.
 		return (((fileInfo.st_mode & S_IFMT) == S_IFREG) ? 1 : 0);
 	}
 
@@ -205,13 +204,13 @@ namespace Utils {
 			   "<head>\n"
 			   "    <meta charset=\"UTF-8\">\n"
 			   "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			   "    <title>" << status_code << "- " << message << "</title>\n"
+			   "    <title>" << status_code << " - " << message << "</title>\n"
 			   "    <link rel=\"stylesheet\" href=\"/css/styles.css" << "\">\n"
 			   "</head>\n"
 			   "<body>\n"
 			   "<div class=\"container\">\n"
 			   "    <h1>Error " << status_code << "</h1>\n"
-			   "    <p>Error Page.</p>\n"
+			   "    <p>" << message << "</p>\n"
 			   "    <a href=\"/\">Go back to home page</a>\n"
 			   "</div>\n"
 			   "</body>\n"
@@ -243,6 +242,21 @@ namespace Utils {
 			 << "<h2>Listing of " << path << "</h2>"
 			 << "<table><tr><th>Filename</th><th>Type</th><th>Creation Date</th><th>Size</th></tr>";
 	}
+
+	bool 
+	createDirectory(const std::string& path) {
+    struct stat st;
+	if (stat(path.c_str(), &st) != 0) {
+        // Directory does not exist, create it
+		if (mkdir(path.c_str(), 0755) != 0) {
+			return false;
+        }
+    } else if (!S_ISDIR(st.st_mode)) {
+        // Path exists but is not a directory
+		return false;
+    }
+    return true;
+	}
 }
 
 bool isDirectory(const std::string& path) {
@@ -258,7 +272,8 @@ bool isDirectory(const std::string& path) {
 
 const std::string getCurrentDate(void) {
 	const char *days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-	const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+							 "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 	time_t now = time(NULL);
 	struct tm* gmTime = gmtime(&now); // returns time in GMT
@@ -294,3 +309,4 @@ bool isExecutable(const std::string& filepath) {
 
 	return ((fileInfo.st_mode & S_IXUSR) ? true : false);
 }
+

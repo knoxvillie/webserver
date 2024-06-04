@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/02 11:44:36 by diogmart          #+#    #+#             */
-/*   Updated: 2024/05/09 12:54:56 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 13:00:33 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <ctime>
 #include <filesystem>
+#include <sys/wait.h>
 
 // ========================
 // 		Macros and struct
@@ -74,6 +75,8 @@ class FuncLogger;
 #endif
 
 #define BUFFER_SIZE 4096
+
+#define TIMEOUT 300
 
 class FuncLogger {
 	private:
@@ -133,7 +136,7 @@ struct t_request {
 	
 	std::string path_info;			// PATH_INFO env varible for CGI
 	std::string query_string;		// QUERY_STRING env variable for CGI
-	bool isCGI;						// Whether or not the file requested is a CGI
+	bool isCGI;						// Whether the file requested is a CGI
 };
 
 // ======================
@@ -147,13 +150,13 @@ std::vector<std::string> vectorInitializer(const char**);
 void printServer(std::vector<Server>&);
 bool isStringUnsignedInt(const std::string&);
 uint32_t ipParserHtonl(const std::string&);
-std::string intToString(int number);
-std::string getValueFromEnv(char** env, const std::string&);
-void signal_handler(int signum);
-bool isDirectory(const std::string& path);
+std::string intToString(int);
+std::string getValueFromEnv(char**, const std::string&);
+void signal_handler(int);
+bool isDirectory(const std::string&);
 const std::string getCurrentDate(void);
-void free_env(char** env);
-bool isExecutable(const std::string& filepath);
+void free_env(char**);
+bool isExecutable(const std::string&);
 
 
 // ======================
@@ -178,5 +181,15 @@ void printMapMapVec(const std::map<T, std::map<T, std::vector<T> > >& myMap) {
 		std::cout << std::endl;
 	}
 }
+
+template<typename K, typename V>
+typename std::map<K, V>::const_iterator find_by_value(std::map<K, V>& map, const V& value) {
+	for (typename std::map<K, V>::const_iterator it = map.begin(); it != map.end(); it++) {
+		if (it->second == value)
+			return (it);
+	}
+	return (map.end());
+}
+
 
 #endif

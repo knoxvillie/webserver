@@ -6,7 +6,7 @@
 /*   By: diogmart <diogmart@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/16 11:02:15 by kfaustin          #+#    #+#             */
-/*   Updated: 2024/05/16 16:03:54 by diogmart         ###   ########.fr       */
+/*   Updated: 2024/06/01 14:36:09 by diogmart         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,11 +60,11 @@ Response::buildHeaderMap() {
 	// Date: Tue, 15 Nov 1994 08:12:31 GMT
 	headerMap["Date"] = getCurrentDate(); // The server MUST send the date according to the 2616 RFC 
 	MLOG("DATE: " << headerMap["Date"] << "\n");
-	headerMap["Content-length"] = Utils::intToString(this->body.size());
+	headerMap["Content-Length"] = Utils::intToString(this->body.size());
 	if (this->contentType.empty())
-		headerMap["Content-type"] = this->contentType; // something
+		headerMap["Content-Type"] = this->contentType; // something
 	else
-		headerMap["Content-type"] = "";
+		headerMap["Content-Type"] = "";
 	headerMap["Cache-control"] = "no-cache, private";
 	headerMap["Server"] = "";
 	if (this->status_code == 302) {
@@ -98,10 +98,15 @@ Response::findErrorPage(int errorCode) {
 	if (it == this->server->getErrorMap().end())
 		return false;
 
-	std::string error_path(this->server->getErrorMap()[errorCode]);
+		
+	std::string error_path = this->server->getErrorMap()[errorCode];
 	std::string path(Global::pwd + error_path);
 	path = path.substr(0, path.find(';'));
 
+	MLOG("error path :" + error_path + "path :" + path);
+	if (isDirectory(path))
+		return false;
+	
 	// Open the error page
 	std::ifstream file(path.c_str());
 	if (file.is_open()) {
@@ -111,19 +116,24 @@ Response::findErrorPage(int errorCode) {
 		this->body = buffer.str();
 		file.close();
 		// Generate the HTTP response with the content of the error page
-	} else return false;
-	
-	return true;
+		return true;
+	}
+	else 
+	{
+		MLOG("Could not open error page file: " + path);
+		return false;		
+	}
 }
 
 void
-Response::sendToClient(int client_sock) {
+Response::sendToClient(int client_sock, Request& request) {
 	GPS;
 	std::string response = this->to_string();
 	MLOG("response: " << response << "\n");
 
 	if (send(client_sock, response.c_str(), response.length(), 0) < 0) {
-		throw std::runtime_error("Error: send function failed");
+		MLOG("ERROR: send to client failed.");
+		request.setToClose();
 	}
 }
 
